@@ -1,0 +1,5 @@
+broadcom-sta (5.10.79.10-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon,  6 Apr 2009 00:08:00 +0200
