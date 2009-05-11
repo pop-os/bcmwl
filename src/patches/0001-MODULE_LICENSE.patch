@@ -1,0 +1,13 @@
+diff --git a/broadcom/src/wl/sys/wl_linux.c b/broadcom/src/wl/sys/wl_linux.c
+index 0f81236..c9968df 100644
+--- a/broadcom/src/wl/sys/wl_linux.c
++++ b/broadcom/src/wl/sys/wl_linux.c
+@@ -163,6 +163,8 @@ struct wl_if *wl_alloc_if(wl_info_t *wl, int iftype, uint unit, struct wlc_if* w
+ static void wl_free_if(wl_info_t *wl, wl_if_t *wlif);
+ static void wl_get_driver_info(struct net_device *dev, struct ethtool_drvinfo *info);
+ 
++MODULE_LICENSE("MIXED/Proprietary");
++
+ static struct pci_device_id wl_id_table[] = {
+ 	{ PCI_VENDOR_ID_BROADCOM, 0x4311, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+ 	{ PCI_VENDOR_ID_BROADCOM, 0x4312, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 

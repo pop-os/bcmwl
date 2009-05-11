@@ -1,0 +1,13 @@
+Source: bcmwl
+Section: admin
+Priority: optional
+Maintainer: Tim Gardner <tim.gardner@canonical.com>
+Standards-Version: 3.2.0.0
+Build-Depends: debhelper
+Vcs-git: http://kernel.ubuntu.com/git-repos/rtg/bcm-wl-dkms
+
+Package: bcmwl-kernel-source
+Architecture: all
+Depends: dkms, linux-libc-dev, libc6-dev
+Description: Broadcom bcm43xx wireless driver source
+ http://www.broadcom.com/support/802.11/linux_sta.php

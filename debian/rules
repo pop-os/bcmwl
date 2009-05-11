@@ -1,0 +1,45 @@
+#!/usr/bin/make -f
+
+build: src/.patched
+	dh_testdir
+
+src/.patched:
+	if [ -d src/patches ] ;\
+	then \
+		for i in src/patches/* ;\
+		do \
+			patch -d src -p2 < $$i; \
+		done; \
+	fi
+	touch $@
+
+
+clean:
+	dh_testdir
+	dh_testroot
+	dh_clean
+
+install:
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+binary-arch:
+
+binary-indep: build install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs 
+	dh_installdocs src/lib/LICENSE.txt
+	dh_install
+	dh_strip
+	dh_compress
+	dh_fixperms
+	dh_installdeb
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary

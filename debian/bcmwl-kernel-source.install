@@ -1,0 +1,2 @@
+src/*			usr/src/bcmwl-5.10.91.9
+debian/dkms.conf	usr/src/bcmwl-5.10.91.9

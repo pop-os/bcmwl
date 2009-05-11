@@ -1,0 +1,11 @@
+bcmwl (5.10.91.9-2) karmic; urgency=low
+
+  * Add src/lib/LICENSE.txt to copyright notice. 
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Mon, 11 May 2009 16:04:29 +0000
+
+bcmwl (5.10.91.9-1) karmic; urgency=low
+
+  * Initial release
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Fri, 5 Sep 2008 18:15:32 -0400
