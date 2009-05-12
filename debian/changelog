@@ -1,3 +1,9 @@
+bcmwl (5.10.91.9-3) karmic; urgency=low
+
+  * Fixed build errors with 2.6.30
+
+ -- Tim Gardner <tim.gardner@canonical.com>  Tue, 12 May 2009 15:29:06 -0600
+
 bcmwl (5.10.91.9-2) karmic; urgency=low
 
   * Add src/lib/LICENSE.txt to copyright notice. 
