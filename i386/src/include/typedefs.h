@@ -20,7 +20,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: typedefs.h,v 1.85.32.7 2008/07/02 00:20:05 Exp $
+ * $Id: typedefs.h,v 1.85.32.8 2009/02/26 17:07:08 Exp $
  */
 
 #ifndef _TYPEDEFS_H_
@@ -66,7 +66,7 @@ typedef unsigned long long int uintptr;
 
 #if defined(LINUX_PORT)
 #include <linux/types.h>	
-#endif
+#endif 
 
 #else
 

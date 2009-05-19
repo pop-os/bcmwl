@@ -22,7 +22,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wl_iw.c,v 1.63.2.22 2008/12/15 18:37:07 Exp $
+ * $Id: wl_iw.c,v 1.63.2.25.4.4 2009/04/20 19:22:00 Exp $
  */
 
 #define LINUX_PORT
@@ -1094,7 +1094,6 @@ wl_iw_get_essid(
 	ssid.SSID_len = dtoh32(ssid.SSID_len);
 
 	memcpy(extra, ssid.SSID, ssid.SSID_len);
-	extra[ssid.SSID_len] = '\0';
 
 	dwrq->length = ssid.SSID_len;
 
@@ -1485,13 +1484,7 @@ wl_iw_set_encode(
 			return -EINVAL;
 	}
 
-	val = (dwrq->flags & IW_ENCODE_DISABLED) ? 0 : WEP_ENABLED;
-
-	if ((error = dev_wlc_intvar_get(dev, "wsec", &wsec)))
-		return error;
-
-	wsec &= ~(WEP_ENABLED);
-	wsec |= val;
+	wsec = (dwrq->flags & IW_ENCODE_DISABLED) ? 0 : WEP_ENABLED;
 
 	if ((error = dev_wlc_intvar_set(dev, "wsec", wsec)))
 		return error;
@@ -1554,6 +1547,8 @@ wl_iw_get_encode(
 	int error, val, wsec, auth;
 
 	WL_TRACE(("%s: SIOCGIWENCODE\n", dev->name));
+
+	bzero(&key, sizeof(wl_wsec_key_t));
 
 	if ((dwrq->flags & IW_ENCODE_INDEX) == 0) {
 
@@ -2390,7 +2385,7 @@ wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data)
 
 			cmd = IWEVPMKIDCAND;
 			pmkcandlist = data;
-			count = pmkcandlist->npmkid_cand;
+			count = ntoh32(pmkcandlist->npmkid_cand);
 			wrqu.data.length = sizeof(struct iw_pmkid_cand);
 			pmkidcand = pmkcandlist->pmkid_cand;
 			while (count) {

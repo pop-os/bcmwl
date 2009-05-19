@@ -22,7 +22,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: linux_osl.c,v 1.127.2.16.2.1 2009/02/09 20:08:40 Exp $
+ * $Id: linux_osl.c,v 1.127.2.18 2009/02/26 17:07:07 Exp $
  */
 
 #define LINUX_PORT
@@ -741,7 +741,6 @@ osl_pkt_tonative(osl_t *osh, void *pkt)
 	for (nskb = (struct sk_buff *)pkt; nskb; nskb = nskb->next) {
 		osh->pub.pktalloced--;
 	}
-
 	return (struct sk_buff *)pkt;
 }
 
@@ -756,6 +755,5 @@ osl_pkt_frmnative(osl_t *osh, void *pkt)
 	for (nskb = (struct sk_buff *)pkt; nskb; nskb = nskb->next) {
 		osh->pub.pktalloced++;
 	}
-
 	return (void *)pkt;
 }

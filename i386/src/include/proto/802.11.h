@@ -22,7 +22,7 @@
  *
  * Fundamental types and constants relating to 802.11
  *
- * $Id: 802.11.h,v 9.222.2.4.40.1 2009/01/28 01:06:57 Exp $
+ * $Id: 802.11.h,v 9.222.2.5 2009/01/28 00:21:34 Exp $
  */
 
 #ifndef _802_11_H_

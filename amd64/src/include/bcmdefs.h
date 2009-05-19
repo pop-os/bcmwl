@@ -22,7 +22,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: bcmdefs.h,v 13.43.2.9 2008/12/03 00:09:23 Exp $
+ * $Id: bcmdefs.h,v 13.43.2.11 2009/02/11 01:59:34 Exp $
  */
 
 #ifndef	_bcmdefs_h_
@@ -119,7 +119,11 @@ typedef struct {
 	hnddma_seg_t segs[MAX_DMA_SEGS];
 } hnddma_seg_map_t;
 
-#define BCMEXTRAHDROOM 160+40
+#if defined(BCM_RPC_NOCOPY) || defined(BCM_RCP_TXNOCOPY)
+#define BCMEXTRAHDROOM 220
+#else
+#define BCMEXTRAHDROOM 172
+#endif
 
 #define BCMDONGLEHDRSZ 12
 

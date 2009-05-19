@@ -25,7 +25,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wlioctl.h,v 1.620.2.49.2.2 2009/01/28 22:52:29 Exp $
+ * $Id: wlioctl.h,v 1.620.2.56 2009/02/26 17:07:07 Exp $
  */
 
 #ifndef _wlioctl_h_
@@ -223,6 +223,12 @@ typedef struct {
 	struct ether_addr ea;
 } scb_val_t;
 
+typedef struct {
+	int ac;
+	uint8 val;
+	struct ether_addr ea;
+} link_val_t;
+
 typedef struct wl_ioctl {
 	uint cmd;	
 	void *buf;	
@@ -231,6 +237,10 @@ typedef struct wl_ioctl {
 	uint used;	
 	uint needed;	
 } wl_ioctl_t;
+
+#define ioctl_subtype	set		
+#define ioctl_pid	used		
+#define ioctl_status	needed		
 
 #define WLC_IOCTL_MAGIC		0x14e46c77
 
@@ -279,6 +289,8 @@ typedef struct wl_ioctl {
 #define WLC_GET_PHYTYPE				39
 #define WLC_DUMP_RATE				40
 #define WLC_SET_RATE_PARAMS			41
+#define WLC_GET_FIXRATE				42
+#define WLC_SET_FIXRATE				43
 
 #define WLC_GET_KEY				44
 #define WLC_SET_KEY				45
@@ -534,8 +546,10 @@ typedef struct wl_ioctl {
 #define WLC_GET_INT_DISASSOC			304	
 #define WLC_SET_NUM_PEERS			305     
 #define WLC_GET_NUM_BSS				306	
-#define WLC_NPHY_SAMPLE_COLLECT		307 
-#define WLC_LAST				308	
+#define WLC_NPHY_SAMPLE_COLLECT			307	
+#define WLC_UM_PRIV				308	
+#define WLC_GET_CMD				309
+#define WLC_LAST				310	
 
 #define WL_RADIO_SW_DISABLE		(1<<0)
 #define WL_RADIO_HW_DISABLE		(1<<1)
@@ -592,6 +606,7 @@ typedef struct wl_po {
 #define	WLC_PHY_TYPE_G		2
 #define	WLC_PHY_TYPE_N		4
 #define	WLC_PHY_TYPE_LP		5
+#define	WLC_PHY_TYPE_SSN	6
 #define	WLC_PHY_TYPE_NULL	0xf
 
 #define WLC_MACMODE_DISABLED	0	

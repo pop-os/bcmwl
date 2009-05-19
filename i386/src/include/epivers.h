@@ -31,16 +31,16 @@
 
 #define	EPI_MINOR_VERSION	10
 
-#define	EPI_RC_NUMBER		79
+#define	EPI_RC_NUMBER		91
 
-#define	EPI_INCREMENTAL_NUMBER	10
+#define	EPI_INCREMENTAL_NUMBER	9
 
 #define	EPI_BUILD_NUMBER	0
 
-#define	EPI_VERSION		5, 10, 79, 10
+#define	EPI_VERSION		5, 10, 91, 9
 
-#define	EPI_VERSION_NUM		0x050a4f0a
+#define	EPI_VERSION_NUM		0x050a5b09
 
-#define	EPI_VERSION_STR		"5.10.79.10"
+#define	EPI_VERSION_STR		"5.10.91.9"
 
 #endif 

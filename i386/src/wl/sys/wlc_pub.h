@@ -23,7 +23,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wlc_pub.h,v 1.293.2.33.2.1 2009/01/28 23:00:39 Exp $
+ * $Id: wlc_pub.h,v 1.293.2.36 2009/01/23 22:38:41 Exp $
  */
 
 #ifndef _wlc_pub_h_
@@ -236,7 +236,6 @@ typedef struct wlc_pub {
 	wl_cnt_t	_cnt;			
 	wl_wme_cnt_t	_wme_cnt;		
 
-	uint8		txpwr_percent;		
 } wlc_pub_t;
 
 typedef struct	wl_rxsts {

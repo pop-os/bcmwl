@@ -23,7 +23,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wl_linux.c,v 1.388.2.66.2.1 2009/02/09 18:53:49 Exp $
+ * $Id: wl_linux.c,v 1.388.2.78.4.2 2009/04/03 02:06:22 Exp $
  */
 
 #define LINUX_PORT
@@ -72,7 +72,6 @@
 #include <bcmutils.h>
 #include <pcicfg.h>
 #include <wlioctl.h>
-#include <wl_linux.h>
 #include <wlc_key.h>
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 4, 5)
@@ -82,6 +81,7 @@
 typedef void wlc_info_t;
 typedef void wlc_hw_info_t;
 typedef const struct si_pub	si_t;
+
 #include <wlc_pub.h>
 #include <wl_dbg.h>
 
@@ -92,83 +92,14 @@ struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
 
 #include <wl_export.h>
 
-typedef struct wl_timer {
-	struct timer_list timer;
-	struct wl_info *wl;
-	void (*fn)(void *);
-	void* arg; 
-	uint ms;
-	bool periodic;
-	bool set;
-	struct wl_timer *next;
-#ifdef BCMDBG
-	char* name; 
-#endif
-} wl_timer_t;
-
-typedef struct wl_task {
-	struct work_struct work;
-	void *context;
-} wl_task_t;
-
-#define WL_IFTYPE_BSS	1 
-#define WL_IFTYPE_WDS	2 
-#define WL_IFTYPE_MON	3 
-
-typedef struct wl_if {
-#ifdef CONFIG_WIRELESS_EXT
-	wl_iw_t		iw;		
-#endif 
-	struct wl_if *next;
-	struct wl_info *wl;		
-	struct net_device *dev;		
-	int type;			
-	struct wlc_if *wlcif;		
-	struct ether_addr remote;	
-	uint subunit;			
-	bool dev_registed;		
-} wl_if_t;
-
-struct wl_info {
-	wlc_pub_t	*pub;		
-	void		*wlc;		
-	osl_t		*osh;		
-	struct net_device *dev;		
-	spinlock_t	lock;		
-	spinlock_t	isr_lock;	
-	uint		bustype;	
-	bool		piomode;	
-	void *regsva;			
-	struct net_device_stats stats;	
-	wl_if_t *if_list;		
-	struct wl_info *next;		
-	atomic_t callbacks;		
-	struct wl_timer *timers;	
-	struct tasklet_struct tasklet;	
-	struct net_device *monitor;	
-	bool		resched;	
-	uint32		pci_psstate[16];	
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-	struct ieee80211_crypto_ops *tkipmodops;	
-	struct ieee80211_tkip_data  *tkip_ucast_data;
-	struct ieee80211_tkip_data  *tkip_bcast_data;
-#endif
-
-	uint	stats_id;		
-
-	struct net_device_stats stats_watchdog[2];
-#ifdef CONFIG_WIRELESS_EXT
-	struct iw_statistics wstats_watchdog[2];
-	struct iw_statistics wstats;
-	int		phy_noise;
-#endif 
-
-};
+#include <wl_linux.h>
 
 static void wl_timer(ulong data);
 static void _wl_timer(wl_timer_t *t);
 
 static int wl_linux_watchdog(void *ctx);
+static
+int wl_found = 0;
 
 struct ieee80211_tkip_data {
 #define TKIP_KEY_LEN 32
@@ -199,19 +130,8 @@ struct ieee80211_tkip_data {
 	u8 rx_hdr[16], tx_hdr[16];
 };
 
-static int wl_found = 0;
-
 #define	WL_DEV_IF(dev)		((wl_if_t*)(dev)->priv)			
 #define	WL_INFO(dev)		((wl_info_t*)(WL_DEV_IF(dev)->wl))	
-
-#define WL_LOCK(wl)	spin_lock_bh(&(wl)->lock)
-#define WL_UNLOCK(wl)	spin_unlock_bh(&(wl)->lock)
-
-#define WL_ISRLOCK(wl, flags) do {spin_lock(&(wl)->isr_lock); (void)(flags);} while (0)
-#define WL_ISRUNLOCK(wl, flags) do {spin_unlock(&(wl)->isr_lock); (void)(flags);} while (0)
-
-#define INT_LOCK(wl, flags)	spin_lock_irqsave(&(wl)->isr_lock, flags)
-#define INT_UNLOCK(wl, flags)	spin_unlock_irqrestore(&(wl)->isr_lock, flags)
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
 #define	WL_ISR(i, d, p)		wl_isr((i), (d))
@@ -236,26 +156,26 @@ static void wl_mic_error(wl_info_t *wl, struct ether_addr *ea, bool group, bool 
 #if defined(CONFIG_PROC_FS)
 static int wl_read_proc(char *buffer, char **start, off_t offset, int length, int *eof, void *data);
 #endif 
-#ifdef BCMDBG
+#if defined(BCMDBG)
 static int wl_dump(wl_info_t *wl, struct bcmstrbuf *b);
 #endif 
 struct wl_if *wl_alloc_if(wl_info_t *wl, int iftype, uint unit, struct wlc_if* wlc_if);
 static void wl_free_if(wl_info_t *wl, wl_if_t *wlif);
 static void wl_get_driver_info(struct net_device *dev, struct ethtool_drvinfo *info);
 
-MODULE_LICENSE("");
-
 static struct pci_device_id wl_id_table[] = {
-	{ PCI_VENDOR_ID_BROADCOM, 0x4311, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x4312, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x4313, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x4315, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x4328, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x4329, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x432a, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x432b, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x432c, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
-	{ PCI_VENDOR_ID_BROADCOM, 0x432d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 },
+	{ PCI_VENDOR_ID_BROADCOM, 0x4311, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x4312, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x4313, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x4315, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x4328, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x4329, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x432a, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x432b, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x432c, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x432d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x4353, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+	{ PCI_VENDOR_ID_BROADCOM, 0x4357, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
 	{ 0 }
 };
 MODULE_DEVICE_TABLE(pci, wl_id_table);
@@ -288,7 +208,7 @@ module_param_string(name, name, IFNAMSIZ, 0);
 static struct ethtool_ops wl_ethtool_ops =
 #else
 static const struct ethtool_ops wl_ethtool_ops =
-#endif
+#endif 
 {
 	.get_drvinfo = wl_get_driver_info
 };
@@ -329,7 +249,6 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 #endif
 	osl_t *osh;
 	int unit;
-	uint err;
 
 	unit = wl_found;
 
@@ -392,10 +311,13 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 	spin_lock_init(&wl->lock);
 	spin_lock_init(&wl->isr_lock);
 
+	{
+	int err;
 	if (!(wl->wlc = wlc_attach((void *) wl, vendor, device, unit, wl->piomode,
 		osh, wl->regsva, wl->bustype, btparam, &err))) {
 		printf("%s: %s driver failed with code %d\n", dev->name, EPI_VERSION_STR, err);
 		goto fail;
+	}
 	}
 	wl->pub = (wlc_pub_t *)wl->wlc;
 
@@ -404,6 +326,7 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 			WL_ERROR(("wl%d: Error setting MPC variable to 0\n", unit));
 		}
 	}
+
 #if defined(CONFIG_PROC_FS)
 
 	sprintf(tmp, "net/wl%d", wl->pub->unit);
@@ -498,7 +421,7 @@ wl_read_proc(char *buffer, char **start, off_t offset, int length, int *eof, voi
 
 	WL_LOCK(wl);
 
-#ifdef BCMDBG
+#if defined(BCMDBG)
 	wlc_iovar_dump(wl->wlc, "all", strlen("all") + 1, buffer, PAGE_SIZE);
 	len = strlen(buffer);
 #endif 
@@ -631,7 +554,6 @@ wl_remove(struct pci_dev *pdev)
 		WL_ERROR(("wl: wl_remove: pci_get_drvdata failed\n"));
 		return;
 	}
-
 	if (!wlc_chipmatch(pdev->vendor, pdev->device)) {
 		WL_ERROR(("wl: wl_remove: wlc_chipmatch failed\n"));
 		return;
@@ -784,7 +706,7 @@ static int
 wl_open(struct net_device *dev)
 {
 	wl_info_t *wl;
-	int error;
+	int error = 0;
 
 	if (!dev)
 		return -ENETDOWN;
@@ -853,23 +775,22 @@ wl_start_int(wl_if_t *wlif, struct sk_buff *skb)
 
 	wl = wlif->wl;
 
+	WL_LOCK(wl);
+
 	WL_TRACE(("wl%d: wl_start: len %d summed %d\n", wl->pub->unit, skb->len, skb->ip_summed));
 
 	if ((pkt = PKTFRMNATIVE(wl->osh, skb)) == NULL) {
 		WL_ERROR(("wl%d: PKTFRMNATIVE failed!\n", wl->pub->unit));
 		WLCNTINCR(wl->pub->_cnt.txnobuf);
 		dev_kfree_skb_any(skb);
+		WL_UNLOCK(wl);
 		return 0;
 	}
-
-	WL_LOCK(wl);
 
 	if (WME_ENAB(wl->pub) && (PKTPRIO(pkt) == 0))
 		pktsetprio(pkt, FALSE);
 	wlc_sendpkt(wl->wlc, pkt, wlif->wlcif);
-
 	WL_UNLOCK(wl);
-
 	return (0);
 }
 
@@ -1061,11 +982,12 @@ void
 wl_down(wl_info_t *wl)
 {
 	wl_if_t *wlif;
-	uint callbacks, ret_val;
+	uint callbacks, ret_val = 0;
 
 	WL_TRACE(("wl%d: wl_down\n", wl->pub->unit));
 
 	for (wlif = wl->if_list; wlif != NULL; wlif = wlif->next) {
+		WL_INFORM(("%s: stop interfaces\n", __FUNCTION__));
 		netif_down(wlif->dev);
 		netif_stop_queue(wlif->dev);
 	}
@@ -1117,9 +1039,10 @@ wl_ethtool(wl_info_t *wl, void *uaddr, wl_if_t *wlif)
 	struct ethtool_drvinfo info;
 	struct ethtool_value edata;
 	uint32 cmd;
-	uint32 toe_cmpnt, csum_dir;
+	uint32 toe_cmpnt = 0, csum_dir;
 	int ret;
 
+	WL_TRACE(("wl%d: %s\n", wl->pub->unit, __FUNCTION__));
 	if (copy_from_user(&cmd, uaddr, sizeof(uint32)))
 		return (-EFAULT);
 
@@ -1271,25 +1194,28 @@ done2:
 static struct net_device_stats*
 wl_get_stats(struct net_device *dev)
 {
-	struct net_device_stats *stats = NULL, *stats_watchdog = NULL;
+	struct net_device_stats *stats_watchdog = NULL;
+	struct net_device_stats *stats = NULL;
 	wl_info_t *wl;
 
 	if (!dev)
 		return NULL;
 
-	wl = WL_INFO(dev);
+	if ((wl = WL_INFO(dev)) == NULL)
+		return NULL;
 
 	if (!(wl->pub))
 		return NULL;
 
 	WL_TRACE(("wl%d: wl_get_stats\n", wl->pub->unit));
 
-	stats = &wl->stats;
+	if ((stats = &wl->stats) == NULL)
+		return NULL;
+
 	ASSERT(wl->stats_id < 2);
 	stats_watchdog = &wl->stats_watchdog[wl->stats_id];
 
 	memcpy(stats, stats_watchdog, sizeof(struct net_device_stats));
-
 	return (stats);
 }
 
@@ -1297,10 +1223,11 @@ wl_get_stats(struct net_device *dev)
 struct iw_statistics *
 wl_get_wireless_stats(struct net_device *dev)
 {
-	int res;
+	int res = 0;
 	wl_info_t *wl;
 	wl_if_t *wlif;
-	struct iw_statistics *wstats = NULL, *wstats_watchdog = NULL;
+	struct iw_statistics *wstats = NULL;
+	struct iw_statistics *wstats_watchdog = NULL;
 	int phy_noise, rssi;
 
 	if (!dev)
@@ -1330,8 +1257,12 @@ wl_get_wireless_stats(struct net_device *dev)
 		rssi = 0;
 	else {
 		scb_val_t scb;
-		if ((res = wlc_ioctl(wl->wlc, WLC_GET_RSSI, &scb, sizeof(scb), wlif->wlcif)))
+		res = wlc_ioctl(wl->wlc, WLC_GET_RSSI, &scb, sizeof(scb), wlif->wlcif);
+		if (res) {
+			WL_ERROR(("wl%d: %s: WLC_GET_RSSI failed (%d)\n",
+				wl->pub->unit, __FUNCTION__, res));
 			return NULL;
+		}
 		rssi = scb.val;
 	}
 
@@ -1357,13 +1288,13 @@ wl_get_wireless_stats(struct net_device *dev)
 #endif 
 
 	return wstats;
-
 }
 #endif 
 
 static int
 wl_set_mac_address(struct net_device *dev, void *addr)
 {
+	int err = 0;
 	wl_info_t *wl;
 	struct sockaddr *sa = (struct sockaddr *) addr;
 
@@ -1377,14 +1308,13 @@ wl_set_mac_address(struct net_device *dev, void *addr)
 	WL_LOCK(wl);
 
 	bcopy(sa->sa_data, dev->dev_addr, ETHER_ADDR_LEN);
-	if (wlc_iovar_op(wl->wlc, "cur_etheraddr", NULL, 0, sa->sa_data, ETHER_ADDR_LEN,
-		IOV_SET, (WL_DEV_IF(dev))->wlcif))
+	err = wlc_iovar_op(wl->wlc, "cur_etheraddr", NULL, 0, sa->sa_data, ETHER_ADDR_LEN,
+		IOV_SET, (WL_DEV_IF(dev))->wlcif);
+	WL_UNLOCK(wl);
+	if (err)
 		WL_ERROR(("wl%d: wl_set_mac_address: error setting MAC addr override\n",
 			wl->pub->unit));
-
-	WL_UNLOCK(wl);
-
-	return 0;
+	return err;
 }
 
 static void
@@ -1402,7 +1332,6 @@ _wl_set_multicast_list(struct net_device *dev)
 
 	if (!dev)
 		return;
-
 	wl = WL_INFO(dev);
 
 	WL_TRACE(("wl%d: wl_set_multicast_list\n", wl->pub->unit));
@@ -1517,7 +1446,6 @@ wl_sendup(wl_info_t *wl, wl_if_t *wlif, void *p, int numpkt)
 	}
 
 	skb->protocol = eth_type_trans(skb, skb->dev);
-
 	if (!ISALIGNED((uintptr)skb->data, 4)) {
 		WL_ERROR(("Unaligned assert. skb %p. skb->data %p.\n", skb, skb->data));
 		if (wlif) {
@@ -1543,7 +1471,7 @@ wl_dump_ver(wl_info_t *wl, struct bcmstrbuf *b)
 		__DATE__, __TIME__, EPI_VERSION_STR);
 }
 
-#ifdef BCMDBG
+#if defined(BCMDBG)
 static int
 wl_dump(wl_info_t *wl, struct bcmstrbuf *b)
 {
@@ -1577,13 +1505,13 @@ wl_dump(wl_info_t *wl, struct bcmstrbuf *b)
 static void
 wl_link_up(wl_info_t *wl)
 {
-	WL_ERROR(("wl%d: link up\n", wl->pub->unit));
+	WL_ERROR(("wl%d: %s: link up\n", wl->pub->unit, __FUNCTION__));
 }
 
 static void
 wl_link_down(wl_info_t *wl)
 {
-	WL_ERROR(("wl%d: link down\n", wl->pub->unit));
+	WL_ERROR(("wl%d: %s: link down\n", wl->pub->unit, __FUNCTION__));
 }
 
 void

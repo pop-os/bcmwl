@@ -1,9 +1,9 @@
-Author: Fatih Aşıcı <fatih@pardus.org.tr>
+Author: Alexander Feldman <alex@llama.gs>
 Description: Patch to compile with kernel 2.6.29.
 
 diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_iw.c broadcom-sta/amd64/src/wl/sys/wl_iw.c
---- broadcom-sta.orig/amd64/src/wl/sys/wl_iw.c	2009-02-09 22:43:18.000000000 +0100
-+++ broadcom-sta/amd64/src/wl/sys/wl_iw.c	2009-04-06 00:39:25.000000000 +0200
+--- broadcom-sta.orig/amd64/src/wl/sys/wl_iw.c	2009-05-03 09:16:11.000000000 +0000
++++ broadcom-sta/amd64/src/wl/sys/wl_iw.c	2009-05-17 14:45:59.000000000 +0000
 @@ -610,7 +610,11 @@ wl_iw_set_spy(
  	char *extra
  )
@@ -28,7 +28,7 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_iw.c broadcom-sta/amd64/src/wl
  	struct sockaddr *addr = (struct sockaddr *) extra;
  	struct iw_quality *qual = (struct iw_quality *) &addr[iw->spy_num];
  	int i;
-@@ -1111,7 +1119,11 @@ wl_iw_set_nick(
+@@ -1110,7 +1118,11 @@ wl_iw_set_nick(
  	char *extra
  )
  {
@@ -40,7 +40,7 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_iw.c broadcom-sta/amd64/src/wl
  
  	WL_TRACE(("%s: SIOCSIWNICKN\n", dev->name));
  
-@@ -1135,7 +1147,11 @@ wl_iw_get_nick(
+@@ -1134,7 +1146,11 @@ wl_iw_get_nick(
  	char *extra
  )
  {
@@ -52,7 +52,7 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_iw.c broadcom-sta/amd64/src/wl
  
  	WL_TRACE(("%s: SIOCGIWNICKN\n", dev->name));
  
-@@ -1795,7 +1811,11 @@ wl_iw_set_wpaauth(
+@@ -1790,7 +1806,11 @@ wl_iw_set_wpaauth(
  	int paramid;
  	int paramval;
  	int val = 0;
@@ -64,7 +64,7 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_iw.c broadcom-sta/amd64/src/wl
  
  	WL_TRACE(("%s: SIOCSIWAUTH\n", dev->name));
  
-@@ -1926,7 +1946,11 @@ wl_iw_get_wpaauth(
+@@ -1921,7 +1941,11 @@ wl_iw_get_wpaauth(
  	int paramid;
  	int paramval = 0;
  	int val;
@@ -77,8 +77,8 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_iw.c broadcom-sta/amd64/src/wl
  	WL_TRACE(("%s: SIOCGIWAUTH\n", dev->name));
  
 diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c broadcom-sta/amd64/src/wl/sys/wl_linux.c
---- broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c	2009-02-09 22:43:32.000000000 +0100
-+++ broadcom-sta/amd64/src/wl/sys/wl_linux.c	2009-04-06 00:39:25.000000000 +0200
+--- broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c	2009-05-03 09:16:11.000000000 +0000
++++ broadcom-sta/amd64/src/wl/sys/wl_linux.c	2009-05-17 14:45:59.000000000 +0000
 @@ -53,6 +53,9 @@
  #include <linux/pci_ids.h>
  #define WLC_MAXBSSCFG		1	
@@ -89,21 +89,9 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c broadcom-sta/amd64/src
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
  #include <net/ieee80211.h>
  #endif
-@@ -149,7 +152,11 @@ struct wl_info {
- 	bool		resched;	
- 	uint32		pci_psstate[16];	
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-+	struct lib80211_crypto_ops *tkipmodops;
-+#else
- 	struct ieee80211_crypto_ops *tkipmodops;	
-+#endif
- 	struct ieee80211_tkip_data  *tkip_ucast_data;
- 	struct ieee80211_tkip_data  *tkip_bcast_data;
- #endif
-@@ -201,7 +208,11 @@ struct ieee80211_tkip_data {
- 
- static int wl_found = 0;
+@@ -130,7 +133,11 @@ struct ieee80211_tkip_data {
+ 	u8 rx_hdr[16], tx_hdr[16];
+ };
  
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 +#define	WL_DEV_IF(dev)		((wl_if_t*)netdev_priv(dev))
@@ -112,8 +100,8 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c broadcom-sta/amd64/src
 +#endif
  #define	WL_INFO(dev)		((wl_info_t*)(WL_DEV_IF(dev)->wl))	
  
- #define WL_LOCK(wl)	spin_lock_bh(&(wl)->lock)
-@@ -363,6 +374,9 @@ wl_attach(uint16 vendor, uint16 device, 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+@@ -282,6 +289,9 @@ wl_attach(uint16 vendor, uint16 device, 
  	dev = wlif->dev;
  	wl->dev = dev;
  	wl_if_setup(dev);
@@ -123,7 +111,7 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c broadcom-sta/amd64/src
  
  	dev->base_addr = regs;
  
-@@ -436,10 +450,19 @@ wl_attach(uint16 vendor, uint16 device, 
+@@ -359,10 +369,20 @@ wl_attach(uint16 vendor, uint16 device, 
  
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
  
@@ -135,6 +123,7 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c broadcom-sta/amd64/src
  	if (wl->tkipmodops == NULL) {
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 +		request_module("lib80211");
++		request_module("lib80211_crypt_tkip");
 +		wl->tkipmodops = lib80211_get_crypto_ops("TKIP");
 +#else
  		request_module("ieee80211_crypt_tkip");
@@ -143,7 +132,7 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c broadcom-sta/amd64/src
  	}
  #endif 
  #ifdef CONFIG_WIRELESS_EXT
-@@ -744,7 +767,11 @@ wl_free(wl_info_t *wl)
+@@ -666,7 +686,11 @@ wl_free(wl_info_t *wl)
  	}
  
  	if (wl->monitor) {
@@ -155,17 +144,19 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c broadcom-sta/amd64/src
  		wl->monitor = NULL;
  	}
  
-@@ -913,6 +940,9 @@ wl_alloc_if(wl_info_t *wl, int iftype, u
+@@ -833,7 +857,10 @@ wl_alloc_if(wl_info_t *wl, int iftype, u
+ 	strncpy(dev->name, name, IFNAMSIZ);
  #else
  
- 	dev = alloc_netdev(0, name, ether_setup);
+-	dev = alloc_netdev(0, name, ether_setup);
++	dev = alloc_netdev(sizeof(wl_if_t), name, ether_setup);
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 +	wlif = netdev_priv(dev);
 +#endif
  	if (!dev) {
  		MFREE(wl->osh, wlif, sizeof(wl_if_t));
  		WL_ERROR(("wl%d: wl_alloc_if: out of memory, alloc_netdev\n",
-@@ -926,7 +956,9 @@ wl_alloc_if(wl_info_t *wl, int iftype, u
+@@ -847,7 +874,9 @@ wl_alloc_if(wl_info_t *wl, int iftype, u
  	wlif->wl = wl;
  	wlif->wlcif = wlcif;
  	wlif->subunit = subunit;
@@ -175,9 +166,29 @@ diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c broadcom-sta/amd64/src
  
  	if (iftype != WL_IFTYPE_MON && wl->dev && netif_queue_stopped(wl->dev))
  		netif_stop_queue(dev);
+diff -Naurp broadcom-sta.orig/amd64/src/wl/sys/wl_linux.h broadcom-sta/amd64/src/wl/sys/wl_linux.h
+--- broadcom-sta.orig/amd64/src/wl/sys/wl_linux.h	2009-05-03 09:16:11.000000000 +0000
++++ broadcom-sta/amd64/src/wl/sys/wl_linux.h	2009-05-17 14:45:59.000000000 +0000
+@@ -85,10 +85,16 @@ struct wl_info {
+ 	bool		resched;	
+ 	uint32		pci_psstate[16];	
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
++	struct lib80211_crypto_ops *tkipmodops;
++	struct lib80211_tkip_data  *tkip_ucast_data;
++	struct lib80211_tkip_data  *tkip_bcast_data;
++#else
+ 	struct ieee80211_crypto_ops *tkipmodops;	
+ 	struct ieee80211_tkip_data  *tkip_ucast_data;
+ 	struct ieee80211_tkip_data  *tkip_bcast_data;
+ #endif
++#endif
+ 
+ 	uint	stats_id;		
+ 
 diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_iw.c broadcom-sta/i386/src/wl/sys/wl_iw.c
---- broadcom-sta.orig/i386/src/wl/sys/wl_iw.c	2009-02-09 22:43:18.000000000 +0100
-+++ broadcom-sta/i386/src/wl/sys/wl_iw.c	2009-04-06 00:39:35.000000000 +0200
+--- broadcom-sta.orig/i386/src/wl/sys/wl_iw.c	2009-05-03 09:16:11.000000000 +0000
++++ broadcom-sta/i386/src/wl/sys/wl_iw.c	2009-05-17 14:46:01.000000000 +0000
 @@ -610,7 +610,11 @@ wl_iw_set_spy(
  	char *extra
  )
@@ -202,7 +213,7 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_iw.c broadcom-sta/i386/src/wl/s
  	struct sockaddr *addr = (struct sockaddr *) extra;
  	struct iw_quality *qual = (struct iw_quality *) &addr[iw->spy_num];
  	int i;
-@@ -1111,7 +1119,11 @@ wl_iw_set_nick(
+@@ -1110,7 +1118,11 @@ wl_iw_set_nick(
  	char *extra
  )
  {
@@ -214,7 +225,7 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_iw.c broadcom-sta/i386/src/wl/s
  
  	WL_TRACE(("%s: SIOCSIWNICKN\n", dev->name));
  
-@@ -1135,7 +1147,11 @@ wl_iw_get_nick(
+@@ -1134,7 +1146,11 @@ wl_iw_get_nick(
  	char *extra
  )
  {
@@ -226,7 +237,7 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_iw.c broadcom-sta/i386/src/wl/s
  
  	WL_TRACE(("%s: SIOCGIWNICKN\n", dev->name));
  
-@@ -1795,7 +1811,11 @@ wl_iw_set_wpaauth(
+@@ -1790,7 +1806,11 @@ wl_iw_set_wpaauth(
  	int paramid;
  	int paramval;
  	int val = 0;
@@ -238,7 +249,7 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_iw.c broadcom-sta/i386/src/wl/s
  
  	WL_TRACE(("%s: SIOCSIWAUTH\n", dev->name));
  
-@@ -1926,7 +1946,11 @@ wl_iw_get_wpaauth(
+@@ -1921,7 +1941,11 @@ wl_iw_get_wpaauth(
  	int paramid;
  	int paramval = 0;
  	int val;
@@ -251,8 +262,8 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_iw.c broadcom-sta/i386/src/wl/s
  	WL_TRACE(("%s: SIOCGIWAUTH\n", dev->name));
  
 diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.c broadcom-sta/i386/src/wl/sys/wl_linux.c
---- broadcom-sta.orig/i386/src/wl/sys/wl_linux.c	2009-02-09 22:43:32.000000000 +0100
-+++ broadcom-sta/i386/src/wl/sys/wl_linux.c	2009-04-06 00:39:35.000000000 +0200
+--- broadcom-sta.orig/i386/src/wl/sys/wl_linux.c	2009-05-03 09:16:11.000000000 +0000
++++ broadcom-sta/i386/src/wl/sys/wl_linux.c	2009-05-17 14:46:01.000000000 +0000
 @@ -53,6 +53,9 @@
  #include <linux/pci_ids.h>
  #define WLC_MAXBSSCFG		1	
@@ -263,21 +274,9 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.c broadcom-sta/i386/src/w
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
  #include <net/ieee80211.h>
  #endif
-@@ -149,7 +152,11 @@ struct wl_info {
- 	bool		resched;	
- 	uint32		pci_psstate[16];	
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-+	struct lib80211_crypto_ops *tkipmodops;
-+#else
- 	struct ieee80211_crypto_ops *tkipmodops;	
-+#endif
- 	struct ieee80211_tkip_data  *tkip_ucast_data;
- 	struct ieee80211_tkip_data  *tkip_bcast_data;
- #endif
-@@ -201,7 +208,11 @@ struct ieee80211_tkip_data {
- 
- static int wl_found = 0;
+@@ -130,7 +133,11 @@ struct ieee80211_tkip_data {
+ 	u8 rx_hdr[16], tx_hdr[16];
+ };
  
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 +#define	WL_DEV_IF(dev)		((wl_if_t*)netdev_priv(dev))
@@ -286,8 +285,8 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.c broadcom-sta/i386/src/w
 +#endif
  #define	WL_INFO(dev)		((wl_info_t*)(WL_DEV_IF(dev)->wl))	
  
- #define WL_LOCK(wl)	spin_lock_bh(&(wl)->lock)
-@@ -363,6 +374,9 @@ wl_attach(uint16 vendor, uint16 device, 
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+@@ -282,6 +289,9 @@ wl_attach(uint16 vendor, uint16 device, 
  	dev = wlif->dev;
  	wl->dev = dev;
  	wl_if_setup(dev);
@@ -297,7 +296,7 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.c broadcom-sta/i386/src/w
  
  	dev->base_addr = regs;
  
-@@ -436,10 +450,19 @@ wl_attach(uint16 vendor, uint16 device, 
+@@ -359,10 +369,20 @@ wl_attach(uint16 vendor, uint16 device, 
  
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
  
@@ -309,6 +308,7 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.c broadcom-sta/i386/src/w
  	if (wl->tkipmodops == NULL) {
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 +		request_module("lib80211");
++		request_module("lib80211_crypt_tkip");
 +		wl->tkipmodops = lib80211_get_crypto_ops("TKIP");
 +#else
  		request_module("ieee80211_crypt_tkip");
@@ -317,7 +317,7 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.c broadcom-sta/i386/src/w
  	}
  #endif 
  #ifdef CONFIG_WIRELESS_EXT
-@@ -744,7 +767,11 @@ wl_free(wl_info_t *wl)
+@@ -666,7 +686,11 @@ wl_free(wl_info_t *wl)
  	}
  
  	if (wl->monitor) {
@@ -329,17 +329,19 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.c broadcom-sta/i386/src/w
  		wl->monitor = NULL;
  	}
  
-@@ -913,6 +940,9 @@ wl_alloc_if(wl_info_t *wl, int iftype, u
+@@ -833,7 +857,10 @@ wl_alloc_if(wl_info_t *wl, int iftype, u
+ 	strncpy(dev->name, name, IFNAMSIZ);
  #else
  
- 	dev = alloc_netdev(0, name, ether_setup);
+-	dev = alloc_netdev(0, name, ether_setup);
++	dev = alloc_netdev(sizeof(wl_if_t), name, ether_setup);
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 +	wlif = netdev_priv(dev);
 +#endif
  	if (!dev) {
  		MFREE(wl->osh, wlif, sizeof(wl_if_t));
  		WL_ERROR(("wl%d: wl_alloc_if: out of memory, alloc_netdev\n",
-@@ -926,7 +956,9 @@ wl_alloc_if(wl_info_t *wl, int iftype, u
+@@ -847,7 +874,9 @@ wl_alloc_if(wl_info_t *wl, int iftype, u
  	wlif->wl = wl;
  	wlif->wlcif = wlcif;
  	wlif->subunit = subunit;
@@ -349,3 +351,23 @@ diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.c broadcom-sta/i386/src/w
  
  	if (iftype != WL_IFTYPE_MON && wl->dev && netif_queue_stopped(wl->dev))
  		netif_stop_queue(dev);
+diff -Naurp broadcom-sta.orig/i386/src/wl/sys/wl_linux.h broadcom-sta/i386/src/wl/sys/wl_linux.h
+--- broadcom-sta.orig/i386/src/wl/sys/wl_linux.h	2009-05-03 09:16:11.000000000 +0000
++++ broadcom-sta/i386/src/wl/sys/wl_linux.h	2009-05-17 14:46:01.000000000 +0000
+@@ -85,10 +85,16 @@ struct wl_info {
+ 	bool		resched;	
+ 	uint32		pci_psstate[16];	
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
++	struct lib80211_crypto_ops *tkipmodops;
++	struct lib80211_tkip_data  *tkip_ucast_data;
++	struct lib80211_tkip_data  *tkip_bcast_data;
++#else
+ 	struct ieee80211_crypto_ops *tkipmodops;	
+ 	struct ieee80211_tkip_data  *tkip_ucast_data;
+ 	struct ieee80211_tkip_data  *tkip_bcast_data;
+ #endif
++#endif
+ 
+ 	uint	stats_id;		
+ 

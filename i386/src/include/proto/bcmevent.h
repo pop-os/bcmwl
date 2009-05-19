@@ -24,7 +24,7 @@
  *
  * Dependencies: proto/bcmeth.h
  *
- * $Id: bcmevent.h,v 9.35.2.4 2008/11/14 01:16:15 Exp $
+ * $Id: bcmevent.h,v 9.35.2.5 2009/03/04 00:30:40 Exp $
  *
  */
 
@@ -179,6 +179,11 @@ typedef struct bcm_event {
 #define WLC_E_SUP_GTK_DECRYPT_FAIL	12	
 #define WLC_E_SUP_SEND_FAIL			13	
 #define WLC_E_SUP_DEAUTH			14	
+
+#define WLC_E_LINK_BCN_LOSS	1	
+#define WLC_E_LINK_DISASSOC	2	
+#define WLC_E_LINK_ASSOC_REC	3	
+#define WLC_E_LINK_BSSCFG_DIS	4	
 
 #undef PACKED
 #if !defined(__GNUC__)
