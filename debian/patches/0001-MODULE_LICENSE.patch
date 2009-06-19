@@ -1,7 +1,6 @@
-diff --git a/src/src/wl/sys/wl_linux.c b/src/src/wl/sys/wl_linux.c
 index 0f81236..c9968df 100644
---- a/src/src/wl/sys/wl_linux.c
-+++ b/src/src/wl/sys/wl_linux.c
+--- src/src/wl/sys/wl_linux.c.orig
++++ src/src/wl/sys/wl_linux.c
 @@ -163,6 +163,8 @@ struct wl_if *wl_alloc_if(wl_info_t *wl, int iftype, uint unit, struct wlc_if* w
  static void wl_free_if(wl_info_t *wl, wl_if_t *wlif);
  static void wl_get_driver_info(struct net_device *dev, struct ethtool_drvinfo *info);

@@ -1,7 +1,6 @@
-diff --git a/src/src/wl/sys/wl_iw.c b/src/src/wl/sys/wl_iw.c
 index d7aba83..8aa5df8 100644
---- a/src/src/wl/sys/wl_iw.c
-+++ b/src/src/wl/sys/wl_iw.c
+--- src/src/wl/sys/wl_iw.c.orig
++++ src/src/wl/sys/wl_iw.c
 @@ -58,6 +58,12 @@ extern bool wl_iw_conn_status_str(uint32 event_type, uint32 status,
  #define htodchanspec(i) i
  #define dtohchanspec(i) i
@@ -69,10 +68,9 @@ index d7aba83..8aa5df8 100644
  
  	WL_TRACE(("%s: SIOCGIWAUTH\n", dev->name));
  
-diff --git a/src/src/wl/sys/wl_linux.c b/src/src/wl/sys/wl_linux.c
 index 0f81236..a8e237a 100644
---- a/src/src/wl/sys/wl_linux.c
-+++ b/src/src/wl/sys/wl_linux.c
+--- src/src/wl/sys/wl_linux.c.orig
++++ src/src/wl/sys/wl_linux.c
 @@ -53,7 +53,9 @@
  #include <linux/pci_ids.h>
  #define WLC_MAXBSSCFG		1	
@@ -204,10 +202,9 @@ index 0f81236..a8e237a 100644
  }
  
  char *
-diff --git a/src/src/wl/sys/wl_linux.h b/src/src/wl/sys/wl_linux.h
 index 0251e5e..a97efbe 100644
---- a/src/src/wl/sys/wl_linux.h
-+++ b/src/src/wl/sys/wl_linux.h
+--- src/src/wl/sys/wl_linux.h.orig
++++ src/src/wl/sys/wl_linux.h
 @@ -84,7 +84,11 @@ struct wl_info {
  	struct net_device *monitor;	
  	bool		resched;	

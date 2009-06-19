@@ -1,13 +1,22 @@
 Source: bcmwl
 Section: admin
 Priority: optional
-Maintainer: Tim Gardner <tim.gardner@canonical.com>
-Standards-Version: 3.2.0.0
-Build-Depends: debhelper
-Vcs-git: http://kernel.ubuntu.com/git-repos/rtg/bcm-wl-dkms
+Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Alberto Milone <alberto.milone@canonical.com>
+Standards-Version: 3.8.0
+Build-Depends: debhelper (>= 5), cdbs
+Vcs-Bzr: https://code.launchpad.net/~broadcom-sta-hackers/broadcom-sta/ubuntu
 
 Package: bcmwl-kernel-source
-Architecture: all
-Depends: dkms, linux-libc-dev, libc6-dev
-Description: Broadcom bcm43xx wireless driver source
- http://www.broadcom.com/support/802.11/linux_sta.php
+Architecture: i386 amd64 lpia
+Depends: ${misc:Depends}, dkms, linux-libc-dev, libc6-dev, linux-headers-generic [i386 amd64], linux-headers-lpia [lpia]
+Description: Broadcom 802.11 Linux STA wireless driver source
+ These package contains Broadcom 802.11 Linux STA wireless driver
+ for use with Broadcom's BCM4311-, BCM4312-, BCM4321-, and
+ BCM4322-based hardware.
+
+Package: bcmwl-modaliases
+Architecture: i386 amd64 lpia
+Description: Modaliases for the Broadcom 802.11 Linux STA driver
+ The modaliases provide a list of pci id's which makes it possible to
+ detect the model of a wireless card.

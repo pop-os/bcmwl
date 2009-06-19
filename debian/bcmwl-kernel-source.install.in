@@ -1,0 +1,5 @@
+src/*				usr/src/bcmwl-#VERSION#
+Makefile			usr/src/bcmwl-#VERSION#
+debian/dkms.conf	usr/src/bcmwl-#VERSION#
+debian/patches/*	usr/src/bcmwl-#VERSION#/patches
+

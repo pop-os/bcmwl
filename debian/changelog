@@ -1,3 +1,51 @@
+bcmwl (5.10.91.9+bdcom-0ubuntu1) karmic; urgency=low
+
+  * debian/control:
+    - Add misc:Depends.
+    - Update Standards-Version.
+    - Depend on linux-headers-generic for i386 and amd64
+      and on linux-headers-lpia for lpia.
+    - Limit architectures to i386 amd64 and lpia.
+    - Set Vcs-Bzr.
+    - Add new package bcmwl-modaliases.
+    - Change maintainer to Ubuntu Core Devs and set
+      original maintainer to myself.
+  * debian/copyright:
+    - Add license from the binary library.
+  * debian/rules
+    - Switch to CDBS.
+    - Do not apply any patches.
+    - Automatically generate debian/dkms.conf and
+      debian/bcmwl-kernel-source.install.
+    - Call debian/bcmwl_supported to install
+      modalias file in /usr/share/jockey/modaliases (LP: #381682)
+  * src/patches:
+    - Move patches directory to debian/patches.
+  * debian/patches/0002-Makefile.patch:
+    - Replace dpkg-architecture with dpkg --print-architecture
+      so as not to depend on dpkg-dev.
+  * debian/dkms.conf.in:
+    - Handle patches here so that different patches 
+      can be applied to different kernel versions.
+  * Separate source from debian/.
+  * debian/bcmwl-kernel-source.postinst:
+    - Cover the use case of buildd machines and build the
+      module for the right kernel on 1st installation.
+    - Create a blacklist file containing b43, b43legacy, ssb
+      bcm43xx and add workaround for b44 so that it is loaded
+      after wl (provided that b44 is used).
+    - Update initramfs.
+  * debian/bcmwl-kernel-source.postrm:
+    - Remove blacklist file.
+    - Update initramfs.
+  * debian/patches:
+    - Add 0004-broadcom-sta-5.10.91.9-linux-2.6.30.patch.
+  * debian/dkms.conf.in:
+    - Make sure that patch 0004 is applied only to
+      2.6.30 kernels.
+ 
+ -- Alberto Milone <alberto.milone@canonical.com>  Fri, 19 Jun 2009 13:12:39 +0200
+
 bcmwl (5.10.91.9-3) karmic; urgency=low
 
   * Fixed build errors with 2.6.30

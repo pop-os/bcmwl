@@ -1,12 +1,11 @@
-diff --git a/src/Makefile b/src/Makefile
 index 2ef91b1..6d821a0 100644
---- a/src/Makefile
-+++ b/src/Makefile
+--- src/Makefile.orig
++++ src/Makefile
 @@ -26,6 +26,12 @@
  #
  # $Id: Makefile_kbuild_portsrc,v 1.1.2.4 2008/05/02 18:33:39 Exp $
  
-+ifeq ($(shell dpkg-architecture -qDEB_HOST_ARCH),amd64)
++ifeq ($(shell dpkg --print-architecture),amd64)
 +BINARCH = x86_64
 +else
 +BINARCH = i386
