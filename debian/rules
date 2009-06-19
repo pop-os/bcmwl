@@ -21,6 +21,7 @@ configure/$(PKG_kernel_src)::
 		$(PKG_kernel_src).install \
 		$(PKG_modaliases).install; do \
 		sed -e "s|#VERSION#|$(VERSION)|"   \
+			-e "s|#ARCH#|$(ARCH_SUFFIX)|"   \
 			debian/$$i.in > debian/$$i;      \
 	done
 	# Generate the modaliases
