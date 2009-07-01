@@ -11,5 +11,6 @@ PATCH[2]="0003-DEV_WL_IF.patch"
 PATCH_MATCH[2]="^2.6.2[9]"
 PATCH[3]="0004-broadcom-sta-5.10.91.9-linux-2.6.30.patch"
 PATCH_MATCH[3]="^2.6.[30]"
+PATCH[4]="0005-NET_DEVICE_OPS.patch"
 
 AUTOINSTALL="yes"
