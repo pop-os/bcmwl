@@ -47,7 +47,7 @@ unchanged:
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
 +#define DO_IOCTL(dev) dev->netdev_ops->ndo_do_ioctl
 +#else
-+#define DO_IOCTL(dev) dev->net_do_ioctl
++#define DO_IOCTL(dev) dev->do_ioctl
 +#endif
 +
  static void swap_key_from_BE(
