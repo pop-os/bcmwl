@@ -1,3 +1,17 @@
+broadcom-sta (5.10.91.9-3) unstable; urgency=low
+
+  * Actually updating the maintainers field.
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 27 Aug 2009 10:53:07 +0200
+
+broadcom-sta (5.10.91.9-2) unstable; urgency=low
+
+  * Updating package to standards version 3.8.3.
+  * Removing vcs fields.
+  * Orphaning package.
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 27 Aug 2009 10:38:01 +0200
+
 broadcom-sta (5.10.91.9-1) unstable; urgency=low
 
   * Merging upstream version 5.10.91.9.

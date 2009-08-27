@@ -1,12 +1,10 @@
 Source: broadcom-sta
 Section: non-free/admin
 Priority: optional
-Maintainer: Daniel Baumann <daniel@debian.org>
+Maintainer: Debian QA Group <packages@qa.debian.org>
 Build-Depends: debhelper (>= 7), quilt
-Standards-Version: 3.8.1
+Standards-Version: 3.8.3
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
-Vcs-Browser: http://git.debian.net/?p=debian/broadcom-sta.git
-Vcs-Git: git://git.debian.net/git/debian/broadcom-sta.git
 
 Package: broadcom-sta-modules-_KVERS_
 Architecture: any
