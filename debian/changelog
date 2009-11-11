@@ -1,3 +1,15 @@
+broadcom-sta (5.10.91.9.3-1) unstable; urgency=low
+
+  * New maintainer (Closes: #543888).
+  * New upstream release (Closes: #547373, #551364).
+  * Compile with 2.6.31.
+  * Removed applyed upstream patches.
+  * Refreshed 01-license.patch file.
+  * Fixed dh_installdeb called twice.
+  * Added README.source file referring to /usr/share/doc/quilt/README.source
+
+ -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Wed, 11 Nov 2009 14:12:55 +0400
+
 broadcom-sta (5.10.91.9-3) unstable; urgency=low
 
   * Actually updating the maintainers field.

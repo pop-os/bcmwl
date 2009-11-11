@@ -1,9 +1,0 @@
-0000000000000000000000000000000000000000 709ee3f9205ce8d757b3b03ed705198467cbee7a Daniel Baumann <daniel@debian.org> 1238977584 +0200	clone: from gitosis@git.undebian.org:debian/broadcom-sta.git
-709ee3f9205ce8d757b3b03ed705198467cbee7a ca4d93fcb96bda573b1b1ba478cb468bfc6ad052 Daniel Baumann <daniel@debian.org> 1238977585 +0200	checkout: moving from debian to pristine-tar
-ca4d93fcb96bda573b1b1ba478cb468bfc6ad052 6818f84986ee3633eeb6809b29b5fd9d83885ffa Daniel Baumann <daniel@debian.org> 1238977585 +0200	checkout: moving from pristine-tar to upstream
-6818f84986ee3633eeb6809b29b5fd9d83885ffa 2d01ff10924ac9277bbb065cff7c62bb33df4f37 Daniel Baumann <daniel@debian.org> 1238977585 +0200	checkout: moving from upstream to debian-lenny-backports
-2d01ff10924ac9277bbb065cff7c62bb33df4f37 709ee3f9205ce8d757b3b03ed705198467cbee7a Daniel Baumann <daniel@debian.org> 1238977585 +0200	checkout: moving from debian-lenny-backports to debian
-709ee3f9205ce8d757b3b03ed705198467cbee7a 2d01ff10924ac9277bbb065cff7c62bb33df4f37 Daniel Baumann <daniel@debian.org> 1238977590 +0200	checkout: moving from debian to debian-lenny-backports
-2d01ff10924ac9277bbb065cff7c62bb33df4f37 709ee3f9205ce8d757b3b03ed705198467cbee7a Daniel Baumann <daniel@debian.org> 1238977839 +0200	checkout: moving from debian-lenny-backports to debian
-709ee3f9205ce8d757b3b03ed705198467cbee7a 6818f84986ee3633eeb6809b29b5fd9d83885ffa Daniel Baumann <daniel@debian.org> 1241341847 +0200	checkout: moving from debian to upstream
-6818f84986ee3633eeb6809b29b5fd9d83885ffa 2228edad6aa75d868ea884198a9e8d25e4aece84 Daniel Baumann <daniel@debian.org> 1241342118 +0200	commit: Adding upstream version 5.10.91.9.

@@ -1,91 +1,135 @@
-April 27, 2009
-Linux kernel space driver 5.10.91.9 GOLD
 
+September 10, 2009
+Linux kernel space hybrid driver 5.10.91.9.3 Gold
 
 DISCLAIMER
 ----------
 
-This is the OFFICIAL GOLD release of Broadcom's Linux kernel space hybrid driver for
-use with Broadcom BCM43224-based (device ID 4353) hardware.
-
+This is an Official Release of Broadcom's hybrid Linux driver for use with Broadcom
+based hardware.
 
 IMPORTANT NOTE AND DISCUSSION OF HYBRID DRIVER
 ----------------------------------------------
 
-There are different tar's for 32-bit and 64-bit x86 CPU architectures.  Make sure you use
-the appropriate tar, as the hybrid binary must be of the appropriate architectural type.
+There are different tar's for 32 bit and 64 bit x86 CPU architectures.  Make sure you use the
+appropriate tar, as the hybrid binary must be of the appropriate architectural type.
 
 Otherwise the hybrid binary is agnostic to the specific version of Linux kernel
 because it is designed to perform all interactions with the OS through OS specific
-files (wl_linux.c, wl_iw.c) and an OS abstraction layer file (osl_linux.c). 
-All of these interactions are done through functions which make the hybrid binary
-OS version independent.  All Linux OS specific code is provided in source form
-allowing re-targeting to different kernel versions and fixing OS related issues.
+files (wl_linux.c, wl_iw.c, osl_linux.c) that are shipped in source form. You compile 
+this source on your system and link with a precompiled .o file (wlc_hybrid.o_shipped) 
+which contains the rest of the driver.
+
+ABOUT THIS RELEASE
+-------------------
+This is a rollup release.  It includes and depracates all previous releases and
+patches.  At the time of release there are no existing applicable patches for this
+release from Broadcom.
 
 
 BUILD AND INSTALLATION INSTRUCTIONS
 -----------------------------------
 
-hybrid-portsrc-x86_32-v5_10_91_9.tar.gz
-hybrid-portsrc-x86_64-v5_10_91_9.tar.gz
+1. Setup the directory by untarring the proper tarball:
 
-On the target machine, setup the source/hybrid/build directory
+For 32 bit: 	hybrid-portsrc.tar.gz
+For 64 bit: 	hybrid-portsrc-x86_64.tar.gz
 
-1.  Create a new directory:                 mkdir hybrid_wl
-2.  Go to that directory:                   cd hybrid_wl
-3.  Untar the appropriate 32/64 bit file
-      to that directory
-        32 bit:                             tar -xzf <path>/hybrid-portsrc-x86_32-v5_10_91_9.tar.gz
-        64 bit:                             tar -xzf <path>/hybrid-portsrc-x86_64-v5_10_91_9.tar.gz
+# mkdir hybrid_wl
+# cd hybrid_wl
+# tar xzf <path>/hybrid-portsrc.tar or <path>/hybrid-portsrc-x86_64.tar.gz
 
-After untar'ing you should have a src and lib sub directory plus a Linux
-2.6 "kbuild" external makefile (Makefile).   The lib sub directory has the pre-built
-binary, wlc_hybrid.o_shipped.  
+2. Build the driver as a Linux loadable kernel module (LKM):
 
-You use the standard Linux 2.6 kernel build system as follows to make a Linux loadable
-kernel module (LKM):
+# make clean   (optional)
+# make
 
-On the target machine, and cd'ed to the directory that contains the Makefile (fragment)
+When the build completes, it will produce a wl.ko file in the top level
+directory.
 
-4.  Cleanup (optional):                  make -C /lib/modules/<2.6.xx.xx>/build M=`pwd` clean
-5.  Build the LKM, i.e. wl.ko:           make -C /lib/modules/<2.6.xx.xx>/build M=`pwd`
+3: Remove any other drivers for the Broadcom wireless.
 
-You should now have a LKM, wl.ko inside this directory.
+There are several open source drivers that are used to drive Broadcom 802.11
+chips such as b43 and ssb. If any of these are present they need to be removed before this 
+driver can be installed.  Any previous revisions of the wl driver also need to
+be removed.
 
-On this or a machine with the same kernel version, install the driver.
+# lsmod  | grep "b43\|ssb\|wl"
 
-1.  Validate you don't have loaded (or built into the kernel) the Linux community provided
-      driver for Broadcom hardware.  This exists in two forms: either "bcm43xx" or a split form
-      of "b43" plus "b43legacy".  If these modules were loaded you would either
-        a) rmmod bcm43xx or
-        b) rmmod b43; rmmod b43legacy
-1a. Validate you don't have a older wl.ko driver loaded from previous install.
-      If the module exist, remove it and replace with new driver:
-        a) rmmod wl.ko
-2.  Replacing existing driver with wl.ko just build in step 5 above.
-      (most likely path to find wl.ko is: /lib/modules/<kernel_version>/kernel/driver/net/wireless
-       or /lib/modules/<kernel_version>/kernel.net/update/)
-3.  depmod
-4.  modprobe wl
+If any of these are installed, remove them:
+# rmmod b43
+# rmmod ssb
+# rmmod wl
 
-Some kernels come with a pre-installed Broadcom driver that supports Broadcom's 43xx family of
-PCIE cards.  If the kernel supports one of those pre-installed driver, you must remove it in order
-to install the new driver.  Some of the existing drivers provided by the Linux community that support
-Broadcom hardware are b43/b43legacy/bcm43xx.  There is also a ssb driver that is loaded along with
-b43.  This ssb driver also must be removed.
+To blacklist these drivers and prevent them from loading in the future:
+# echo "blacklist ssb" >> /etc/modprobe.d/blacklist.conf
+# echo "blacklist b43" >> /etc/modprobe.d/blacklist.conf
 
-If the kernel supports blacklist, you can add those drivers to the blacklist file so that it will
-not be loaded on next reboot.
+4: Insmod the driver.
+
+If you were already running a previous version of wl, you'll want to provide a
+clean transition from the older driver. (The path to previous driver is usually
+/lib/modules/<kernel-version>/kernel/net/wireless)
+
+# rmmod wl 
+# mv <path-to-prev-driver>/wl.ko <path-to-prev-driver>/wl.ko.orig
+# cp wl.ko <path-to-prev-driver>/wl.ko
+# depmod
+# modprobe wl
+
+Otherwise, if you have not previously installed a wl driver do this:
+
+# modprobe lib80211
+# insmod wl.ko
+
+wl.ko is now operational.  It may take several seconds for the Network Manager
+to notice a new network driver has been installed and show the surrounding
+wireless networks.
+
+COMMON ISSUES/QUESTIONS
+-----------------------
+
+If there is a problem, usually some clues can be gleaned from the system log
+via the 'dmesg' command.
+
+Why aren't channels 12 & 13 supported?  The driver only supports the default
+locale setting wich is ROW (Rest Of World) which does not include channels 12 or 13.
+
+I see this output, is it harmful?  WARNING: modpost: missing MODULE_LICENSE()
+No it is not harmful and it is expected and should be ignored.
+
+Is my Brcm device with PCI Device ID XYZ Supported?  These PCI Device IDs are supported:
+
+	  Device ID	Product Name
+          ---------   	-------------
+          0x4311  	4311 2.4 Ghz
+          0x4312  	4311 Dualband
+          0x4313  	4311 5 Ghz
+          0x4315  	4312 2.4 Ghz
+          0x4328  	4321 Dualband
+          0x4329  	4321 2.4 Ghz
+          0x432a  	4321 5 Ghz
+          0x432b  	4322 Dualband
+          0x432c  	4322 2.4 Ghz
+          0x432d  	4322 5 Ghz
+          0x4353  	43224 Dualband
+          0x4357  	43225 2.4 Ghz
 
 
-ISSUES FIXED IN THIS RELEASE
-----------------------------
-#72138 - SLED11 / Ubuntu 8.04: 43224 fails to associate after 6 hours
+ISSUES FIXED AND WHAT'S NEW IN THIS RELEASE
+-------------------------------------------
++ Supports Linux kernel 2.6.29, 2.6.30.1, 2.6.31
++ Supports hidden networks
++ Supports rfkill in kernels <  2.6.31
 
 
 KNOWN ISSUES AND LIMITATIONS
 ----------------------------
 #72238 - 20% lower throughput on channels 149, 153, 157, and 161
 #72324 - Ubuntu 8.04: cannot ping when Linux STA is IBSS creator with WEP enabled
-#72216 - Ubuntu 8.04: standby/resume with WPA2 and wpa_supplicant causes a continuous assoc/disassoc loop
-         (issue with wpa_supplicant, restarting wpa_supplicant fixes the issue)
+#72216 - Ubuntu 8.04: standby/resume with WPA2 and wpa_supplicant causes a continuous 
+	assoc/disassoc loop (issue with wpa_supplicant, restarting wpa_supplicant fixes the issue)
+#76739 Ubuntu9.04: unable to connect to hidden network after stdby/resume
+#76793 Ubuntu9.04: STA fails to create IBSS network in 5 Ghz band
+#76814 Wireless option is Grayed out in Network Manager in FC-11-64bit
+
