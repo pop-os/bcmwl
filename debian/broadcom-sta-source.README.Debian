@@ -1,0 +1,24 @@
+broadcom-sta for Debian
+-----------------------
+
+Broadcom STA is a binary-only device driver to support the following IEEE
+802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4321-, and BCM4322.
+
+You also need the wireless-tools package to get the necessary user-space support
+programs.
+
+The Debian broadcom-sta-source package can be used in several ways,
+
+ * Using module-assistant(8) commands provided by the module-assistant Debian
+   package:
+
+        # module-assistant prepare broadcom-sta
+        # module-assistant auto-install broadcom-sta
+
+ * Using the make-kpkg(1) command provided by the kernel-package Debian
+   package. See the "modules_image" section of the make-kpkg(1) man page.
+
+ * Unpacking /usr/src/broadcom-sta-*.tar.bz2 and installing the module on your
+   own.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon,  6 Apr 2009 00:08:00 +0200

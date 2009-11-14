@@ -1,0 +1,47 @@
+broadcom-sta (5.10.91.9.3-1) unstable; urgency=low
+
+  * New upstream release.
+  * Compile with 2.6.31.
+  * Removed applyed upstream patches.
+  * Refreshed 01-license.patch file.
+  * Updated the maintainers field.
+  * Fixed dh_installdeb called twice.
+  * Added README.source file referring to /usr/share/doc/quilt/README.source
+
+ -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Wed, 11 Nov 2009 14:12:55 +0400
+
+broadcom-sta (5.10.91.9-3) unstable; urgency=low
+
+  * Actually updating the maintainers field.
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 27 Aug 2009 10:53:07 +0200
+
+broadcom-sta (5.10.91.9-2) unstable; urgency=low
+
+  * Updating package to standards version 3.8.3.
+  * Removing vcs fields.
+  * Orphaning package.
+
+ -- Daniel Baumann <daniel@debian.org>  Thu, 27 Aug 2009 10:38:01 +0200
+
+broadcom-sta (5.10.91.9-1) unstable; urgency=low
+
+  * Merging upstream version 5.10.91.9.
+  * Using correct rfc-2822 date formats in changelog.
+  * Correcting broadcom-sta-common package description.
+  * Adding patch from Chris Nolan <chris@cenolan.com> to allow the
+    driver to associate with hidden SSID networks using Network Manager.
+  * Adding patch to export module license symbol.
+  * Adding updated 2.6.29 patch from Alexander Feldman <alex@llama.gs>.
+  * Adding patch from Victor Ashirov <victor.ashirov@gmail.com> to
+    compile with 2.6.30.
+  * Removing wl-iw.patch, not required anymore.
+  * Removing disabled patches.
+
+ -- Daniel Baumann <daniel@debian.org>  Tue, 19 May 2009 13:13:00 +0200
+
+broadcom-sta (5.10.79.10-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Daniel Baumann <daniel@debian.org>  Mon, 06 Apr 2009 00:08:00 +0200
