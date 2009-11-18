@@ -1,3 +1,16 @@
+bcmwl (5.10.91.9+bdcom-0ubuntu5) lucid; urgency=low
+
+  [ Michael Casadevall ]
+  * debian/patches/0006-broadcom-sta-5.10.91.9-linux-2.6.32.patch:
+    - Fix the build for 2.6.32-HEAD (LP: #458757)
+
+  [ Alberto Milone ] 
+  * debian/dkms.conf.in:
+    - Make sure that Michael's patch is applied only for 2.6.32
+      kernels.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Wed, 18 Nov 2009 12:48:41 +0100
+
 bcmwl (5.10.91.9+bdcom-0ubuntu4) karmic; urgency=low
 
   * debian/patches/0005-NET_DEVICE_OPS.patch:
