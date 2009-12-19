@@ -1,0 +1,58 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: broadcom-sta@packages.debian.org\n"
+"POT-Creation-Date: 2009-12-19 15:21+0400\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: note
+#. Description
+#: ../broadcom-sta-source.templates:1001
+msgid "You should now use the free b43 driver"
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../broadcom-sta-source.templates:1001
+msgid ""
+"Since kernel 2.6.32, support have been added for low power consumption "
+"wireless network cards from Broadcom."
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../broadcom-sta-source.templates:1001
+msgid ""
+"In order to try it, please observe the following steps:\n"
+" - Install b43-fwcutter then fetch and extract firmwares\n"
+" - Shut down your wireless network card (eg. eth1)\n"
+" - Remove wl module with `modprobe -r wl`\n"
+" - Insert the b43 module with `modprobe b43`\n"
+" - Set up your wireless network card (eg. wlan0)"
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../broadcom-sta-source.templates:1001
+msgid ""
+"Important: the network card name is wlanX instead of ethX for intree module."
+msgstr ""
+
+#. Type: note
+#. Description
+#: ../broadcom-sta-source.templates:1001
+msgid ""
+"If the card is working, you should uninstall broadcom-sta-common and "
+"broadcom-sta-modules-KVER."
+msgstr ""
