@@ -115,7 +115,6 @@ binary-indep: install
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs
-	dh_installdebconf
 	dh_installdocs
 	dh_install
 	dh_installmodules

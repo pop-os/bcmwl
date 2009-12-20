@@ -1,8 +1,8 @@
 broadcom-sta (5.10.91.9.3-2) unstable; urgency=low
 
   * Added patch from Emilio Coppa <ercoppa@gmail.com> to compile with 2.6.32.
-  * Using debconf to inform the user that he should now use the free b43
-  driver (Closes: #542775).
+  * Added a note to README.Debian to inform the user that he should now use
+    the free b43 driver (Closes: #542775).
 
  -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Sat, 19 Dec 2009 11:48:47 +0400
 

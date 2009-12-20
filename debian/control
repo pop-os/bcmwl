@@ -21,7 +21,6 @@ Description: Common files for the Broadcom STA Wireless driver
 Package: broadcom-sta-source
 Architecture: all
 Depends: ${misc:Depends}, debhelper (>= 7), bzip2, make, quilt
-Pre-Depends: debconf (>= 0.5) | debconf-2.0
 Recommends: module-assistant
 Suggests: wireless-tools
 Description: Source for the Broadcom STA Wireless driver
