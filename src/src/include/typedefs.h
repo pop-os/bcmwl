@@ -1,26 +1,12 @@
 /*
- * Copyright 2008, Broadcom Corporation
+ * Copyright (C) 2010, Broadcom Corporation
  * All Rights Reserved.
  * 
- *  	Unless you and Broadcom execute a separate written software license
- * agreement governing use of this software, this software is licensed to you
- * under the terms of the GNU General Public License version 2, available at
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html (the "GPL"), with the
- * following added to such license:
- *      As a special exception, the copyright holders of this software give you
- * permission to link this software with independent modules, regardless of the
- * license terms of these independent modules, and to copy and distribute the
- * resulting executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the license
- * of that module. An independent module is a module which is not derived from
- * this software.
- *
  * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
  * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
- *
- * $Id: typedefs.h,v 1.85.32.8 2009/02/26 17:07:08 Exp $
+ * $Id: typedefs.h,v 1.96.28.1.8.1 2009/11/30 22:27:30 Exp $
  */
 
 #ifndef _TYPEDEFS_H_
@@ -45,6 +31,13 @@
 typedef unsigned long long int uintptr;
 #endif
 
+#if defined(TARGETOS_nucleus)
+
+#include <stddef.h>
+
+#define TYPEDEF_FLOAT_T
+#endif   
+
 #if defined(LINUX_PORT)
 #define TYPEDEF_UINT
 #define TYPEDEF_USHORT
@@ -62,6 +55,8 @@ typedef unsigned long long int uintptr;
 #define TYPEDEF_UINT64
 #endif
 
+#if !defined(__BOB__) && !defined(TARGETOS_nucleus)
+
 #if defined(__KERNEL__)
 
 #if defined(LINUX_PORT)
@@ -71,6 +66,8 @@ typedef unsigned long long int uintptr;
 #else
 
 #include <sys/types.h>
+
+#endif 
 
 #endif 
 
@@ -179,18 +176,24 @@ typedef float64 float_t;
 #define	PTRSZ	sizeof(char*)
 #endif
 
-#ifndef INLINE
-
 #if defined(__GNUC__)
-
-#define INLINE __inline__
-
+	#define BWL_COMPILER_GNU
+#elif defined(__CC_ARM) && __CC_ARM
+	#define BWL_COMPILER_ARMCC
 #else
-
-#define INLINE
-
+	#error "Unknown compiler!"
 #endif 
 
+#ifndef INLINE
+	#if defined(BWL_COMPILER_MICROSOFT)
+		#define INLINE __inline
+	#elif defined(BWL_COMPILER_GNU)
+		#define INLINE __inline__
+	#elif defined(BWL_COMPILER_ARMCC)
+		#define INLINE	__inline
+	#else
+		#define INLINE
+	#endif 
 #endif 
 
 #undef TYPEDEF_BOOL
@@ -212,6 +215,8 @@ typedef float64 float_t;
 #undef TYPEDEF_FLOAT_T
 
 #endif 
+
+#define UNUSED_PARAMETER(x) (void)(x)
 
 #include <bcmdefs.h>
 

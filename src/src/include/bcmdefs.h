@@ -1,28 +1,15 @@
 /*
  * Misc system wide definitions
  *
- * Copyright 2008, Broadcom Corporation
+ * Copyright (C) 2010, Broadcom Corporation
  * All Rights Reserved.
  * 
- *  	Unless you and Broadcom execute a separate written software license
- * agreement governing use of this software, this software is licensed to you
- * under the terms of the GNU General Public License version 2, available at
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html (the "GPL"), with the
- * following added to such license:
- *      As a special exception, the copyright holders of this software give you
- * permission to link this software with independent modules, regardless of the
- * license terms of these independent modules, and to copy and distribute the
- * resulting executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the license
- * of that module. An independent module is a module which is not derived from
- * this software.
- *
  * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
  * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: bcmdefs.h,v 13.43.2.11 2009/02/11 01:59:34 Exp $
+ * $Id: bcmdefs.h,v 13.61 2009/04/01 18:59:11 Exp $
  */
 
 #ifndef	_bcmdefs_h_
@@ -40,7 +27,14 @@
 #define BCMFASTPATH
 
 #define BCMROMDATA(_data)	_data
+#define BCMROMDAT_NAME(_data)	_data
 #define BCMROMFN(_fn)		_fn
+#define BCMROMFN_NAME(_fn)	_fn
+#define STATIC	static
+#define BCMROMDAT_ARYSIZ(data)	ARRAYSIZE(data)
+#define BCMROMDAT_SIZEOF(data)	sizeof(data)
+#define BCMROMDAT_APATCH(data)
+#define BCMROMDAT_SPATCH(data)
 
 #define	SI_BUS			0	
 #define	PCI_BUS			1	
@@ -120,12 +114,16 @@ typedef struct {
 } hnddma_seg_map_t;
 
 #if defined(BCM_RPC_NOCOPY) || defined(BCM_RCP_TXNOCOPY)
+
 #define BCMEXTRAHDROOM 220
 #else
 #define BCMEXTRAHDROOM 172
 #endif
 
 #define BCMDONGLEHDRSZ 12
+#define BCMDONGLEPADSZ 16
+
+#define BCMDONGLEOVERHEAD	(BCMDONGLEHDRSZ + BCMDONGLEPADSZ)
 
 #ifdef BCMDBG
 

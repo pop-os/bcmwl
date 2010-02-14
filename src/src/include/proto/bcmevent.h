@@ -1,22 +1,9 @@
 /*
  * Broadcom Event  protocol definitions
  *
- * Copyright 2008, Broadcom Corporation
+ * Copyright (C) 2010, Broadcom Corporation
  * All Rights Reserved.
  * 
- *  	Unless you and Broadcom execute a separate written software license
- * agreement governing use of this software, this software is licensed to you
- * under the terms of the GNU General Public License version 2, available at
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html (the "GPL"), with the
- * following added to such license:
- *      As a special exception, the copyright holders of this software give you
- * permission to link this software with independent modules, regardless of the
- * license terms of these independent modules, and to copy and distribute the
- * resulting executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the license
- * of that module. An independent module is a module which is not derived from
- * this software.
- *
  * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
  * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
@@ -24,19 +11,18 @@
  *
  * Dependencies: proto/bcmeth.h
  *
- * $Id: bcmevent.h,v 9.35.2.5 2009/03/04 00:30:40 Exp $
+ * $Id: bcmevent.h,v 9.52.2.5 2009/10/22 07:38:44 Exp $
  *
  */
 
 #ifndef _BCMEVENT_H_
 #define _BCMEVENT_H_
 
-#if defined(__GNUC__)
-#define	PACKED	__attribute__((packed))
-#else
-#pragma pack(1)
-#define	PACKED
-#endif 
+#ifndef _TYPEDEFS_H_
+#include <typedefs.h>
+#endif
+
+#include <packed_section_start.h>
 
 #define BCM_EVENT_MSG_VERSION		1	
 #define BCM_MSG_IFNAME_MAX		16	
@@ -45,7 +31,7 @@
 #define WLC_EVENT_MSG_FLUSHTXQ		0x02	
 #define WLC_EVENT_MSG_GROUP		0x04	
 
-typedef struct
+typedef BWL_PRE_PACKED_STRUCT struct
 {
 	uint16	version;
 	uint16	flags;			
@@ -56,14 +42,14 @@ typedef struct
 	uint32	datalen;		
 	struct ether_addr	addr;	
 	char	ifname[BCM_MSG_IFNAME_MAX]; 
-} PACKED wl_event_msg_t;
+} BWL_POST_PACKED_STRUCT wl_event_msg_t;
 
-typedef struct bcm_event {
+typedef BWL_PRE_PACKED_STRUCT struct bcm_event {
 	struct ether_header eth;
 	bcmeth_hdr_t		bcm_hdr;
 	wl_event_msg_t		event;
 
-} PACKED bcm_event_t;
+} BWL_POST_PACKED_STRUCT bcm_event_t;
 
 #define BCM_MSG_LEN	(sizeof(bcm_event_t) - sizeof(bcmeth_hdr_t) - sizeof(struct ether_header))
 
@@ -111,14 +97,28 @@ typedef struct bcm_event {
 #define WLC_E_PSM_WATCHDOG	41	
 #define WLC_E_PROBREQ_MSG       44      
 #define WLC_E_SCAN_CONFIRM_IND  45
-#define WLC_E_PSK_SUP	46	
+#define WLC_E_PSK_SUP		46	
 #define WLC_E_COUNTRY_CODE_CHANGED 47
 #define	WLC_E_EXCEEDED_MEDIUM_TIME 48	
 #define WLC_E_ICV_ERROR		49	
-#define WLC_E_UNICAST_DECODE_ERROR 50 
+#define WLC_E_UNICAST_DECODE_ERROR 50	
 #define WLC_E_MULTICAST_DECODE_ERROR 51 
-#define WLC_E_EXTLOG_MSG	52
-#define WLC_E_LAST			53	
+#define WLC_E_TRACE		52
+#define WLC_E_IF		54	
+#define WLC_E_RSSI		56	
+#define WLC_E_PFN_SCAN_COMPLETE	57	
+#define WLC_E_EXTLOG_MSG	58
+#define WLC_E_ACTION_FRAME      59 
+#define WLC_E_ACTION_FRAME_COMPLETE      60 
+#define WLC_E_PRE_ASSOC_IND	61	
+#define WLC_E_PRE_REASSOC_IND	62	
+#define WLC_E_CHANNEL_ADOPTED	63	
+#define WLC_E_AP_STARTED	64	
+#define WLC_E_DFS_AP_STOP	65	
+#define WLC_E_DFS_AP_RESUME	66	
+#define WLC_E_WAI_STA_EVENT	67	
+#define WLC_E_WAI_MSG 		68	
+#define WLC_E_LAST		69	
 
 #define WLC_E_STATUS_SUCCESS		0	
 #define WLC_E_STATUS_FAIL		1	
@@ -134,6 +134,7 @@ typedef struct bcm_event {
 #define WLC_E_STATUS_11HQUIET	11	
 #define WLC_E_STATUS_SUPPRESS	12	
 #define WLC_E_STATUS_NOCHANS	13	
+#define WLC_E_STATUS_CS_ABORT	15	
 
 #define WLC_E_REASON_INITIAL_ASSOC	0	
 #define WLC_E_REASON_LOW_RSSI		1	
@@ -164,7 +165,7 @@ typedef struct bcm_event {
 #define WLC_E_PRUNE_QBSS_LOAD		16	
 #define WLC_E_PRUNE_HOME_AP		17	
 
-#define WLC_E_SUP_OTHER				0	
+#define WLC_E_SUP_OTHER			0	
 #define WLC_E_SUP_DECRYPT_KEY_DATA	1	
 #define WLC_E_SUP_BAD_UCAST_WEP128	2	
 #define WLC_E_SUP_BAD_UCAST_WEP40	3	
@@ -177,17 +178,17 @@ typedef struct bcm_event {
 #define WLC_E_SUP_GRP_KEY_CIPHER	10	
 #define WLC_E_SUP_GRP_MSG1_NO_GTK	11	
 #define WLC_E_SUP_GTK_DECRYPT_FAIL	12	
-#define WLC_E_SUP_SEND_FAIL			13	
-#define WLC_E_SUP_DEAUTH			14	
+#define WLC_E_SUP_SEND_FAIL		13	
+#define WLC_E_SUP_DEAUTH		14	
+
+#define WLC_E_IF_ADD		1	
+#define WLC_E_IF_DEL		2	
 
 #define WLC_E_LINK_BCN_LOSS	1	
 #define WLC_E_LINK_DISASSOC	2	
 #define WLC_E_LINK_ASSOC_REC	3	
 #define WLC_E_LINK_BSSCFG_DIS	4	
 
-#undef PACKED
-#if !defined(__GNUC__)
-#pragma pack()
-#endif 
+#include <packed_section_end.h>
 
 #endif 

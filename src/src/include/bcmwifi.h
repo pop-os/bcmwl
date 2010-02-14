@@ -3,28 +3,15 @@
  * This header file housing the define and function prototype use by
  * both the wl driver, tools & Apps.
  *
- * Copyright 2008, Broadcom Corporation
+ * Copyright (C) 2010, Broadcom Corporation
  * All Rights Reserved.
  * 
- *  	Unless you and Broadcom execute a separate written software license
- * agreement governing use of this software, this software is licensed to you
- * under the terms of the GNU General Public License version 2, available at
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html (the "GPL"), with the
- * following added to such license:
- *      As a special exception, the copyright holders of this software give you
- * permission to link this software with independent modules, regardless of the
- * license terms of these independent modules, and to copy and distribute the
- * resulting executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the license
- * of that module. An independent module is a module which is not derived from
- * this software.
- *
  * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
  * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: bcmwifi.h,v 1.19.2.1.54.1 2009/03/25 01:50:55 Exp $
+ * $Id: bcmwifi.h,v 1.24 2009/05/21 21:22:04 Exp $
  */
 
 #ifndef	_bcmwifi_h_
@@ -100,6 +87,7 @@ typedef uint16 chanspec_t;
 #define CHSPEC_CTL_CHAN(chspec)  ((CHSPEC_SB_LOWER(chspec)) ? \
 				  (LOWER_20_SB((chspec & WL_CHANSPEC_CHAN_MASK))) : \
 				  (UPPER_20_SB((chspec & WL_CHANSPEC_CHAN_MASK))))
+#define CHSPEC2WLC_BAND(chspec) (CHSPEC_IS5G((chspec))? WLC_BAND_5G: WLC_BAND_2G)
 
 #define CHANSPEC_STR_LEN    8
 
@@ -126,6 +114,8 @@ extern chanspec_t wf_chspec_aton(char *a);
 extern bool wf_chspec_malformed(chanspec_t chanspec);
 
 extern uint8 wf_chspec_ctlchan(chanspec_t chspec);
+
+extern chanspec_t wf_chspec_ctlchspec(chanspec_t chspec);
 
 extern int wf_mhz2channel(uint freq, uint start_factor);
 

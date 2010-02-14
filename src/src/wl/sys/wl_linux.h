@@ -1,28 +1,15 @@
 /*
  * wl_linux.c exported functions and definitions
  *
- * Copyright 2008, Broadcom Corporation
+ * Copyright (C) 2010, Broadcom Corporation
  * All Rights Reserved.
  * 
- *  	Unless you and Broadcom execute a separate written software license
- * agreement governing use of this software, this software is licensed to you
- * under the terms of the GNU General Public License version 2, available at
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html (the "GPL"), with the
- * following added to such license:
- *      As a special exception, the copyright holders of this software give you
- * permission to link this software with independent modules, regardless of the
- * license terms of these independent modules, and to copy and distribute the
- * resulting executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the license
- * of that module. An independent module is a module which is not derived from
- * this software.
- *
  * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
  * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wl_linux.h,v 1.22.2.3 2009/02/27 02:04:03 Exp $
+ * $Id: wl_linux.h,v 1.27.2.4.4.1 2009/11/18 18:51:21 Exp $
  */
 
 #ifndef _wl_linux_h_
@@ -58,12 +45,16 @@ typedef struct wl_if {
 	struct wl_if *next;
 	struct wl_info *wl;		
 	struct net_device *dev;		
-	int type;			
 	struct wlc_if *wlcif;		
-	struct ether_addr remote;	
 	uint subunit;			
 	bool dev_registed;		
 } wl_if_t;
+
+struct rfkill_stuff {
+	struct rfkill *rfkill;
+	char rfkill_name[32];
+	char registered;
+};
 
 struct wl_info {
 	wlc_pub_t	*pub;		
@@ -72,12 +63,11 @@ struct wl_info {
 	struct net_device *dev;		
 	spinlock_t	lock;		
 	spinlock_t	isr_lock;	
-	uint		bustype;	
+	uint		bcm_bustype;	
 	bool		piomode;	
 	void *regsva;			
 	struct net_device_stats stats;	
 	wl_if_t *if_list;		
-	struct wl_info *next;		
 	atomic_t callbacks;		
 	struct wl_timer *timers;	
 	struct tasklet_struct tasklet;	
@@ -85,10 +75,15 @@ struct wl_info {
 	bool		resched;	
 	uint32		pci_psstate[16];	
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
+#define NUM_GROUP_KEYS 4
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	struct lib80211_crypto_ops *tkipmodops;
+#else
 	struct ieee80211_crypto_ops *tkipmodops;	
-	struct ieee80211_tkip_data  *tkip_ucast_data;
-	struct ieee80211_tkip_data  *tkip_bcast_data;
 #endif
+	struct ieee80211_tkip_data  *tkip_ucast_data;
+	struct ieee80211_tkip_data  *tkip_bcast_data[NUM_GROUP_KEYS];
+#endif 
 
 	uint	stats_id;		
 
@@ -98,7 +93,10 @@ struct wl_info {
 	struct iw_statistics wstats;
 	int		phy_noise;
 #endif 
-
+#if defined(WL_CONFIG_RFKILL_INPUT)
+	struct rfkill_stuff wl_rfkill;
+	mbool last_phyind;
+#endif 
 };
 
 #define WL_LOCK(wl)	spin_lock_bh(&(wl)->lock)

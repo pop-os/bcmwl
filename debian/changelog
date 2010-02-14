@@ -1,3 +1,41 @@
+bcmwl (5.60.48.36+bdcom-0ubuntu1) lucid; urgency=low
+
+  * New upstream release (LP: #432780):
+    - Support up to linux kernel 2.6.31. 2.6.32 support is there
+      also but not tested (although reports from users suggests it
+      works fine).
+    - Support for hidden networks.
+    - Support for rfkill in kernels < 2.6.31.
+    - Setting power level via 'iwconfig eth1 txpower X' is now
+      operational
+    - Add support for 4313.
+    - Additional channels in both 2.4 and 5 Ghz bands.
+    - Fix issue with tkip group keys that caused the following
+      message to repeat often:
+      TKIP: RX tkey->key_idx=2 frame keyidx=1 priv=ffff8800cf80e840
+    - Fix a continuous assoc/disassoc loop (in Ubuntu 8.04)
+      with suspend/resume with WPA2 and wpa_supplicant.
+    - Fix bug affecting Ubuntu 8.04 which prevented from pinging when
+      Linux STA is IBSS creator with WEP.
+    - Fix bug affecting Ubuntu 9.04 which prevented from connecting to
+      hidden networks after suspend/resume.
+    - Fix bug which prevented the driver from associating to AP with
+      when transitioning from AES to TKIP encryption.
+  * debian/patches/0002-Makefile.patch:
+    - Refresh patch.
+  * debian/patches/0003-DEV_WL_IF.patch,
+    0004-broadcom-sta-5.10.91.9-linux-2.6.30.patch,
+    0005-NET_DEVICE_OPS.patch,
+    0006-broadcom-sta-5.10.91.9-linux-2.6.32.patch:
+    - Drop patches as they are now part of the upstream code.
+  * debian/dkms.conf.in:
+    - Remove the lines about the above mentioned patches.
+  * debian/bcmwl-kernel-source.postinst:
+    - Make use of /usr/lib/dkms/common.postinst (LP: #497149).
+  * Bump compat to 5.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Sun, 14 Feb 2010 19:58:58 +0100
+
 bcmwl (5.10.91.9+bdcom-0ubuntu5) lucid; urgency=low
 
   [ Michael Casadevall ]

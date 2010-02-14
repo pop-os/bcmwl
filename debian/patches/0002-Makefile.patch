@@ -1,9 +1,9 @@
-index 2ef91b1..6d821a0 100644
---- src/Makefile.orig
-+++ src/Makefile
-@@ -26,6 +26,12 @@
+diff -Nur src.orig/Makefile src/Makefile
+--- src.orig/Makefile	2010-02-06 02:59:15.000000000 +0100
++++ src/Makefile	2010-02-14 16:16:10.819815931 +0100
+@@ -13,6 +13,12 @@
  #
- # $Id: Makefile_kbuild_portsrc,v 1.1.2.4 2008/05/02 18:33:39 Exp $
+ # $Id: Makefile_kbuild_portsrc,v 1.5.4.1 2009/08/13 21:37:18 Exp $
  
 +ifeq ($(shell dpkg --print-architecture),amd64)
 +BINARCH = x86_64
@@ -14,9 +14,12 @@ index 2ef91b1..6d821a0 100644
  obj-m              += wl.o
  
  wl-objs            := 
-@@ -37,4 +43,4 @@ EXTRA_CFLAGS       :=
+@@ -24,7 +30,7 @@
  EXTRA_CFLAGS       += -I$(src)/src/include
- EXTRA_CFLAGS       += -I$(src)/src/wl/sys
+ EXTRA_CFLAGS       += -I$(src)/src/wl/sys -I$(src)/src/wl/phy
  
 -EXTRA_LDFLAGS      := $(src)/lib/wlc_hybrid.o_shipped
 +EXTRA_LDFLAGS      := $(src)/lib/wlc_hybrid.o_shipped_$(BINARCH)
+ 
+ all:
+ 	KBUILD_NOPEDANTIC=1 make -C /lib/modules/`uname -r`/build M=`pwd`

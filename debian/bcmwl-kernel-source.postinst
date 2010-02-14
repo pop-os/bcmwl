@@ -8,85 +8,31 @@ CVERSION=`dpkg-query -W -f='${Version}' bcmwl-kernel-source | awk -F "-" '{print
 MODULES_DIR=$(ls /lib/modules/)
 CURRENT_KERNEL=$(uname -r)
 BLACKLIST_FILE=/etc/modprobe.d/blacklist-bcm43.conf
-PACKAGE_NAME=bcmwl-kernel-source
+PACKAGE_NAME=bcmwl
 #DEBHELPER#
+
+ARCH=`dpkg --print-architecture`
+case $ARCH in
+    amd64)
+        ARCH="x86_64"
+        ;;
+    lpia)
+        ARCH="i686"
+        ;;
+    i386)
+        ARCH="i686"
+        ;;
+    *)
+        echo "WARNING: unsupported arch: $ARCH"
+        ARCH="$ARCH"
+        ;;
+esac
 
 case "$1" in
 	configure)
-	# On 1st installation, let us look for a directory
-	# in /lib/modules which matches `uname -r`. If none
-	# is found it is possible that buildd is being used
-	# and that uname -r is giving us the name of the
-	# kernel used by the buildd machine.
-	# 
-	# If this is the case we try to build the kernel
-	# module for each kernel which has a directory in 
-	# /lib/modules. Furthermore we will have to tell 
-	# DKMS which architecture it should build the module
-	# for (e.g. if the buildd machine is using a 
-	# 2.6.24-23-xen 64bit kernel).
-	#
-	# NOTE: if the headers are not installed then the
-	#       module won't be built, as usual
-	if [ "configure" = "$1" ] && [ -z "$2" ]; then
-		KERNEL_MATCHES=false
-		
-		echo "First Installation: checking all kernels..."
-		for kerneldir in $MODULES_DIR; do
-			if [ ${kerneldir} = ${CURRENT_KERNEL} ]; then
-				# Kernel found
-				KERNEL_MATCHES=true
-				break
-			fi
-		done
-		
-		if [ $KERNEL_MATCHES = false ]; then
-			# Maybe we are dealing with buildd
-			echo "Directory for kernel $CURRENT_KERNEL not found in /lib/modules"
-			case $(dpkg --print-architecture) in
-				amd64)
-					FORCE_ARCH=x86_64
-					;;
-				lpia)
-					FORCE_ARCH=i686
-					;;
-				i386)
-					FORCE_ARCH=i686
-					;;
-				*)
-					echo "ERROR: unsupported arch: "$(dpkg --print-architecture)
-					exit 1
-					;;
-			esac
-			
-			echo "Adding Module to DKMS build system"
-			dkms add -m bcmwl -v $CVERSION > /dev/null
-			
-			for kerneldir in $MODULES_DIR; do
-				echo "Building initial module for $kerneldir, architecture $FORCE_ARCH"
-				dkms build -m bcmwl -v $CVERSION -k $kerneldir -a $FORCE_ARCH > /dev/null
-				echo "Installing initial module for $kerneldir, architecture $FORCE_ARCH"
-				dkms install -m bcmwl -v $CVERSION -k $kerneldir -a $FORCE_ARCH --force > /dev/null
-			done
-		else
-			echo "Directory for kernel $CURRENT_KERNEL found in /lib/modules"
-			echo "Adding Module to DKMS build system"
-			dkms add -m bcmwl -v $CVERSION > /dev/null
-			echo "Doing initial module build"
-			dkms build -m bcmwl -v $CVERSION > /dev/null
-			echo "Installing initial module"
-			dkms install -m bcmwl -v $CVERSION --force > /dev/null
-			echo "Done."
-		fi
-	else
-		echo "Adding Module to DKMS build system"
-		dkms add -m bcmwl -v $CVERSION > /dev/null
-		echo "Doing initial module build"
-		dkms build -m bcmwl -v $CVERSION > /dev/null
-		echo "Installing initial module"
-		dkms install -m bcmwl -v $CVERSION --force > /dev/null
-		echo "Done."
-	fi
+	# Build the kernel module
+	/usr/lib/dkms/common.postinst $PACKAGE_NAME $CVERSION /usr/share/$PACKAGE_NAME $ARCH $2
+	exit $?
 	
 	# Create a blacklist file
 	if [ ! -f $BLACKLIST_FILE ]; then

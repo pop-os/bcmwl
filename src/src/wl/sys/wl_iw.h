@@ -1,28 +1,15 @@
 /*
  * Linux Wireless Extensions support
  *
- * Copyright 2008, Broadcom Corporation
+ * Copyright (C) 2010, Broadcom Corporation
  * All Rights Reserved.
  * 
- *  	Unless you and Broadcom execute a separate written software license
- * agreement governing use of this software, this software is licensed to you
- * under the terms of the GNU General Public License version 2, available at
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html (the "GPL"), with the
- * following added to such license:
- *      As a special exception, the copyright holders of this software give you
- * permission to link this software with independent modules, regardless of the
- * license terms of these independent modules, and to copy and distribute the
- * resulting executable under terms of your choice, provided that you also meet,
- * for each linked independent module, the terms and conditions of the license
- * of that module. An independent module is a module which is not derived from
- * this software.
- *
  * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
  * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wl_iw.h,v 1.5.32.7 2009/03/02 21:54:59 Exp $
+ * $Id: wl_iw.h,v 1.15 2009/04/17 00:19:28 Exp $
  */
 
 #ifndef _wl_iw_h_
@@ -42,6 +29,20 @@
 #define	WL_IW_RSSI_VERY_GOOD	-58	
 #define	WL_IW_RSSI_EXCELLENT	-57	
 #define	WL_IW_RSSI_INVALID	 0	
+#define MAX_WX_STRING 80
+#define isprint(c) bcm_isprint(c)
+#define WL_IW_SET_ACTIVE_SCAN	(SIOCIWFIRSTPRIV+1)
+#define WL_IW_GET_RSSI			(SIOCIWFIRSTPRIV+3)
+#define WL_IW_SET_PASSIVE_SCAN	(SIOCIWFIRSTPRIV+5)
+#define WL_IW_GET_LINK_SPEED	(SIOCIWFIRSTPRIV+7)
+#define WL_IW_GET_CURR_MACADDR	(SIOCIWFIRSTPRIV+9)
+#define WL_IW_SET_STOP				(SIOCIWFIRSTPRIV+11)
+#define WL_IW_SET_START			(SIOCIWFIRSTPRIV+13)
+
+#define 		G_SCAN_RESULTS 8*1024
+#define 		WE_ADD_EVENT_FIX	0x80
+#define          G_WLAN_SET_ON	0
+#define          G_WLAN_SET_OFF	1
 
 typedef struct wl_iw {
 	char nickname[IW_ESSID_MAX_SIZE];
@@ -57,6 +58,14 @@ typedef struct wl_iw {
 	void  *wlinfo;
 } wl_iw_t;
 
+struct wl_ctrl {
+	struct timer_list *timer;
+	struct net_device *dev;
+	long sysioc_pid;
+	struct semaphore sysioc_sem;
+	struct completion sysioc_exited;
+};
+
 #if WIRELESS_EXT > 12
 #include <net/iw_handler.h>
 extern const struct iw_handler_def wl_iw_handler_def;
@@ -65,6 +74,8 @@ extern const struct iw_handler_def wl_iw_handler_def;
 extern int wl_iw_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
 extern void wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data);
 extern int wl_iw_get_wireless_stats(struct net_device *dev, struct iw_statistics *wstats);
+int wl_iw_attach(struct net_device *dev);
+void wl_iw_detach(void);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
 #define IWE_STREAM_ADD_EVENT(info, stream, ends, iwe, extra) \
