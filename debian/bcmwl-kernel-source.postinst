@@ -31,8 +31,7 @@ esac
 case "$1" in
 	configure)
 	# Build the kernel module
-	/usr/lib/dkms/common.postinst $PACKAGE_NAME $CVERSION /usr/share/$PACKAGE_NAME $ARCH $2
-	exit $?
+	/usr/lib/dkms/common.postinst $PACKAGE_NAME $CVERSION /usr/share/$PACKAGE_NAME $ARCH $2 || exit $?
 	
 	# Create a blacklist file
 	if [ ! -f $BLACKLIST_FILE ]; then

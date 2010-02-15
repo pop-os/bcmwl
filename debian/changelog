@@ -1,3 +1,10 @@
+bcmwl (5.60.48.36+bdcom-0ubuntu2) lucid; urgency=low
+
+  * debian/bcmwl-kernel-source.postinst:
+    - Do not exit after using DKMS if there are no errors.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 15 Feb 2010 15:57:31 +0100
+
 bcmwl (5.60.48.36+bdcom-0ubuntu1) lucid; urgency=low
 
   * New upstream release (LP: #432780):
