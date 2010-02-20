@@ -1,3 +1,11 @@
+broadcom-sta (5.10.91.9.3-3) unstable; urgency=low
+
+  * Blacklisting b43legacy, b43, b44 and ssb modules (Closes: #545388).
+  * Added a note to README.Debian (broadcom-sta-common) to explain why b44
+    module is blacklisted.
+
+ -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Thu, 14 Jan 2010 22:33:24 +0400
+
 broadcom-sta (5.10.91.9.3-2) unstable; urgency=low
 
   * Added patch from Emilio Coppa <ercoppa@gmail.com> to compile with 2.6.32.

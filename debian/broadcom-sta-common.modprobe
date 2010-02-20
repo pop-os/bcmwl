@@ -1,1 +1,7 @@
-install wl /sbin/modprobe -qr b43 ssb; /sbin/modprobe --ignore-install wl $CMDLINE_OPTS
+# wl module from Broadcom conflicts with ssb
+# We must blacklist the following modules:
+blacklist b44
+blacklist b43legacy
+blacklist b43
+blacklist ssb
+install wl /sbin/modprobe --ignore-install wl $CMDLINE_OPTS
