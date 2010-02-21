@@ -3,7 +3,7 @@
 # Makefile fragment for Linux 2.6
 # Broadcom 802.11abg Networking Device Driver
 #
-# Copyright 2008, Broadcom Corporation
+# Copyright (C) 2010, Broadcom Corporation
 # All Rights Reserved.
 # 
 # This is UNPUBLISHED PROPRIETARY SOURCE CODE of Broadcom Corporation;
@@ -11,18 +11,18 @@
 # or duplicated in any form, in whole or in part, without the prior
 # written permission of Broadcom Corporation.
 #
-# $Id: Makefile_kbuild_portsrc,v 1.1.2.4.84.1 2009/08/11 01:19:20 Exp $
+# $Id: Makefile_kbuild_portsrc,v 1.5.4.1 2009/08/13 21:37:18 Exp $
 
 obj-m              += wl.o
 
 wl-objs            := 
+wl-objs            += src/shared/linux_osl.o
 wl-objs            += src/wl/sys/wl_linux.o
 wl-objs            += src/wl/sys/wl_iw.o
-wl-objs            += src/shared/linux_osl.o
 
 EXTRA_CFLAGS       :=
 EXTRA_CFLAGS       += -I$(src)/src/include
-EXTRA_CFLAGS       += -I$(src)/src/wl/sys
+EXTRA_CFLAGS       += -I$(src)/src/wl/sys -I$(src)/src/wl/phy
 
 EXTRA_LDFLAGS      := $(src)/lib/wlc_hybrid.o_shipped
 
