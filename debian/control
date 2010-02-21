@@ -3,7 +3,7 @@ Section: non-free/admin
 Priority: optional
 Maintainer: Cyril Lacoux (Yack) <clacoux@easter-eggs.com>
 Build-Depends: debhelper (>= 7), quilt
-Standards-Version: 3.8.3
+Standards-Version: 3.8.4
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
 
 Package: broadcom-sta-common
@@ -13,8 +13,8 @@ Recommends: broadcom-sta-source, module-assistant
 Suggests: wireless-tools
 Description: Common files for the Broadcom STA Wireless driver
  Broadcom STA is a binary-only device driver to support the following IEEE
- 802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4321-, and
- BCM4322.
+ 802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4313-,
+ BCM4321-, and BCM4322.
  .
  This package contains the common files.
 
@@ -25,8 +25,8 @@ Recommends: module-assistant
 Suggests: wireless-tools
 Description: Source for the Broadcom STA Wireless driver
  Broadcom STA is a binary-only device driver to support the following IEEE
- 802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4321-, and
- BCM4322.
+ 802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4313-,
+ BCM4321-, and BCM4322.
  .
  This package provides the source code for the wl kernel modules. The
  wireless-tools package is also required in order to make use of these modules.
