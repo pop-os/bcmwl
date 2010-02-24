@@ -1,0 +1,26 @@
+Version: 5.60.48.36
+Date: February 9, 2010
+
+    Supports up to linux kernel 2.6.31. 2.6.32 support is there also but 
+    not tested (although reports from users suggests it works fine.)
+    Supports hidden networks
+    Supports rfkill in kernels <  2.6.31
+    Setting power level via 'iwconfig eth1 txpower X' now operational
+    Support for 4313
+    Additional channels in both 2.4 and 5 Ghz bands.
+    Fixed issue with tkip group keys that caused this message to repeat often:
+      TKIP: RX tkey->key_idx=2 frame keyidx=1 priv=ffff8800cf80e840
+    Following fixes
+      Issue #72216 - Ubuntu 8.04: standby/resume with WPA2 and wpa_supplicant causes
+                     a continuous assoc/disassoc loop (issue in 2.6.24 kernel)
+      Issue #72324 - Ubuntu 8.04: cannot ping when Linux STA is IBSS creator with WEP
+      Issue #76739 - Ubuntu 9.04: unable to connect to hidden network after stdby/resume
+      Issue #80392 - S4 resume hang with SuSE SLED 11 and 43225
+      Issue #80792 - LSTA is not able to associate to AP with transition from AES to TKIP encryption
+
+Version: 5.10.91.9.3 Gold
+Date: September 10, 2009
+
+    Supports Linux kernel 2.6.29, 2.6.30.1, 2.6.31
+    Supports hidden networks
+    Supports rfkill in kernels <  2.6.31
