@@ -1,12 +1,12 @@
 broadcom-sta (5.60.48.36-1) unstable; urgency=low
 
-  * New upstream release. 
+  * New upstream release (Closes: #571233).
   * Removed applyed upstream patch for 2.6.32 compatibility.
   * Refreshed 01-license.patch file.
-  * Bumped standards version to 3.8.4.
+  * Bumped standards version to 3.8.4 (No changes).
   * Added BCM4313 to the list of supported cards.
 
- -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Sat, 20 Feb 2010 19:25:05 +0400
+ -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Wed, 24 Feb 2010 21:12:29 +0400
 
 broadcom-sta (5.10.91.9.3-3) unstable; urgency=low
 
