@@ -9,7 +9,7 @@ Vcs-Bzr: https://code.launchpad.net/~broadcom-sta-hackers/broadcom-sta/ubuntu
 
 Package: bcmwl-kernel-source
 Architecture: i386 amd64 lpia
-Depends: ${misc:Depends}, dkms, linux-libc-dev, libc6-dev, linux-headers-generic [i386 amd64], linux-headers-lpia [lpia]
+Depends: ${misc:Depends}, dkms, linux-libc-dev, libc6-dev, linux-headers-generic [i386 amd64] | linux-headers, linux-headers-lpia [lpia]
 Description: Broadcom 802.11 Linux STA wireless driver source
  These package contains Broadcom 802.11 Linux STA wireless driver
  for use with Broadcom's BCM4311-, BCM4312-, BCM4321-, and
