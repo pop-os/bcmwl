@@ -1,3 +1,12 @@
+bcmwl (5.60.48.36+bdcom-0ubuntu4) maverick; urgency=low
+
+  * debian/patches/0003-autoconf.h.patch:
+    - Do not #include <linux/autoconf.h> in kernels that include it
+      automatically (2.6.15 or higher).  This fixes building on 2.6.33
+      which moved that file to <generated/autoconf.h>.  (LP: #580594)
+
+ -- Anders Kaseorg <andersk@mit.edu>  Fri, 14 May 2010 21:23:45 -0400
+
 bcmwl (5.60.48.36+bdcom-0ubuntu3) lucid; urgency=low
 
   * Fix control file to support -generic-pae kernel install (LP: #567607) 
