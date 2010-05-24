@@ -1,0 +1,32 @@
+Index: broadcom-sta-5.60.48.36/amd64/src/include/linuxver.h
+===================================================================
+--- broadcom-sta-5.60.48.36.orig/amd64/src/include/linuxver.h	2010-03-11 13:37:58.000000000 +0400
++++ broadcom-sta-5.60.48.36/amd64/src/include/linuxver.h	2010-03-11 13:39:28.000000000 +0400
+@@ -20,7 +20,11 @@
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0))
+ #include <linux/config.h>
+ #else
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33))
+ #include <linux/autoconf.h>
++#else
++#include <generated/autoconf.h>
++#endif
+ #endif
+ #include <linux/module.h>
+ 
+Index: broadcom-sta-5.60.48.36/i386/src/include/linuxver.h
+===================================================================
+--- broadcom-sta-5.60.48.36.orig/i386/src/include/linuxver.h	2010-03-11 13:37:58.000000000 +0400
++++ broadcom-sta-5.60.48.36/i386/src/include/linuxver.h	2010-03-11 13:39:51.000000000 +0400
+@@ -20,7 +20,11 @@
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0))
+ #include <linux/config.h>
+ #else
++#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33))
+ #include <linux/autoconf.h>
++#else
++#include <generated/autoconf.h>
++#endif
+ #endif
+ #include <linux/module.h>
+ 

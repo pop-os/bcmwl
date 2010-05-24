@@ -1,3 +1,10 @@
+broadcom-sta (5.60.48.36-2) unstable; urgency=low
+
+  * Added patch to compile with 2.6.33 (Closes: #572314, #572429). 
+  * Added patch from Michael Tuschik for cross-compilation. (Closes: #579839)
+
+ -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Mon, 24 May 2010 10:22:44 +0400
+
 broadcom-sta (5.60.48.36-1) unstable; urgency=low
 
   * New upstream release (Closes: #571233).

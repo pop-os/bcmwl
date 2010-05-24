@@ -2,9 +2,9 @@
 
 include /usr/share/quilt/quilt.make
 
-DEB_BUILD_ARCH		?= $(shell dpkg-architecture -qDEB_BUILD_ARCH)
+DEB_HOST_ARCH		?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
-ifeq ($(DEB_BUILD_ARCH),amd64)
+ifeq ($(DEB_HOST_ARCH),amd64)
 	SOURCEDIR=$(CURDIR)/amd64
 else # i386
 	SOURCEDIR=$(CURDIR)/i386
