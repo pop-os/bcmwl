@@ -1,3 +1,12 @@
+bcmwl (5.60.48.36+bdcom-0ubuntu5) maverick; urgency=low
+
+  * debian/patches/0004-mclist.patch:
+   - Switch over to multicast iterator functions for kernels v2.6.35 and
+     later.  This fixes module building on v2.6.35-1.1.  Conditionalise
+     the patch to support older kernels.  (LP: #590924)
+
+ -- Andy Whitcroft <apw@canonical.com>  Tue, 08 Jun 2010 11:19:05 +0100
+
 bcmwl (5.60.48.36+bdcom-0ubuntu4) maverick; urgency=low
 
   * debian/patches/0003-autoconf.h.patch:
