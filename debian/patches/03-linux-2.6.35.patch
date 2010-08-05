@@ -6,7 +6,7 @@ Index: broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_linux.c
  _wl_set_multicast_list(struct net_device *dev)
  {
  	wl_info_t *wl;
-+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
  	struct dev_mc_list *mclist;
 +#else
 +	struct netdev_hw_addr	*ha;
@@ -22,7 +22,7 @@ Index: broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_linux.c
 -
 -		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count);
 -			i++, mclist = mclist->next) {
-+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 +		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count); i++, mclist = mclist->next) {
  			if (i >= MAXMULTILIST) {
  				wl->pub->allmulti = TRUE;
@@ -54,7 +54,7 @@ Index: broadcom-sta-5.60.48.36/i386/src/wl/sys/wl_linux.c
  _wl_set_multicast_list(struct net_device *dev)
  {
  	wl_info_t *wl;
-+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
  	struct dev_mc_list *mclist;
 +#else
 +	struct netdev_hw_addr	*ha;
@@ -70,7 +70,7 @@ Index: broadcom-sta-5.60.48.36/i386/src/wl/sys/wl_linux.c
 -
 -		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count);
 -			i++, mclist = mclist->next) {
-+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 +		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count); i++, mclist = mclist->next) {
  			if (i >= MAXMULTILIST) {
  				wl->pub->allmulti = TRUE;
