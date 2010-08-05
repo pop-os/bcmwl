@@ -1,3 +1,10 @@
+broadcom-sta (5.60.48.36-3) unstable; urgency=low
+
+  * Added upstream patch to compile with 2.6.35 (Closes: #591549).
+  * Bumped standards version to 3.9.1 (No changes).
+
+ -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Thu, 05 Aug 2010 11:44:37 +0400
+
 broadcom-sta (5.60.48.36-2) unstable; urgency=low
 
   * Added patch to compile with 2.6.33 (Closes: #572314, #572429). 
