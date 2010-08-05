@@ -1,0 +1,96 @@
+Index: broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_linux.c
+===================================================================
+--- broadcom-sta-5.60.48.36.orig/amd64/src/wl/sys/wl_linux.c	2010-08-05 11:42:58.156000641 +0400
++++ broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_linux.c	2010-08-05 11:43:09.784000639 +0400
+@@ -1418,7 +1418,12 @@
+ _wl_set_multicast_list(struct net_device *dev)
+ {
+ 	wl_info_t *wl;
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
+ 	struct dev_mc_list *mclist;
++#else
++	struct netdev_hw_addr	*ha;
++	int num;
++#endif
+ 	int i;
+ 
+ 	if (!dev)
+@@ -1431,9 +1436,8 @@
+ 
+ 	if (wl->pub->up) {
+ 		wl->pub->allmulti = (dev->flags & IFF_ALLMULTI)? TRUE: FALSE;
+-
+-		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count);
+-			i++, mclist = mclist->next) {
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
++		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count); i++, mclist = mclist->next) {
+ 			if (i >= MAXMULTILIST) {
+ 				wl->pub->allmulti = TRUE;
+ 				i = 0;
+@@ -1441,6 +1445,18 @@
+ 			}
+ 			wl->pub->multicast[i] = *((struct ether_addr*) mclist->dmi_addr);
+ 		}
++#else
++		num = min_t(int, netdev_mc_count(dev), MAXMULTILIST);
++		i = 0;
++		netdev_for_each_mc_addr(ha, dev) {
++			if (i >= num) {
++				wl->pub->allmulti = TRUE;
++				i = 0;
++				break;
++			}
++			wl->pub->multicast[i] = *((struct ether_addr*) ha->addr);
++		}
++#endif
+ 		wl->pub->nmulticast = i;
+ 		wlc_set(wl->wlc, WLC_SET_PROMISC, (dev->flags & IFF_PROMISC));
+ 	}
+Index: broadcom-sta-5.60.48.36/i386/src/wl/sys/wl_linux.c
+===================================================================
+--- broadcom-sta-5.60.48.36.orig/i386/src/wl/sys/wl_linux.c	2010-08-05 11:43:03.128000638 +0400
++++ broadcom-sta-5.60.48.36/i386/src/wl/sys/wl_linux.c	2010-08-05 11:43:14.100000636 +0400
+@@ -1418,7 +1418,12 @@
+ _wl_set_multicast_list(struct net_device *dev)
+ {
+ 	wl_info_t *wl;
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
+ 	struct dev_mc_list *mclist;
++#else
++	struct netdev_hw_addr	*ha;
++	int num;
++#endif
+ 	int i;
+ 
+ 	if (!dev)
+@@ -1431,9 +1436,8 @@
+ 
+ 	if (wl->pub->up) {
+ 		wl->pub->allmulti = (dev->flags & IFF_ALLMULTI)? TRUE: FALSE;
+-
+-		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count);
+-			i++, mclist = mclist->next) {
++#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
++		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count); i++, mclist = mclist->next) {
+ 			if (i >= MAXMULTILIST) {
+ 				wl->pub->allmulti = TRUE;
+ 				i = 0;
+@@ -1441,6 +1445,18 @@
+ 			}
+ 			wl->pub->multicast[i] = *((struct ether_addr*) mclist->dmi_addr);
+ 		}
++#else
++		num = min_t(int, netdev_mc_count(dev), MAXMULTILIST);
++		i = 0;
++		netdev_for_each_mc_addr(ha, dev) {
++			if (i >= num) {
++				wl->pub->allmulti = TRUE;
++				i = 0;
++				break;
++			}
++			wl->pub->multicast[i] = *((struct ether_addr*) ha->addr);
++		}
++#endif
+ 		wl->pub->nmulticast = i;
+ 		wlc_set(wl->wlc, WLC_SET_PROMISC, (dev->flags & IFF_PROMISC));
+ 	}
