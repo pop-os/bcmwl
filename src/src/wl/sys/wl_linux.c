@@ -10,7 +10,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wl_linux.c,v 1.480.2.12.2.14 2009/12/31 19:03:02 Exp $
+ * $Id: wl_linux.c,v 1.480.2.12.2.14.8.1 2010/09/29 17:56:48 Exp $
  */
 
 #define LINUX_PORT
@@ -1415,8 +1415,13 @@ wl_set_multicast_list(struct net_device *dev)
 static void
 _wl_set_multicast_list(struct net_device *dev)
 {
-	wl_info_t *wl;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
 	struct dev_mc_list *mclist;
+#else
+	struct netdev_hw_addr   *ha;
+	int num;
+#endif
+	wl_info_t *wl;
 	int i;
 
 	if (!dev)
@@ -1430,6 +1435,7 @@ _wl_set_multicast_list(struct net_device *dev)
 	if (wl->pub->up) {
 		wl->pub->allmulti = (dev->flags & IFF_ALLMULTI)? TRUE: FALSE;
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 33)
 		for (i = 0, mclist = dev->mc_list; mclist && (i < dev->mc_count);
 			i++, mclist = mclist->next) {
 			if (i >= MAXMULTILIST) {
@@ -1439,6 +1445,18 @@ _wl_set_multicast_list(struct net_device *dev)
 			}
 			wl->pub->multicast[i] = *((struct ether_addr*) mclist->dmi_addr);
 		}
+#else
+		num = min_t(int, netdev_mc_count(dev), MAXMULTILIST);
+		i = 0;
+		netdev_for_each_mc_addr(ha, dev) {
+			if (i >= num) {
+				wl->pub->allmulti = TRUE;
+				i = 0;
+				break;
+			}
+			wl->pub->multicast[i] = *((struct ether_addr*) ha->addr);
+		}
+#endif 
 		wl->pub->nmulticast = i;
 		wlc_set(wl->wlc, WLC_SET_PROMISC, (dev->flags & IFF_PROMISC));
 	}

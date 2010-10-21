@@ -1,3 +1,15 @@
+bcmwl (5.60.246.2+bdcom-0ubuntu1) natty; urgency=low
+
+  * Remove 0003-autoconf.h.patch as it's no longer needed.
+  * Remove 0004-mclist.patch as it's no longer needed.
+  * New upstream release:
+   - Add support for kernels up to 2.6.36.
+   - Prevent the system from hanging when using the F2 hot key to
+     enable/disable wireless quickly while wireless is still in the
+     process of re-association with AP (LP: #611575).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Thu, 21 Oct 2010 13:25:16 +0200
+
 bcmwl (5.60.48.36+bdcom-0ubuntu5) maverick; urgency=low
 
   * debian/patches/0004-mclist.patch:

@@ -18,18 +18,18 @@
 
 #define	EPI_MINOR_VERSION	60
 
-#define	EPI_RC_NUMBER		48
+#define	EPI_RC_NUMBER		246
 
-#define	EPI_INCREMENTAL_NUMBER	36
+#define	EPI_INCREMENTAL_NUMBER	2
 
 #define EPI_BUILD_NUMBER	2
 
-#define	EPI_VERSION		5, 60, 48, 36
+#define	EPI_VERSION		5, 60, 246, 2
 
-#define	EPI_VERSION_NUM		0x053c3024
+#define	EPI_VERSION_NUM		0x053cf602
 
-#define EPI_VERSION_DEV		5.60.48
+#define EPI_VERSION_DEV		5.60.246
 
-#define	EPI_VERSION_STR		"5.60.48.36 "
+#define	EPI_VERSION_STR		"5.60.246.2 "
 
 #endif 

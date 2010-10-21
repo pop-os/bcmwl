@@ -7,9 +7,4 @@ MAKE[0]="make -C $kernel_source_dir M=$dkms_tree/$PACKAGE_NAME/$PACKAGE_VERSION/
 DEST_MODULE_LOCATION[0]="/updates"
 PATCH[0]="0001-MODULE_LICENSE.patch"
 PATCH[1]="0002-Makefile.patch"
-PATCH[2]="0003-autoconf.h.patch"
-# Needed for 2.6.35 and later
-PATCH[3]="0004-mclist.patch"
-PATCH_MATCH[3]="^2.6.(3[5-9]|[4-9][0-9])"
-
 AUTOINSTALL="yes"

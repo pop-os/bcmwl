@@ -10,7 +10,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: linuxver.h,v 13.50.22.2 2009/10/02 19:09:49 Exp $
+ * $Id: linuxver.h,v 13.50.22.2.28.1 2010/09/29 17:39:52 Exp $
  */
 
 #ifndef _linuxver_h_
@@ -20,8 +20,12 @@
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0))
 #include <linux/config.h>
 #else
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33))
 #include <linux/autoconf.h>
+#else
+#include <generated/autoconf.h>
 #endif
+#endif 
 #include <linux/module.h>
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 3, 0))
