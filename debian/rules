@@ -14,8 +14,10 @@ endif
 %:
 	dh "$@" --with modaliases
 
+# we don't actually build/clean the source here, it's dkms
+override_dh_auto_clean:
+
 override_dh_auto_build:
-	# we don't actually build the source here, it's dkms
 
 override_dh_auto_install:
 	# just create .install files from templates.
