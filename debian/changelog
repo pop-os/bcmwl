@@ -1,3 +1,19 @@
+bcmwl (5.100.82.38+bdcom-0ubuntu1) natty; urgency=low
+
+  * debian/control:
+    - Update the description.
+  * New upstream release:
+    - Add support for bcm43227 and bcm43228.
+    - Fix issue where iwconfig was sometimes reporting rate incorrectly.
+    - Add support for rfkill in kernels 2.6.31 to 2.6.36.
+    - Add support for scan complete event (SIOCGIWSCAN).
+    - Add EAGAIN (busy signal) to query of scan results.
+    - 4313 PHY fixes to improve throughput stability at different ranges.
+    - Fix interop issues with different APs.
+    - Fix hangs seen during Fn-F2 sequence.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Wed, 05 Jan 2011 16:56:18 +0100
+
 bcmwl (5.60.246.2+bdcom-0ubuntu3) natty; urgency=low
 
   * debian/rules: Fix cleaning to not fall over on the buildds.
