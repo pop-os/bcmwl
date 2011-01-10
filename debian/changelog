@@ -1,3 +1,11 @@
+bcmwl (5.100.82.38+bdcom-0ubuntu2) natty; urgency=low
+
+  [ Henrik Rydberg ]
+  * debian/patches0003-Make-up-for-missing-init_MUTEX.patch:
+    - Make up for missing init_MUTEX (LP: #700176).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 10 Jan 2011 11:51:03 +0100
+
 bcmwl (5.100.82.38+bdcom-0ubuntu1) natty; urgency=low
 
   * debian/control:
