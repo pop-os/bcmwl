@@ -1,3 +1,20 @@
+broadcom-sta (5.100.82.38-1) unstable; urgency=low
+
+  * New upstream release (Closes: #605715).
+  * Switch to dpkg-source 3.0 (quilt) format.
+  * Updated my e-mail.
+  * Rebuild initrd when broadcom-sta-common is configured (Closes: #591869). 
+  * Added brcm80211 driver to blacklist as requested by Ben Hutchings
+    (Closes: #597786, #601009, #611539).
+  * Added upstream changelog and README.txt files.
+  * Removed applyed upstream patch for 2.6.33 compatibility.
+  * Removed applyed upstream patch for 2.6.35 compatibility.
+  * Added patch to compile with 2.6.37.
+  * Added patch from Anisse Astier <anisse@astier.eu> to compile with minimal
+    kernel configuration (Closes: #612445).
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Thu, 10 Feb 2011 09:21:50 +0400
+
 broadcom-sta (5.60.48.36-3) unstable; urgency=low
 
   * Added upstream patch to compile with 2.6.35 (Closes: #591549).

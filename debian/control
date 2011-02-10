@@ -1,7 +1,7 @@
 Source: broadcom-sta
 Section: non-free/admin
 Priority: optional
-Maintainer: Cyril Lacoux (Yack) <clacoux@easter-eggs.com>
+Maintainer: Cyril Lacoux <clacoux@easter-eggs.com>
 Build-Depends: debhelper (>= 7), quilt
 Standards-Version: 3.9.1
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
