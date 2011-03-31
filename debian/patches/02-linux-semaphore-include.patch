@@ -1,0 +1,24 @@
+Index: broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_iw.h
+===================================================================
+--- broadcom-sta-5.60.48.36.orig/amd64/src/wl/sys/wl_iw.h	2011-02-09 08:41:59.447725001 +0400
++++ broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_iw.h	2011-02-09 08:42:16.639725001 +0400
+@@ -16,6 +16,7 @@
+ #define _wl_iw_h_
+ 
+ #include <linux/wireless.h>
++#include <linux/semaphore.h>
+ 
+ #include <typedefs.h>
+ #include <proto/ethernet.h>
+Index: broadcom-sta-5.60.48.36/i386/src/wl/sys/wl_iw.h
+===================================================================
+--- broadcom-sta-5.60.48.36.orig/i386/src/wl/sys/wl_iw.h	2011-02-09 08:41:26.375725002 +0400
++++ broadcom-sta-5.60.48.36/i386/src/wl/sys/wl_iw.h	2011-02-09 08:41:38.939725002 +0400
+@@ -16,6 +16,7 @@
+ #define _wl_iw_h_
+ 
+ #include <linux/wireless.h>
++#include <linux/semaphore.h>
+ 
+ #include <typedefs.h>
+ #include <proto/ethernet.h>
