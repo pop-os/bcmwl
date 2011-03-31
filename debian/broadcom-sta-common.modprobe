@@ -3,5 +3,6 @@
 blacklist b44
 blacklist b43legacy
 blacklist b43
+blacklist brcm80211
 blacklist ssb
 install wl /sbin/modprobe --ignore-install wl $CMDLINE_OPTS
