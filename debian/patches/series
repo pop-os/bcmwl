@@ -1,3 +1,4 @@
+00-changelog.patch
 01-license.patch
-02-linux-2.6.33.patch
-03-linux-2.6.35.patch
+02-linux-semaphore-include.patch
+03-linux-2.6.37.patch
