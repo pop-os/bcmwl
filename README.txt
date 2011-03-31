@@ -1,13 +1,9 @@
-/* $Id: ReadmeReleaseHybridBuild.txt,v 15.4.22.2.6.28 2010/02/06 01:27:51 Exp $ */
-
-
-
 Broadcom Linux hybrid wireless driver
 
 DISCLAIMER
 ----------
 This is an Official Release of Broadcom's hybrid Linux driver for use with 
-Broadcom based hardware.
+Broadcom-based hardware.
 
 WHERE TO GET THE RELEASE
 ------------------------
@@ -45,23 +41,25 @@ The cards with the following PCI Device IDs are supported with this driver.
 Both Broadcom and and Dell product names are described.  Cards not listed here
 may also work.
 
-	   BRCM		    PCI		  PCI		  Dell
-	  Product Name	  Vendor ID	Device ID	Product ID
-          -------------	 ----------	---------   	-----------
+ 	    BRCM		    PCI	PCI		  Dell
+	    Product Name	  Vendor ID	Device ID	Product ID
+          -------------	 ----------	---------   -----------
           4311 2.4 Ghz	    0x14e4	0x4311  	Dell 1390
           4311 Dualband	    0x14e4	0x4312  	Dell 1490
-          4311 5 Ghz	    0x14e4    	0x4313  	
+          4311 5 Ghz	    0x14e4  0x4313  	
           4312 2.4 Ghz	    0x14e4	0x4315  	Dell 1395
-          4313 2.4 Ghz	    0x14e4	0x4727 		Dell 1501
+          4313 2.4 Ghz	    0x14e4	0x4727 	Dell 1501
           4321 Dualband	    0x14e4	0x4328  	Dell 1505
           4321 Dualband	    0x14e4	0x4328  	Dell 1500
           4321 2.4 Ghz	    0x14e4	0x4329  	
           4321 5 Ghz        0x14e4	0x432a  	
-          4322 	Dualband    0x14e4	0x432b  	Dell 1510
+          4322 Dualband     0x14e4	0x432b  	Dell 1510
           4322 2.4 Ghz      0x14e4 	0x432c  	
           4322 5 Ghz        0x14e4 	0x432d  	
           43224 Dualband    0x14e4	0x4353  	Dell 1520
           43225 2.4 Ghz     0x14e4	0x4357  	
+          43227 2.4 Ghz     0x14e4  0x4358
+          43228 Dualband    0x14e4  0x4359      Dell 1530
 
 To find the Device ID's of Broadcom cards on your machines do:
 # lspci -n | grep 14e4
@@ -104,12 +102,13 @@ BUILD INSTRUCTIONS
 ------------------
 1. Setup the directory by untarring the proper tarball:
 
-For 32 bit: 	hybrid-portsrc.tar.gz
-For 64 bit: 	hybrid-portsrc-x86_64.tar.gz
+For 32 bit: 	hybrid-portsrc_x86-32_v5.100.82.38.tar.gz
+For 64 bit: 	hybrid-portsrc_x86-64_v5.100.82.38.tar.gz
 
+Example:
 # mkdir hybrid_wl
 # cd hybrid_wl
-# tar xzf <path>/hybrid-portsrc.tar or <path>/hybrid-portsrc-x86_64.tar.gz
+# tar xzf <path>/hybrid-portsrc_x86-32_v5.100.82.38.tar.gz
 
 2. Build the driver as a Linux loadable kernel module (LKM):
 
@@ -249,20 +248,53 @@ the user to lower the tx power to levels below the regulatory limit.
 Internally, the actual tx power is always kept within regulatory limits
 no matter what the user request is set to.
 
-WHAT'S NEW IN THIS RELEASE
-----------------------------
-+ Supports up to linux kernel 2.6.31. 2.6.32 support is there also but 
-not tested (although reports from users suggests it works fine.)
+WHAT'S NEW IN RELEASE 5.100.82.38
+---------------------------------
++ Support for bcm43227 and bcm43228
++ Fix for issue where iwconfig was sometime reporting rate incorrectly
++ Supports rfkill in kernels 2.6.31 to 2.6.36
++ Supports scan complete event (SIOCGIWSCAN)
++ Adds EAGAIN (busy signal) to query of scan results
+
+WHAT'S NEW IN RELEASE 5.100.57.15
+---------------------------------
++ Following fixes (issues introduced in 5.100.57.13)
+    Issue #87477 - 4313: DUT is not able to associate in WPA2-PSK TKIP/AES
+    Issue #87533 - NetworkManager: 4313: Unable to associate to APs with WPA2-PSK
+
+WHAT'S NEW IN RELEASE 5.100.57.13
+---------------------------------
++ 4313 PHY fixes to improve throughput stability at different ranges
++ Fix for interop issues with different APs
++ Fix for hangs seen during Fn-F2 sequence
+- Support for rfkill in kernels 2.6.31 to 2.6.36
+
+WHAT'S NEW IN RELEASE 5.60.246.6
+--------------------------------
++ Supports rfkill in kernels 2.6.31 to 2.6.36
++ Fix for compile error with multicast list in kernel 2.6.34
++ Fix for #76743 - Ubuntu9.04: Network manager displays n/w's with radio disabled
+
+WHAT'S NEW IN RELEASE 5.60.246.2
+--------------------------------
++ Supports up to linux kernel 2.6.36 (from 2.6.32)
++ Fix for #86668: [Canonical] Bug #611575/617369: System will hang if
+    you use the F2 hot key to enable/disable wireless quickly while
+    wireless is still in the process of re-association with AP
+
+WHAT'S NEW IN RELEASE 5.60.48.36
+--------------------------------
++ Supports up to linux kernel 2.6.32
 + Supports hidden networks
-+ Supports rfkill in kernels <  2.6.31
++ Supports rfkill in kernels < 2.6.31
 + Setting power level via 'iwconfig eth1 txpower X' now operational
-+ Support for 4313
-+ Additional channels in both 2.4 and 5 Ghz bands.
++ Support for bcm4313
++ Additional channels in both 2.4 and 5 Ghz bands
 + Fixed issue with tkip group keys that caused this message to repeat often:
-	TKIP: RX tkey->key_idx=2 frame keyidx=1 priv=ffff8800cf80e840
+    TKIP: RX tkey->key_idx=2 frame keyidx=1 priv=ffff8800cf80e840
 + Following fixes
     Issue #72216 - Ubuntu 8.04: standby/resume with WPA2 and wpa_supplicant causes
-                               a continuous assoc/disassoc loop (issue in 2.6.24 kernel)
+                     a continuous assoc/disassoc loop (issue in 2.6.24 kernel)
     Issue #72324 - Ubuntu 8.04: cannot ping when Linux STA is IBSS creator with WEP
     Issue #76739 - Ubuntu 9.04: unable to connect to hidden network after stdby/resume
     Issue #80392 - S4 resume hang with SuSE SLED 11 and 43225
@@ -271,10 +303,10 @@ not tested (although reports from users suggests it works fine.)
 KNOWN ISSUES AND LIMITATIONS
 ----------------------------
 #72238 - 20% lower throughput on channels 149, 153, 157, and 161
-#76743 - Ubuntu9.04: Network manager displays n/w's with radio disabled
 #76793 - Ubuntu9.04: STA fails to create IBSS network in 5 Ghz band
 #81392 - Unable to transfer data over ad-hoc network created by NetworkManager (iwconfig OK)
 #81452 - STA unable to associate to AP when PEAPv1-MSCHAPv2 authentication is used
+#87531 - WPASUP: 4313: WPA Supplicant crashes when trying to connect to 802.1x
 
 HOW TO INSTALL A PRE-COMPILED DRIVER
 -----------------------------------

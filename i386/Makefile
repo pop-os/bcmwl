@@ -11,7 +11,7 @@
 # or duplicated in any form, in whole or in part, without the prior
 # written permission of Broadcom Corporation.
 #
-# $Id: Makefile_kbuild_portsrc,v 1.5.4.1 2009/08/13 21:37:18 Exp $
+# $Id: Makefile_kbuild_portsrc,v 1.6.54.1 2010/09/27 22:18:19 Exp $
 
 obj-m              += wl.o
 
@@ -23,6 +23,7 @@ wl-objs            += src/wl/sys/wl_iw.o
 EXTRA_CFLAGS       :=
 EXTRA_CFLAGS       += -I$(src)/src/include
 EXTRA_CFLAGS       += -I$(src)/src/wl/sys -I$(src)/src/wl/phy
+#EXTRA_CFLAGS       += -DBCMDBG_ASSERT
 
 EXTRA_LDFLAGS      := $(src)/lib/wlc_hybrid.o_shipped
 
