@@ -1,3 +1,11 @@
+bcmwl (5.100.82.38+bdcom-0ubuntu3) natty; urgency=low
+
+  * debian/bcmwl-kernel-source.postinst: Also blacklist brcm80211, to ensure
+    it actually is getting used. Thanks to Daniel van Vugt for the patch!
+    (LP: #747002)
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Mon, 18 Apr 2011 12:14:43 +0200
+
 bcmwl (5.100.82.38+bdcom-0ubuntu2) natty; urgency=low
 
   [ Henrik Rydberg ]
