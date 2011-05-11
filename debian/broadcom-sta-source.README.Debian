@@ -21,7 +21,8 @@ broadcom-sta for Debian
 =======================
 
 Broadcom STA is a binary-only device driver to support the following IEEE
-802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4321-, and BCM4322.
+802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4313-,
+BCM4321-, BCM4322-, BCM43224-, BCM43225-, BCM43227-, and BCM43228.
 
 You also need the wireless-tools package to get the necessary user-space support
 programs.

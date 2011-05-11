@@ -14,7 +14,8 @@ Recommends: wireless-tools
 Description: broadcom-sta modules for Linux (kernel _KVERS_)
  Broadcom STA is a binary-only device driver to support the following IEEE
  802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4313-,
- BCM4321-, and BCM4322-based hardware.
+ BCM4321-, BCM4322-, BCM43224-, BCM43225-, BCM43227-, and BCM43228-based
+ hardware.
  .
  This package contains the set of loadable kernel modules for the broadcom-sta
  wireless network driver. The wireless-tools package is also required in order
