@@ -1,3 +1,12 @@
+broadcom-sta (5.100.82.38-2) unstable; urgency=low
+
+  * Updated supported chipset details, thanks to Geoff Simmons
+    <gsimmons@gsimmons.org> (Closes: #620149). 
+  * Added brcmsmac to blacklist, thanks to Geoff Simmons for the tip
+    (Closes: #626283).
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Wed, 11 May 2011 07:24:54 +0400
+
 broadcom-sta (5.100.82.38-1) unstable; urgency=low
 
   * New upstream release (Closes: #605715).
