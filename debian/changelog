@@ -1,3 +1,14 @@
+bcmwl (5.100.82.38+bdcom-0ubuntu4) oneiric; urgency=low
+
+  [ Daniel van Vugt ]
+  * debian/bcmwl-kernel-source.prerm:
+    - Don't error out if we can't remove bcmwl module.  LP: #776439
+  * debian/bcmwl-kernel-source.postinst:
+    - Unconditionally update the blacklist (i.e. even on upgrade).
+      LP: #776165 
+
+ -- Michael Terry <mterry@ubuntu.com>  Wed, 01 Jun 2011 13:57:27 -0400
+
 bcmwl (5.100.82.38+bdcom-0ubuntu3) natty; urgency=low
 
   * debian/bcmwl-kernel-source.postinst: Also blacklist brcm80211, to ensure

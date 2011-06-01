@@ -11,7 +11,7 @@ CVERSION=`dpkg-query -W -f='${Version}' bcmwl-kernel-source | awk -F "-" '{print
 case "$1" in
     remove|upgrade)
 		echo "Removing all DKMS Modules"
-		dkms remove -m bcmwl -v $CVERSION --all > /dev/null
+		dkms remove -m bcmwl -v $CVERSION --all > /dev/null || true
 		echo "Done."
         ;;
 esac
