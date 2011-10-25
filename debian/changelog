@@ -1,3 +1,12 @@
+broadcom-sta (5.100.82.111-1) unstable; urgency=low
+
+  * New upstream release.
+  * Refreshed changelog and license patches.
+  * Removed obsolete patch 03-linux-2.6.37.patch.
+  * Bumped standards version to 3.9.2 (No changes).
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Tue, 25 Oct 2011 08:21:13 +0400
+
 broadcom-sta (5.100.82.38-2) unstable; urgency=low
 
   * Updated supported chipset details, thanks to Geoff Simmons
