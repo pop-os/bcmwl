@@ -10,7 +10,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wl_linux.c,v 1.524.2.40.2.12 2010/12/08 23:33:57 Exp $
+ * $Id: wl_linux.c,v 1.524.2.40.2.15 2011-02-09 02:28:28 Exp $
  */
 
 #define LINUX_PORT
@@ -65,13 +65,11 @@ typedef const struct si_pub	si_t;
 
 #include <wlc_pub.h>
 #include <wl_dbg.h>
+#include <wlc_ethereal.h>
+#include <proto/ieee80211_radiotap.h>
 
-#undef USE_IW
-#if defined(CONFIG_WIRELESS_EXT)
-#define USE_IW
-#endif
-#ifdef USE_IW
 #include <wl_iw.h>
+#ifdef USE_IW
 struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
 #endif
 
@@ -82,8 +80,15 @@ struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
 #ifdef WL_THREAD
 #include <linux/kthread.h>
 #endif 
+
+#if defined(USE_CFG80211)
+#include <wl_cfg80211.h>
+#endif
+
 static void wl_timer(ulong data);
 static void _wl_timer(wl_timer_t *t);
+
+static int wl_monitor_start(struct sk_buff *skb, struct net_device *dev);
 
 #ifdef WL_ALL_PASSIVE
 static void wl_start_txqwork(struct wl_task *task);
@@ -98,6 +103,8 @@ static void wl_dpc_rxwork(struct wl_task *task);
 #else
 
 #endif 
+
+static int wl_reg_proc_entry(wl_info_t *wl);
 
 static int wl_linux_watchdog(void *ctx);
 static
@@ -159,11 +166,9 @@ static void wl_dpc(ulong data);
 #endif 
 static void wl_link_up(wl_info_t *wl, char * ifname);
 static void wl_link_down(wl_info_t *wl, char *ifname);
+static int wl_schedule_task(wl_info_t *wl, void (*fn)(struct wl_task *), void *context);
 #ifdef WL_THREAD
 static int wl_start_enqueue_wlthread(wl_info_t *wl, struct sk_buff *skb);
-#endif 
-#if defined(CONFIG_PROC_FS)
-static int wl_read_proc(char *buffer, char **start, off_t offset, int length, int *eof, void *data);
 #endif 
 #if defined(BCMDBG)
 static int wl_dump(wl_info_t *wl, struct bcmstrbuf *b);
@@ -268,6 +273,63 @@ module_param_string(name, name, IFNAMSIZ, 0);
 #define	IEEE80211_RADIOTAP_HTMOD_STBC_MASK	0x30
 #define	IEEE80211_RADIOTAP_HTMOD_STBC_SHIFT	4
 
+struct wl_radiotap_legacy {
+	struct ieee80211_radiotap_header	ieee_radiotap;
+	uint32       tsft_h;
+	uint32       tsft_l;
+	uint8        flags;
+	uint8        rate;
+	uint16       channel_freq;
+	uint16       channel_flags;
+	uint8        signal;
+	uint8        noise;
+	uint8        antenna;
+} __attribute__((__packed__));
+
+struct wl_radiotap_ht {
+	struct ieee80211_radiotap_header        ieee_radiotap;
+	uint32_t				it_present_ext;
+	uint32_t	pad1;
+	uint32		tsft_h;
+	uint32		tsft_l;
+	u_int8_t        flags;
+	u_int8_t        pad2;
+	u_int16_t       channel_freq;
+	u_int16_t       channel_flags;
+	u_int8_t        signal;
+	u_int8_t        noise;
+	u_int8_t        antenna;
+	u_int8_t        pad3;
+	u_int8_t	vend_oui[3];
+	u_int8_t	vend_sns;
+	u_int16_t	vend_skip_len;
+	u_int8_t	mcs;
+	u_int8_t	htflags;
+} __attribute__((packed));
+
+#define WL_RADIOTAP_PRESENT_LEGACY			\
+	((1 << IEEE80211_RADIOTAP_TSFT) |		\
+	 (1 << IEEE80211_RADIOTAP_RATE) |		\
+	 (1 << IEEE80211_RADIOTAP_CHANNEL) |		\
+	 (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |	\
+	 (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |	\
+	 (1 << IEEE80211_RADIOTAP_FLAGS) |		\
+	 (1 << IEEE80211_RADIOTAP_ANTENNA))
+
+#define WL_RADIOTAP_PRESENT_HT				\
+	((1 << IEEE80211_RADIOTAP_TSFT) |		\
+	 (1 << IEEE80211_RADIOTAP_FLAGS) |		\
+	 (1 << IEEE80211_RADIOTAP_CHANNEL) |		\
+	 (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |	\
+	 (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |	\
+	 (1 << IEEE80211_RADIOTAP_ANTENNA) |		\
+	 (1 << IEEE80211_RADIOTAP_VENDOR_NAMESPACE) |	\
+	 (1 << IEEE80211_RADIOTAP_EXT))
+
+#ifndef ARPHRD_IEEE80211_RADIOTAP
+#define ARPHRD_IEEE80211_RADIOTAP 803
+#endif
+
 #ifndef	SRCBASE
 #define	SRCBASE "."
 #endif
@@ -327,6 +389,12 @@ static const struct net_device_ops wl_netdev_ops =
 	.ndo_do_ioctl = wl_ioctl
 };
 
+static const struct net_device_ops wl_netdev_monitor_ops =
+{
+	.ndo_start_xmit = wl_monitor_start,
+	.ndo_get_stats = wl_get_stats,
+	.ndo_do_ioctl = wl_ioctl
+};
 #endif 
 
 static
@@ -371,11 +439,15 @@ void wl_if_setup(struct net_device *dev)
 #if WIRELESS_EXT > 12
 	dev->wireless_handlers = (struct iw_handler_def *) &wl_iw_handler_def;
 #endif
-#endif 
-
 #if WIRELESS_EXT >= 19 || LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	dev->ethtool_ops = &wl_ethtool_ops;
 #endif
+#endif 
+
+#if defined(USE_CFG80211) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	dev->ethtool_ops = &wl_ethtool_ops;
+#endif 
+
 }
 
 static wl_info_t *
@@ -384,11 +456,11 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 	struct net_device *dev;
 	wl_if_t *wlif;
 	wl_info_t *wl;
-#if defined(CONFIG_PROC_FS)
-	char tmp[128];
-#endif
 	osl_t *osh;
 	int unit, err;
+#if defined(USE_CFG80211)
+	struct device *parentdev;
+#endif
 
 	unit = wl_found + instance_base;
 	err = 0;
@@ -482,7 +554,7 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 #ifdef WL_ALL_PASSIVE
 		spin_lock_init(&wl->txq_lock);
 #endif 
-		init_MUTEX(&wl->sem);
+		sema_init(&wl->sem, 1);
 	}
 
 	if (!(wl->wlc = wlc_attach((void *) wl, vendor, device, unit, wl->piomode,
@@ -501,12 +573,6 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 	wlc_iovar_setint(wl->wlc, "scan_passive_time", 170);
 
 	wlc_iovar_setint(wl->wlc, "qtxpower", 23 * 4);
-
-#if defined(CONFIG_PROC_FS)
-
-	sprintf(tmp, "net/wl%d", wl->pub->unit);
-	create_proc_read_entry(tmp, 0, 0, wl_read_proc, (void*)wl);
-#endif
 
 #ifdef BCMDBG
 	if (macaddr != NULL) {  
@@ -536,11 +602,31 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 		dev->irq = irq;
 	}
 
+#if defined(USE_IW)
+	WL_ERROR(("Using Wireless Extension\n"));
+#endif
+
+#if defined(USE_CFG80211)
+	parentdev = NULL;
+	if (wl->bcm_bustype == PCI_BUS) {
+		parentdev = &((struct pci_dev *)btparam)->dev;
+	}
+	if (parentdev) {
+		if (wl_cfg80211_attach(dev, parentdev)) {
+			goto fail;
+		}
+	}
+	else {
+		WL_ERROR(("unsupported bus type\n"));
+		goto fail;
+	}
+#else
 	if (wl->bcm_bustype == PCI_BUS) {
 		struct pci_dev *pci_dev = (struct pci_dev *)btparam;
 		if (pci_dev != NULL)
 			SET_NETDEV_DEV(dev, &pci_dev->dev);
 	}
+#endif 
 
 	if (register_netdev(dev)) {
 		WL_ERROR(("wl%d: register_netdev() failed\n", unit));
@@ -610,6 +696,8 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 	wlc_dump_register(wl->pub, "wl", (dump_fn_t)wl_dump, (void *)wl);
 #endif
 
+	wl_reg_proc_entry(wl);
+
 	printf("%s: Broadcom BCM%04x 802.11 Hybrid Wireless Controller " EPI_VERSION_STR,
 		dev->name, device);
 
@@ -625,45 +713,6 @@ fail:
 	wl_free(wl);
 	return NULL;
 }
-
-#if defined(CONFIG_PROC_FS)
-static int
-wl_read_proc(char *buffer, char **start, off_t offset, int length, int *eof, void *data)
-{
-	wl_info_t *wl;
-	int len;
-	off_t pos;
-	off_t begin;
-
-	len = pos = begin = 0;
-
-	wl = (wl_info_t*) data;
-
-	WL_LOCK(wl);
-
-#if defined(BCMDBG)
-	wlc_iovar_dump(wl->wlc, "all", strlen("all") + 1, buffer, PAGE_SIZE);
-	len = strlen(buffer);
-#endif 
-	WL_UNLOCK(wl);
-	pos = begin + len;
-
-	if (pos < offset) {
-		len = 0;
-		begin = pos;
-	}
-
-	*eof = 1;
-
-	*start = buffer + (offset - begin);
-	len -= (offset - begin);
-
-	if (len > length)
-		len = length;
-
-	return (len);
-}
-#endif 
 
 static void __devexit wl_remove(struct pci_dev *pdev);
 
@@ -908,12 +957,13 @@ wl_free(wl_info_t *wl)
 	}
 
 	if (wl->wlc) {
-#if defined(CONFIG_PROC_FS)
-		char tmp[128];
 
-		sprintf(tmp, "net/wl%d", wl->pub->unit);
-		remove_proc_entry(tmp, 0);
-#endif 
+		{
+		char tmp1[128];
+		sprintf(tmp1, "%s%d", HYBRID_PROC, wl->pub->unit);
+		remove_proc_entry(tmp1, 0);
+		}
+
 		wlc_detach(wl->wlc);
 		wl->wlc = NULL;
 		wl->pub = NULL;
@@ -1002,6 +1052,13 @@ wl_open(struct net_device *dev)
 	if (!error)
 		OLD_MOD_INC_USE_COUNT;
 
+#if defined(USE_CFG80211)
+	if (wl_cfg80211_up(dev)) {
+		WL_ERROR(("%s: failed to bring up cfg80211\n", __func__));
+		return -1;
+	}
+#endif
+
 	return (error? -ENODEV: 0);
 }
 
@@ -1012,6 +1069,10 @@ wl_close(struct net_device *dev)
 
 	if (!dev)
 		return -ENETDOWN;
+
+#if defined(USE_CFG80211)
+	wl_cfg80211_down(dev);
+#endif
 
 	wl = WL_INFO(dev);
 
@@ -1073,8 +1134,6 @@ wl_txflowcontrol(wl_info_t *wl, struct wl_if *wlif, bool state, int prio)
 		netif_wake_queue(dev);
 }
 
-#if defined(WL_ALL_PASSIVE)
-
 static int
 wl_schedule_task(wl_info_t *wl, void (*fn)(struct wl_task *task), void *context)
 {
@@ -1101,7 +1160,6 @@ wl_schedule_task(wl_info_t *wl, void (*fn)(struct wl_task *task), void *context)
 
 	return 0;
 }
-#endif 
 
 static struct wl_if *
 wl_alloc_if(wl_info_t *wl, int iftype, uint subunit, struct wlc_if* wlcif)
@@ -1150,6 +1208,7 @@ wl_alloc_if(wl_info_t *wl, int iftype, uint subunit, struct wlc_if* wlcif)
 	wlif->wl = wl;
 	wlif->wlcif = wlcif;
 	wlif->subunit = subunit;
+	wlif->if_type = iftype;
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
 	dev->priv = wlif;
 #endif
@@ -1176,6 +1235,11 @@ wl_free_if(wl_info_t *wl, wl_if_t *wlif)
 	if (wlif->dev_registed) {
 		unregister_netdev(wlif->dev);
 	}
+
+#if defined(USE_CFG80211)
+	if (wlif->if_type != WL_IFTYPE_MON)
+		wl_cfg80211_detach(wlif->dev);
+#endif
 
 	p = wl->if_list;
 	if (p == wlif)
@@ -1300,6 +1364,7 @@ void
 wl_down(wl_info_t *wl)
 {
 	wl_if_t *wlif;
+	int monitor = 0;
 	uint callbacks, ret_val = 0;
 
 	WL_TRACE(("wl%d: wl_down\n", wl->pub->unit));
@@ -1307,6 +1372,13 @@ wl_down(wl_info_t *wl)
 	for (wlif = wl->if_list; wlif != NULL; wlif = wlif->next) {
 		netif_down(wlif->dev);
 		netif_stop_queue(wlif->dev);
+	}
+
+	if (wl->monitor_dev) {
+		ret_val = wlc_ioctl(wl->wlc, WLC_SET_MONITOR, &monitor, sizeof(int), NULL);
+		if (ret_val != BCME_OK) {
+			WL_ERROR(("%s: Disabling MONITOR failed %d\n", __FUNCTION__, ret_val));
+		}
 	}
 
 	ret_val = wlc_down(wl->wlc);
@@ -2025,6 +2097,10 @@ wl_event(wl_info_t *wl, char *ifname, wlc_event_t *e)
 	wl_iw_event(wl->dev, &(e->event), e->data);
 #endif 
 
+#if defined(USE_CFG80211)
+	wl_cfg80211_event(wl->dev, &(e->event), e->data);
+#endif
+
 	switch (e->event.event_type) {
 	case WLC_E_LINK:
 	case WLC_E_NDIS_LINK:
@@ -2345,11 +2421,319 @@ wl_free_timer(wl_info_t *wl, wl_timer_t *t)
 void
 wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 {
+	struct sk_buff *oskb = (struct sk_buff *)p;
+	struct sk_buff *skb;
+	uchar *pdata;
+	uint len;
+
+	len = 0;
+	skb = NULL;
+	WL_TRACE(("wl%d: wl_monitor\n", wl->pub->unit));
+
+	if (!wl->monitor_dev)
+		return;
+
+	if (wl->monitor_type == ARPHRD_IEEE80211_PRISM) {
+		p80211msg_t *phdr;
+
+		len = sizeof(p80211msg_t) + oskb->len - D11_PHY_HDR_LEN;
+		if ((skb = dev_alloc_skb(len)) == NULL)
+			return;
+
+		skb_put(skb, len);
+		phdr = (p80211msg_t*)skb->data;
+
+		phdr->msgcode = WL_MON_FRAME;
+		phdr->msglen = sizeof(p80211msg_t);
+		strcpy(phdr->devname, wl->dev->name);
+
+		phdr->hosttime.did = WL_MON_FRAME_HOSTTIME;
+		phdr->hosttime.status = P80211ITEM_OK;
+		phdr->hosttime.len = 4;
+		phdr->hosttime.data = jiffies;
+
+		phdr->channel.did = WL_MON_FRAME_CHANNEL;
+		phdr->channel.status = P80211ITEM_NO_VALUE;
+		phdr->channel.len = 4;
+		phdr->channel.data = 0;
+
+		phdr->signal.did = WL_MON_FRAME_SIGNAL;
+		phdr->signal.status = P80211ITEM_OK;
+		phdr->signal.len = 4;
+
+		phdr->signal.data = rxsts->preamble;
+
+		phdr->noise.did = WL_MON_FRAME_NOISE;
+		phdr->noise.status = P80211ITEM_NO_VALUE;
+		phdr->noise.len = 4;
+		phdr->noise.data = 0;
+
+		phdr->rate.did = WL_MON_FRAME_RATE;
+		phdr->rate.status = P80211ITEM_OK;
+		phdr->rate.len = 4;
+		phdr->rate.data = rxsts->datarate;
+
+		phdr->istx.did = WL_MON_FRAME_ISTX;
+		phdr->istx.status = P80211ITEM_NO_VALUE;
+		phdr->istx.len = 4;
+		phdr->istx.data = 0;
+
+		phdr->mactime.did = WL_MON_FRAME_MACTIME;
+		phdr->mactime.status = P80211ITEM_OK;
+		phdr->mactime.len = 4;
+		phdr->mactime.data = rxsts->mactime;
+
+		phdr->rssi.did = WL_MON_FRAME_RSSI;
+		phdr->rssi.status = P80211ITEM_OK;
+		phdr->rssi.len = 4;
+		phdr->rssi.data = rxsts->signal;		
+
+		phdr->sq.did = WL_MON_FRAME_SQ;
+		phdr->sq.status = P80211ITEM_OK;
+		phdr->sq.len = 4;
+		phdr->sq.data = rxsts->sq;
+
+		phdr->frmlen.did = WL_MON_FRAME_FRMLEN;
+		phdr->frmlen.status = P80211ITEM_OK;
+		phdr->frmlen.status = P80211ITEM_OK;
+		phdr->frmlen.len = 4;
+		phdr->frmlen.data = rxsts->pktlength;
+
+		pdata = skb->data + sizeof(p80211msg_t);
+		bcopy(oskb->data + D11_PHY_HDR_LEN, pdata, oskb->len - D11_PHY_HDR_LEN);
+
+	} else if (wl->monitor_type == ARPHRD_IEEE80211_RADIOTAP) {
+		int channel_frequency;
+		uint16 channel_flags;
+		uint8 flags;
+		uint16 rtap_len;
+		struct dot11_header * mac_header;
+		uint16 fc;
+
+		if (rxsts->datarate != 0)
+			rtap_len = sizeof(struct wl_radiotap_legacy);
+		else
+			rtap_len = sizeof(struct wl_radiotap_ht);
+
+		len = rtap_len + (oskb->len - D11_PHY_HDR_LEN);
+		if ((skb = dev_alloc_skb(len)) == NULL)
+			return;
+
+		skb_put(skb, len);
+
+		if (CHSPEC_IS2G(rxsts->chanspec)) {
+			channel_flags = IEEE80211_CHAN_2GHZ;
+			channel_frequency = wf_channel2mhz(CHSPEC_CHANNEL(rxsts->chanspec),
+			                                   WF_CHAN_FACTOR_2_4_G);
+		} else {
+			channel_flags = IEEE80211_CHAN_5GHZ;
+			channel_frequency = wf_channel2mhz(CHSPEC_CHANNEL(rxsts->chanspec),
+			                                   WF_CHAN_FACTOR_5_G);
+		}
+
+		mac_header = (struct dot11_header *)(oskb->data + D11_PHY_HDR_LEN);
+		fc = ntoh16(mac_header->fc);
+
+		flags = IEEE80211_RADIOTAP_F_FCS;
+
+		if (rxsts->preamble == WL_RXS_PREAMBLE_SHORT)
+			flags |= IEEE80211_RADIOTAP_F_SHORTPRE;
+
+		if (fc & (FC_WEP >> FC_WEP_SHIFT))
+			flags |= IEEE80211_RADIOTAP_F_WEP;
+
+		if (fc & (FC_MOREFRAG >> FC_MOREFRAG_SHIFT))
+			flags |= IEEE80211_RADIOTAP_F_FRAG;
+
+		if (rxsts->pkterror & WL_RXS_CRC_ERROR)
+			flags |= IEEE80211_RADIOTAP_F_BADFCS;
+
+		if (rxsts->datarate != 0) {
+			struct wl_radiotap_legacy *rtl = (struct wl_radiotap_legacy*)skb->data;
+
+			rtl->ieee_radiotap.it_version = 0;
+			rtl->ieee_radiotap.it_pad = 0;
+			rtl->ieee_radiotap.it_len = HTOL16(rtap_len);
+			rtl->ieee_radiotap.it_present = HTOL32(WL_RADIOTAP_PRESENT_LEGACY);
+
+			rtl->tsft_l = htol32(rxsts->mactime);
+			rtl->flags = flags;
+			rtl->rate = rxsts->datarate;
+			rtl->channel_freq = HTOL16(channel_frequency);
+			rtl->channel_flags = HTOL16(channel_flags);
+			rtl->signal = (int8)rxsts->signal;
+			rtl->noise = (int8)rxsts->noise;
+			rtl->antenna = rxsts->antenna;
+		} else {
+			struct wl_radiotap_ht *rtht = (struct wl_radiotap_ht*)skb->data;
+
+			rtht->ieee_radiotap.it_version = 0;
+			rtht->ieee_radiotap.it_pad = 0;
+			rtht->ieee_radiotap.it_len = HTOL16(rtap_len);
+			rtht->ieee_radiotap.it_present = HTOL32(WL_RADIOTAP_PRESENT_HT);
+			rtht->it_present_ext = HTOL32(WL_RADIOTAP_BRCM_MCS);
+
+			rtht->pad1 = 0;
+			rtht->tsft_l = htol32(rxsts->mactime);
+			rtht->flags = flags;
+			rtht->pad2 = 0;
+			rtht->channel_freq = HTOL16(channel_frequency);
+			rtht->channel_flags = HTOL16(channel_flags);
+			rtht->signal = (int8)rxsts->signal;
+			rtht->noise = (int8)rxsts->noise;
+			rtht->antenna = rxsts->antenna;
+
+			rtht->pad3 = 0;
+			memcpy(rtht->vend_oui, "\x00\x10\x18", 3);
+			rtht->vend_sns = WL_RADIOTAP_BRCM_SNS;
+			rtht->vend_skip_len = 2;
+
+			rtht->mcs = rxsts->mcs;
+			rtht->htflags = 0;
+			if (rxsts->htflags & WL_RXS_HTF_40)
+				   rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_40;
+			if (rxsts->htflags & WL_RXS_HTF_SGI)
+				   rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_SGI;
+			if (rxsts->preamble & WL_RXS_PREAMBLE_HT_GF)
+				   rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_GF;
+			if (rxsts->htflags & WL_RXS_HTF_LDPC)
+				   rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_LDPC;
+			rtht->htflags |=
+				(rxsts->htflags & WL_RXS_HTF_STBC_MASK) <<
+				IEEE80211_RADIOTAP_HTMOD_STBC_SHIFT;
+		}
+
+		pdata = skb->data + rtap_len;
+		bcopy(oskb->data + D11_PHY_HDR_LEN, pdata, oskb->len - D11_PHY_HDR_LEN);
+	}
+
+	skb->dev = wl->monitor_dev;
+	skb->dev->last_rx = jiffies;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 22)
+	skb_reset_mac_header(skb);
+#else
+	skb->mac.raw = skb->data;
+#endif
+	skb->ip_summed = CHECKSUM_NONE;
+	skb->pkt_type = PACKET_OTHERHOST;
+	skb->protocol = htons(ETH_P_80211_RAW);
+
+#ifdef NAPI_POLL
+	netif_receive_skb(skb);
+#else 
+	netif_rx(skb);
+#endif 
+}
+
+static int
+wl_monitor_start(struct sk_buff *skb, struct net_device *dev)
+{
+	wl_info_t *wl;
+
+	wl = WL_DEV_IF(dev)->wl;
+	PKTFREE(wl->osh, skb, FALSE);
+	return 0;
+}
+
+static void
+wl_add_monitor(wl_task_t *task)
+{
+	wl_info_t *wl = (wl_info_t *) task->context;
+	struct net_device *dev;
+	wl_if_t *wlif;
+
+	ASSERT(wl);
+	WL_LOCK(wl);
+	WL_TRACE(("wl%d: wl_add_monitor\n", wl->pub->unit));
+
+	if (wl->monitor_dev)
+		goto done;
+
+	wlif = wl_alloc_if(wl, WL_IFTYPE_MON, wl->pub->unit, NULL);
+	if (!wlif) {
+		WL_ERROR(("wl%d: wl_add_monitor: alloc wlif failed\n", wl->pub->unit));
+		goto done;
+	}
+
+	dev = wlif->dev;
+	wl->monitor_dev = dev;
+
+	bcopy(wl->dev->dev_addr, dev->dev_addr, ETHER_ADDR_LEN);
+	dev->flags = wl->dev->flags;
+	dev->type = wl->monitor_type;
+	if (wl->monitor_type == ARPHRD_IEEE80211_PRISM) {
+		sprintf(dev->name, "prism%d", wl->pub->unit);
+	} else {
+		sprintf(dev->name, "radiotap%d", wl->pub->unit);
+	}
+
+#if defined(WL_USE_NETDEV_OPS)
+	dev->netdev_ops = &wl_netdev_monitor_ops;
+#else
+	dev->hard_start_xmit = wl_monitor_start;
+	dev->do_ioctl = wl_ioctl;
+	dev->get_stats = wl_get_stats;
+#endif 
+
+	WL_UNLOCK(wl);
+	if (register_netdev(dev)) {
+		WL_ERROR(("wl%d: wl_add_monitor, register_netdev failed for \"%s\"\n",
+			wl->pub->unit, wl->monitor_dev->name));
+		wl->monitor_dev = NULL;
+		wl_free_if(wl, wlif);
+	} else
+		wlif->dev_registed = TRUE;
+	WL_LOCK(wl);
+done:
+	MFREE(wl->osh, task, sizeof(wl_task_t));
+	atomic_dec(&wl->callbacks);
+	WL_UNLOCK(wl);
+}
+
+static void
+wl_del_monitor(wl_task_t *task)
+{
+	wl_info_t *wl = (wl_info_t *) task->context;
+	struct net_device *dev;
+	wl_if_t *wlif = NULL;
+
+	ASSERT(wl);
+	WL_LOCK(wl);
+	WL_TRACE(("wl%d: wl_del_monitor\n", wl->pub->unit));
+	dev = wl->monitor_dev;
+	if (!dev)
+		goto done;
+	wlif = WL_DEV_IF(dev);
+	ASSERT(wlif);
+	wl->monitor_dev = NULL;
+	WL_UNLOCK(wl);
+	wl_free_if(wl, wlif);
+	WL_LOCK(wl);
+done:
+	MFREE(wl->osh, task, sizeof(wl_task_t));
+	WL_UNLOCK(wl);
+	atomic_dec(&wl->callbacks);
 }
 
 void
 wl_set_monitor(wl_info_t *wl, int val)
 {
+	WL_TRACE(("wl%d: wl_set_monitor: val %d\n", wl->pub->unit, val));
+
+	if (val && !wl->monitor_dev) {
+		if (val == 1)
+			wl->monitor_type = ARPHRD_IEEE80211_PRISM;
+		else if (val == 2)
+			wl->monitor_type = ARPHRD_IEEE80211_RADIOTAP;
+		else {
+			WL_ERROR(("monitor type %d not supported\n", val));
+			ASSERT(0);
+		}
+
+		(void) wl_schedule_task(wl, wl_add_monitor, wl);
+	} else if (!val && wl->monitor_dev) {
+		(void) wl_schedule_task(wl, wl_del_monitor, wl);
+	}
 }
 
 #if LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 15)
@@ -2732,5 +3116,75 @@ wl_linux_watchdog(void *ctx)
 #endif 
 	}
 
+	return 0;
+}
+
+static int
+wl_proc_read(char *buffer, char **start, off_t offset, int length, int *eof, void *data)
+{
+	wl_info_t * wl = (wl_info_t *)data;
+	int bcmerror, to_user;
+	int len;
+
+	if (offset > 0) {
+		*eof = 1;
+		return 0;
+	}
+
+	if (!length) {
+		WL_ERROR(("%s: Not enough return buf space\n", __FUNCTION__));
+		return 0;
+	}
+	WL_LOCK(wl);
+	bcmerror = wlc_ioctl(wl->wlc, WLC_GET_MONITOR, &to_user, sizeof(int), NULL);
+	len = sprintf(buffer, "%d\n", to_user);
+	WL_UNLOCK(wl);
+	return len;
+}
+
+static int
+wl_proc_write(struct file *filp, const char __user *buff, unsigned long length, void *data)
+{
+	wl_info_t * wl = (wl_info_t *)data;
+	int from_user = 0;
+	int bcmerror;
+
+	if (length == 0 || length > 2) {
+
+		WL_ERROR(("%s: Invalid data length\n", __FUNCTION__));
+		return -EIO;
+	}
+	if (copy_from_user(&from_user, buff, 1)) {
+		WL_ERROR(("%s: copy from user failed\n", __FUNCTION__));
+		return -EIO;
+	}
+
+	if (from_user >= 0x30)
+		from_user -= 0x30;
+
+	WL_LOCK(wl);
+	bcmerror = wlc_ioctl(wl->wlc, WLC_SET_MONITOR, &from_user, sizeof(int), NULL);
+	WL_UNLOCK(wl);
+
+	if (bcmerror < 0) {
+		WL_ERROR(("%s: SET_MONITOR failed with %d\n", __FUNCTION__, bcmerror));
+		return -EIO;
+	}
+	return length;
+}
+
+static int
+wl_reg_proc_entry(wl_info_t *wl)
+{
+	char tmp[32];
+	sprintf(tmp, "%s%d", HYBRID_PROC, wl->pub->unit);
+	if ((wl->proc_entry = create_proc_entry(tmp, 0644, NULL)) == NULL) {
+		WL_ERROR(("%s: create_proc_entry %s failed\n", __FUNCTION__, tmp));
+		ASSERT(0);
+		return -1;
+	}
+	wl->proc_entry->read_proc = wl_proc_read;
+	wl->proc_entry->write_proc = wl_proc_write;
+	wl->proc_entry->data = wl;
 	return 0;
 }

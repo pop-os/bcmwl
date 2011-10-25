@@ -1,8 +1,8 @@
-Index: broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_linux.c
+Index: broadcom-sta-5.100.82.111/amd64/src/wl/sys/wl_linux.c
 ===================================================================
---- broadcom-sta-5.60.48.36.orig/amd64/src/wl/sys/wl_linux.c	2010-12-15 06:01:09.000000000 +0400
-+++ broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_linux.c	2011-02-09 08:38:25.643725002 +0400
-@@ -180,6 +180,8 @@
+--- broadcom-sta-5.100.82.111.orig/amd64/src/wl/sys/wl_linux.c	2011-10-06 03:16:38.000000000 +0400
++++ broadcom-sta-5.100.82.111/amd64/src/wl/sys/wl_linux.c	2011-10-25 08:27:33.248356736 +0400
+@@ -185,6 +185,8 @@
  static void wl_report_radio_state(wl_info_t *wl);
  #endif
  
@@ -11,11 +11,11 @@ Index: broadcom-sta-5.60.48.36/amd64/src/wl/sys/wl_linux.c
  static struct pci_device_id wl_id_table[] = {
  	{ PCI_VENDOR_ID_BROADCOM, 0x4311, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
  	{ PCI_VENDOR_ID_BROADCOM, 0x4312, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-Index: broadcom-sta-5.60.48.36/i386/src/wl/sys/wl_linux.c
+Index: broadcom-sta-5.100.82.111/i386/src/wl/sys/wl_linux.c
 ===================================================================
---- broadcom-sta-5.60.48.36.orig/i386/src/wl/sys/wl_linux.c	2010-12-15 05:58:07.000000000 +0400
-+++ broadcom-sta-5.60.48.36/i386/src/wl/sys/wl_linux.c	2011-02-09 08:38:25.643725002 +0400
-@@ -180,6 +180,8 @@
+--- broadcom-sta-5.100.82.111.orig/i386/src/wl/sys/wl_linux.c	2011-10-06 03:16:10.000000000 +0400
++++ broadcom-sta-5.100.82.111/i386/src/wl/sys/wl_linux.c	2011-10-25 08:27:33.248356736 +0400
+@@ -185,6 +185,8 @@
  static void wl_report_radio_state(wl_info_t *wl);
  #endif
  
