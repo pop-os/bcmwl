@@ -10,7 +10,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wlc_pub.h,v 1.434.2.30.2.1 2010/10/26 23:11:23 Exp $
+ * $Id: wlc_pub.h,v 1.434.2.30.2.1 2010-10-26 23:11:23 Exp $
  */
 
 #ifndef _wlc_pub_h_
@@ -335,6 +335,49 @@ typedef struct wlc_if_stats {
 	uint32  rxfragerr;		
 } wlc_if_stats_t;
 
+#define WL_RXS_CRC_ERROR		0x00000001 
+#define WL_RXS_RUNT_ERROR		0x00000002 
+#define WL_RXS_ALIGN_ERROR		0x00000004 
+#define WL_RXS_OVERSIZE_ERROR		0x00000008 
+#define WL_RXS_WEP_ICV_ERROR		0x00000010 
+#define WL_RXS_WEP_ENCRYPTED		0x00000020 
+#define WL_RXS_PLCP_SHORT		0x00000040 
+#define WL_RXS_DECRYPT_ERR		0x00000080 
+#define WL_RXS_OTHER_ERR		0x80000000 
+
+#define WL_RXS_PHY_A			0x00000000 
+#define WL_RXS_PHY_B			0x00000001 
+#define WL_RXS_PHY_G			0x00000002 
+#define WL_RXS_PHY_N			0x00000004 
+
+#define WL_RXS_ENCODING_UNKNOWN		0x00000000
+#define WL_RXS_ENCODING_DSSS_CCK	0x00000001 
+#define WL_RXS_ENCODING_OFDM		0x00000002 
+#define WL_RXS_ENCODING_HT		0x00000003 
+
+#define WL_RXS_UNUSED_STUB		0x0		
+#define WL_RXS_PREAMBLE_SHORT		0x00000001	
+#define WL_RXS_PREAMBLE_LONG		0x00000002	
+#define WL_RXS_PREAMBLE_HT_MM		0x00000003	
+#define WL_RXS_PREAMBLE_HT_GF		0x00000004	
+
+#define WL_RXS_HTF_40			0x01
+#define WL_RXS_HTF_20L			0x02
+#define WL_RXS_HTF_20U			0x04
+#define WL_RXS_HTF_SGI			0x08
+#define WL_RXS_HTF_STBC_MASK		0x30
+#define WL_RXS_HTF_STBC_SHIFT		4
+#define WL_RXS_HTF_LDPC			0x40
+
+#define WL_RXS_NFRM_AMPDU_FIRST		0x00000001 
+#define WL_RXS_NFRM_AMPDU_SUB		0x00000002 
+#define WL_RXS_NFRM_AMSDU_FIRST		0x00000004 
+#define WL_RXS_NFRM_AMSDU_SUB		0x00000008 
+
+#define WL_TXS_TXF_FAIL		0x01	
+#define WL_TXS_TXF_CTS		0x02	
+#define WL_TXS_TXF_RTSCTS 	0x04	
+
 #define	AP_ENAB(pub)	(0)
 
 #define APSTA_ENAB(pub)	(0)
@@ -431,9 +474,8 @@ extern void wlc_wlcif_stats_get(wlc_info_t *wlc, wlc_if_t *wlcif,
 #define WLC_PERF_STATS_ISR			0x01
 #define WLC_PERF_STATS_DPC			0x02
 #define WLC_PERF_STATS_TMR_DPC		0x04
-#define WLC_PERF_STATS_GPTIMER		0x08
+#define WLC_PERF_STATS_PRB_REQ		0x08
 #define WLC_PERF_STATS_BCN			0x10
-#define WLC_PERF_STATS_PRB_REQ		0x20
 
 void wlc_update_perf_stats(wlc_info_t *wlc, uint32 mask);
 void wlc_update_isr_stats(wlc_info_t *wlc, uint32 macintstatus);

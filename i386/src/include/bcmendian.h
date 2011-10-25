@@ -9,7 +9,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- *  $Id: bcmendian.h,v 1.36 2009/11/09 05:29:43 Exp $
+ *  $Id: bcmendian.h,v 1.36 2009-11-09 05:29:43 Exp $
  *
  * This file by default provides proper behavior on little-endian architectures.
  * On big-endian architectures, IL_BIGENDIAN should be defined.

@@ -9,7 +9,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: bcmutils.h,v 13.239.2.2 2010/08/02 17:57:32 Exp $
+ * $Id: bcmutils.h,v 13.239.2.2.8.1 2011-01-31 11:12:24 Exp $
  */
 
 #ifndef	_bcmutils_h_
@@ -215,6 +215,7 @@ extern bool pktq_pdel(struct pktq *pq, void *p, int prec);
 
 extern int pktq_mlen(struct pktq *pq, uint prec_bmp);
 extern void *pktq_mdeq(struct pktq *pq, uint prec_bmp, int *prec_out);
+extern void *pktq_mpeek(struct pktq *pq, uint prec_bmp, int *prec_out);
 
 #define pktq_len(pq)                    ((int)(pq)->len)
 #define pktq_max(pq)                    ((int)(pq)->max)

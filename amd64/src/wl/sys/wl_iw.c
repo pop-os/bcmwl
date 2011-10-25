@@ -9,8 +9,10 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wl_iw.c,v 1.133.2.1.28.7 2010/12/15 00:00:32 Exp $
+ * $Id: wl_iw.c,v 1.133.2.1.28.9 2011-01-26 22:23:18 Exp $
  */
+
+#if defined(USE_IW)
 
 #define LINUX_PORT
 
@@ -43,13 +45,7 @@ extern bool wl_iw_conn_status_str(uint32 event_type, uint32 status,
 #define htodchanspec(i) i
 #define dtohchanspec(i) i
 
-#undef USE_IW
-#if defined(CONFIG_WIRELESS_EXT)
-#define USE_IW
-#endif
-#ifdef USE_IW
 extern struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
-#endif 
 
 #if WIRELESS_EXT < 19
 #define IW_IOCTL_IDX(cmd)	((cmd) - SIOCIWFIRST)
@@ -2722,3 +2718,5 @@ int wl_iw_attach(struct net_device *dev)
 void wl_iw_detach(void)
 {
 }
+
+#endif 

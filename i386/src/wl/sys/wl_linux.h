@@ -9,7 +9,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wl_linux.h,v 1.35.2.5.12.1 2010/12/08 23:33:16 Exp $
+ * $Id: wl_linux.h,v 1.35.2.5.12.1 2010-12-08 23:33:16 Exp $
  */
 
 #ifndef _wl_linux_h_
@@ -51,6 +51,7 @@ struct wl_if {
 	struct wlc_if *wlcif;		
 	uint subunit;			
 	bool dev_registed;		
+	int  if_type;			
 };
 
 struct rfkill_stuff {
@@ -131,7 +132,10 @@ struct wl_info {
 	struct rfkill_stuff wl_rfkill;
 	mbool last_phyind;
 #endif 
+	struct proc_dir_entry *proc_entry;
 };
+
+#define HYBRID_PROC	"brcm_monitor"
 
 #if (defined(NAPI_POLL) && defined(WL_ALL_PASSIVE))
 #error "WL_ALL_PASSIVE cannot co-exists w/ NAPI_POLL"

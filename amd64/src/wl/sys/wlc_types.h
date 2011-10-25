@@ -4,12 +4,12 @@
  * Copyright (C) 2010, Broadcom Corporation
  * All Rights Reserved.
  * 
- * This is UNPUBLISHED PROPRIETARY SOURCE CODE of Broadcom Corporation;
- * the contents of this file may not be disclosed to third parties, copied
- * or duplicated in any form, in whole or in part, without the prior
- * written permission of Broadcom Corporation.
+ * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
+ * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
+ * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+ * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wlc_types.h,v 1.7.10.3 2010/04/23 18:02:20 Exp $
+ * $Id: wlc_types.h,v 1.7.10.3 2010-04-23 18:02:20 Exp $
  */
 
 #ifndef _wlc_types_h_
