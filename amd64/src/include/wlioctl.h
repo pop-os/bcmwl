@@ -12,7 +12,7 @@
  * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
  * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
  *
- * $Id: wlioctl.h,v 1.782.2.36.2.2 2010/09/03 23:57:01 Exp $
+ * $Id: wlioctl.h,v 1.782.2.36.2.3 2011-01-26 01:17:15 Exp $
  */
 
 #ifndef _wlioctl_h_
@@ -216,6 +216,24 @@ typedef struct wl_uint32_list {
 
 	uint32 element[1];
 } wl_uint32_list_t;
+
+typedef struct wl_assoc_params {
+	struct ether_addr bssid;	
+	int32 chanspec_num;		
+	chanspec_t chanspec_list[1];	
+} wl_assoc_params_t;
+#define WL_ASSOC_PARAMS_FIXED_SIZE 	OFFSETOF(wl_assoc_params_t, chanspec_list)
+
+typedef wl_assoc_params_t wl_reassoc_params_t;
+#define WL_REASSOC_PARAMS_FIXED_SIZE	WL_ASSOC_PARAMS_FIXED_SIZE
+
+typedef wl_assoc_params_t wl_join_assoc_params_t;
+#define WL_JOIN_ASSOC_PARAMS_FIXED_SIZE	WL_ASSOC_PARAMS_FIXED_SIZE
+
+typedef struct wl_join_params {
+	wlc_ssid_t ssid;
+	wl_assoc_params_t params;	
+} wl_join_params_t;
 
 #define	CRYPTO_ALGO_OFF			0
 #define	CRYPTO_ALGO_WEP1		1
