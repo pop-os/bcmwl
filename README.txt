@@ -280,7 +280,7 @@ kernel version >= 2.6.32, cfg80211 is used, otherwise wireless extension
 is used. (End users should notice little difference.)
 + Supports Linux kernel 2.6.38
 + Fix for problem with rebooting while wireless disabled via airline switch.
-
++ Fixed a kernel panic observed on some 64-bit systems
 
 HOW TO USE MONITOR MODE
 -----------------------

@@ -118,7 +118,7 @@ wl-objs            += src/wl/sys/wl_cfg80211.o
 
 EXTRA_CFLAGS       += -I$(src)/src/include
 EXTRA_CFLAGS       += -I$(src)/src/wl/sys -I$(src)/src/wl/phy
-EXTRA_CFLAGS       += -DBCMDBG_ASSERT
+#EXTRA_CFLAGS       += -DBCMDBG_ASSERT
 
 EXTRA_LDFLAGS      := $(src)/lib/wlc_hybrid.o_shipped
 
