@@ -1,3 +1,9 @@
+broadcom-sta (5.100.82.112-1) unstable; urgency=low
+
+  * New upstream release. 
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Wed, 26 Oct 2011 08:51:03 +0400
+
 broadcom-sta (5.100.82.111-1) unstable; urgency=low
 
   * New upstream release.
