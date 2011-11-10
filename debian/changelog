@@ -1,3 +1,11 @@
+broadcom-sta (5.100.82.112-2) unstable; urgency=low
+
+  * Added 02-rename-to-wlan0.patch to rename device from eth%d to wlan%d.
+  * Added 04-2.6.39.patch to compile with 2.6.39.X kernels.
+  * Thanks to Carlos Alberto Lopez Perez <clopez@igalia.com> (Closes: #648169).
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Thu, 10 Nov 2011 08:50:03 +0400
+
 broadcom-sta (5.100.82.112-1) unstable; urgency=low
 
   * New upstream release. 
