@@ -7,12 +7,10 @@ from Broadcom was added to the free b43 driver.
 
 In order to try it, please observe the following steps:
  - Install b43-fwcutter then fetch and extract firmwares
- - Shut down your wireless network card (eg. eth1)
+ - Shut down your wireless network card
  - Remove wl module with `modprobe -r wl`
  - Insert the b43 module with `modprobe b43`
- - Set up your wireless network card (eg. wlan0)
-
-Important: the network card name is wlanX instead of ethX for intree module.
+ - Set up your wireless network card
 
 If the card is working, you should uninstall broadcom-sta-common,
 broadcom-sta-modules-KVER and this package.
