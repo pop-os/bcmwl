@@ -1,3 +1,10 @@
+broadcom-sta (5.100.82.112-3) unstable; urgency=low
+
+  * Added a note to NEWS.Debian to inform the user that the interface has been
+    renamed in 5.100.82.112-2 (Closes: #648396).
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Fri, 11 Nov 2011 15:09:34 +0400
+
 broadcom-sta (5.100.82.112-2) unstable; urgency=low
 
   * Added 02-rename-to-wlan0.patch to rename device from eth%d to wlan%d.
