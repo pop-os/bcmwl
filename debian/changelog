@@ -1,3 +1,9 @@
+bcmwl (5.100.82.38+bdcom-0ubuntu5) precise; urgency=low
+
+  * Add 0004-Add-support-for-Linux-3.2.patch.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Tue, 22 Nov 2011 18:48:03 +0100
+
 bcmwl (5.100.82.38+bdcom-0ubuntu4) oneiric; urgency=low
 
   [ Daniel van Vugt ]
