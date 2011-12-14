@@ -1,5 +1,6 @@
 00-changelog.patch
-01-license.patch
-02-rename-to-wlan0.patch
-03-linux-semaphore-include.patch
-04-2.6.39.patch
+01-shipped-module.patch
+02-license.patch
+03-rename-to-wlan0.patch
+04-linux-semaphore-include.patch
+05-2.6.39.patch
