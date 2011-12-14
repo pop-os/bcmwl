@@ -2,14 +2,6 @@
 
 include /usr/share/quilt/quilt.make
 
-DEB_HOST_ARCH		?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
-
-ifeq ($(DEB_HOST_ARCH),amd64)
-	SOURCEDIR=$(CURDIR)/amd64
-else # i386
-	SOURCEDIR=$(CURDIR)/i386
-endif
-
 # some default definitions, important!
 #
 # Name of the source package
@@ -30,6 +22,7 @@ MA_DIR ?= /usr/share/modass
 -include $(MA_DIR)/include/generic.make
 # load default rules, including kdist, kdist_image, ...
 -include $(MA_DIR)/include/common-rules.make
+SOURCEDIR=$(CURDIR)
 
 # module assistant calculates all needed things for us and sets
 # following variables:
@@ -97,7 +90,14 @@ install: build
 	dh_installdirs -p$(psource)  usr/src/modules/$(sname)/debian usr/src/modules/$(sname)
 
 	# Copy only the driver source to the proper location
-	cp -a README.txt amd64 i386 debian/$(psource)/usr/src/modules/$(sname)
+	cp -a amd64/* debian/$(psource)/usr/src/modules/$(sname)/
+	cp README.txt debian/$(psource)/usr/src/modules/$(sname)/
+	
+	# Shipped proprietary precompiled driver
+	rm -f debian/$(psource)/usr/src/modules/$(sname)/lib/wlc_hybrid.o_shipped
+	cp amd64/lib/wlc_hybrid.o_shipped debian/$(psource)/usr/src/modules/$(sname)/lib/wlc_hybrid.o_amd64
+	cp i386/lib/wlc_hybrid.o_shipped debian/$(psource)/usr/src/modules/$(sname)/lib/wlc_hybrid.o_i386
+
 	# Copy the needed debian/ pieces to the proper location
 	cp debian/*modules.in* \
 		debian/$(psource)/usr/src/modules/$(sname)/debian

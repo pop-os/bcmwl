@@ -1,3 +1,17 @@
+broadcom-sta (5.100.82.112-4) unstable; urgency=low
+
+  * Enabled compilation for 64bits kernel on i386 architecture
+    (Closes: #651787):
+    - Provide one merged src tree with both amd64 and i386 shipped proprietary
+      modules.
+    - Patch Makefile to select correct shipped module depending on kernel
+      configuration.
+    - Removed all extra patches (from i386 tree).
+    - Removed SOURCEDIR = f(dpkg-architecture) from rules file.
+    - Updated series file as well.
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Wed, 14 Dec 2011 08:03:53 +0400
+
 broadcom-sta (5.100.82.112-3) unstable; urgency=low
 
   * Added a note to NEWS.Debian to inform the user that the interface has been
