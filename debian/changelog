@@ -1,6 +1,7 @@
 broadcom-sta (5.100.82.112-5) unstable; urgency=low
 
   * Re-add support for installation from sources (Closes: #655279).
+  * Added 06-3.2.0.patch to compile with 3.2 kernels (Closes: #656600, #657049).
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Fri, 20 Jan 2012 08:59:07 +0400
 
