@@ -220,7 +220,7 @@ License: other
  writing.
 
 Files: debian/*
-Copyright: (C) 2009 Cyril Lacoux <clacoux@easter-eggs.com>
+Copyright: (C) 2009-2012 Cyril Lacoux <clacoux@easter-eggs.com>
            (C) 2009 Daniel Baumann <daniel@debian.org>
 License: PD
  The Debian packaging is hereby placed in the public domain (no rights

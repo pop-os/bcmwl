@@ -1,3 +1,23 @@
+broadcom-sta (5.100.82.112-6) unstable; urgency=low
+
+  * Added dkms support (Closes: #568034)
+  * Remove modass override symlink
+  * debian/control:
+    - Set architecture to amd64 i386
+    - Removed wireless-tools from Suggests since module recommends it
+    - Bumped debhelper version to 8
+  * debian/control.modules.in:
+    - Bumped standards version to 3.9.2 (No changes)
+    - Set architecture to amd64 i386
+    - Removed quilt from Depends and Build-Depends
+    - Bumped debhelper version to 8
+  * debian/rules:
+    - Moved module specific stuff to debian/rules.modules
+    - Removed quilt stuff since it's natively supported by format 3.0
+    - Rewrote most of file
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Sat, 28 Jan 2012 09:47:33 +0400
+
 broadcom-sta (5.100.82.112-5) unstable; urgency=low
 
   * Re-add support for installation from sources (Closes: #655279).
