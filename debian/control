@@ -19,7 +19,7 @@ Description: Common files for the Broadcom STA Wireless driver
  This package contains the common files.
 
 Package: broadcom-sta-dkms
-Architecture: amd64 i386
+Architecture: all
 Depends: ${misc:Depends}
 Recommends: wireless-tools
 Breaks: broadcom-sta-common, broadcom-sta-modules (<< 5.100.82.112-6~), broadcom-sta-source
@@ -36,7 +36,7 @@ Description: dkms source for the Broadcom STA Wireless driver
  Kernel source or headers are required to compile these modules.
 
 Package: broadcom-sta-source
-Architecture: amd64 i386
+Architecture: all
 Depends: ${misc:Depends}, debhelper (>= 8), bzip2, make
 Recommends: module-assistant
 Description: Source for the Broadcom STA Wireless driver
