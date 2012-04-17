@@ -1,3 +1,9 @@
+broadcom-sta (5.100.82.112-7) unstable; urgency=low
+
+  * Bumped standards version to 3.9.3 (No changes)
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Tue, 17 Apr 2012 14:08:12 +0400
+
 broadcom-sta (5.100.82.112-6) unstable; urgency=low
 
   * Added dkms support (Closes: #568034)
