@@ -1,3 +1,14 @@
+bcmwl (5.100.82.38+bdcom-0ubuntu6) precise; urgency=high
+
+  * Update to match switch to PAE kernel by default in precise for i386
+    (LP: #986475)
+    - Depend on linux-headers-generic-pae on i386 instead of
+      linux-headers-generic so that the right headers are available to build
+      the driver
+  * Drop long obsolete lpia specific depends on linux-headers-lpia
+
+ -- Scott Kitterman <scott@kitterman.com>  Sat, 21 Apr 2012 02:09:32 -0400
+
 bcmwl (5.100.82.38+bdcom-0ubuntu5) precise; urgency=low
 
   * Add 0004-Add-support-for-Linux-3.2.patch.
