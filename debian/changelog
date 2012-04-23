@@ -1,3 +1,11 @@
+bcmwl (5.100.82.38+bdcom-0ubuntu6.1) precise-proposed; urgency=low
+
+  * debian/bcmwl-kernel-source.postinst:
+    - Blacklist brcmfmac, brcmsmac and bcma so that they don't
+      conflict with the closed driver (LP: #873117)
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 23 Apr 2012 16:11:56 +0200
+
 bcmwl (5.100.82.38+bdcom-0ubuntu6) precise; urgency=high
 
   * Update to match switch to PAE kernel by default in precise for i386

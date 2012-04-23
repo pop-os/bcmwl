@@ -42,6 +42,9 @@ blacklist b43legacy
 blacklist ssb
 blacklist bcm43xx
 blacklist brcm80211
+blacklist brcmfmac
+blacklist brcmsmac
+blacklist bcma
 EOF
 	# If b44 is loaded, append these additional lines
 	if lsmod | grep b44 > /dev/null; then
