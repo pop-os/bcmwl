@@ -1,3 +1,13 @@
+bcmwl (5.100.82.38+bdcom-0ubuntu7) quantal; urgency=low
+
+  * Add 0005-Add-support-for-Linux-3.4.0.patch:
+    - Thanks to Eugene San for the patch (LP: #994255).
+  * debian/dkms.conf.in:
+    - Make sure that both patch 0004 and 0005 are applied
+      when dealing with linux 3.4.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Tue, 22 May 2012 13:10:38 +0200
+
 bcmwl (5.100.82.38+bdcom-0ubuntu6.1) precise-proposed; urgency=low
 
   * debian/bcmwl-kernel-source.postinst:
