@@ -1,3 +1,19 @@
+bcmwl (5.100.82.112+bdcom-0ubuntu1) quantal; urgency=low
+
+  * New upstream release:
+    - Add Monitor mode.
+    - Add cfg80211 API support. The choice of API is
+      done at compile time. If kernel version >= 2.6.32,
+      cfg80211 is used, otherwise wireless extension
+      is used. (End users should notice little
+      difference.)
+    - Fix problem with triggered a reboot when the
+      wireless was disabled using the function key.
+    - Fix a kernel panic observed on some 64-bit
+      systems.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Wed, 20 Jun 2012 13:30:20 +0200
+
 bcmwl (5.100.82.38+bdcom-0ubuntu8) quantal; urgency=low
 
   * debian/dkms.conf.in:
