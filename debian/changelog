@@ -1,3 +1,12 @@
+bcmwl (5.100.82.112+bdcom-0ubuntu2) quantal; urgency=low
+
+  * 0004-Add-support-for-Linux-3.2.patch:
+    - Make sure the patch can always be applied.
+  * debian/dkms.conf.in:
+    - Always apply all patches (LP: #1020059).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Thu, 05 Jul 2012 13:20:00 +0200
+
 bcmwl (5.100.82.112+bdcom-0ubuntu1) quantal; urgency=low
 
   * New upstream release:
