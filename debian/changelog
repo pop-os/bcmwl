@@ -1,3 +1,13 @@
+bcmwl (5.100.82.112+bdcom-0ubuntu3) quantal; urgency=low
+
+  * debian/bcmwl-kernel-source.postinst: Mirror the actions of the installed
+    modprobe.d files, i. e. rmmod the b43 driver and try to modprobe wl, so
+    that this package works right after installation. (LP: #1065827)
+  * debian/bcmwl-kernel-source.postinst: Drop duplicate #DEBHELPER# token. It
+    does not currently expand to anything, but it looks confusing.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Fri, 12 Oct 2012 14:00:38 +0200
+
 bcmwl (5.100.82.112+bdcom-0ubuntu2) quantal; urgency=low
 
   * 0004-Add-support-for-Linux-3.2.patch:

@@ -10,7 +10,6 @@ MODULES_DIR=$(ls /lib/modules/)
 CURRENT_KERNEL=$(uname -r)
 BLACKLIST_FILE=/etc/modprobe.d/blacklist-bcm43.conf
 PACKAGE_NAME=bcmwl
-#DEBHELPER#
 
 ARCH=`dpkg --print-architecture`
 case $ARCH in
@@ -53,6 +52,10 @@ blacklist b44
 install wl modprobe -r b43 b44 b43legacy ssb; modprobe --ignore-install wl $CMDLINE_OPTS; modprobe --ignore-install b44
 EOF
 	fi
+
+        # Try to use the module right away
+        rmmod b43 b43legacy ssb bcm43xx brcm80211 brcmfmac brcmsmac bcma || :
+        modprobe wl || :
 	
 	# Update initramfs
 	update-initramfs -u
