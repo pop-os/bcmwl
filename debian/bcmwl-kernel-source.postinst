@@ -54,7 +54,7 @@ EOF
 	fi
 
         # Try to use the module right away
-        rmmod b43 b43legacy ssb bcm43xx brcm80211 brcmfmac brcmsmac bcma || :
+        rmmod b43 b43legacy ssb bcm43xx brcm80211 brcmfmac brcmsmac bcma 2>/dev/null|| :
         modprobe wl || :
 	
 	# Update initramfs

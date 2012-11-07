@@ -1,3 +1,11 @@
+bcmwl (5.100.82.112+bdcom-0ubuntu4) raring; urgency=low
+
+  * debian/bcmwl-kernel-source.postinst: Silence the errors from rmmod about
+    the modules not being loaded. This is fully expected, and just causes
+    confusion, as well as autopkgtest failures.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Wed, 07 Nov 2012 14:54:27 +0100
+
 bcmwl (5.100.82.112+bdcom-0ubuntu3) quantal; urgency=low
 
   * debian/bcmwl-kernel-source.postinst: Mirror the actions of the installed
