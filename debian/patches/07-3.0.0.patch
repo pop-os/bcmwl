@@ -1,0 +1,27 @@
+Description: Use cfg80211 with 3.0 kernels
+Author: Jacopo Corbetta <jacopo.corbetta@gmail.com>
+Bug-Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=672677
+Last-Update: 2012-11-19
+
+Index: broadcom-sta-5.100.82.112/amd64/Makefile
+===================================================================
+--- broadcom-sta-5.100.82.112.orig/amd64/Makefile	2012-05-24 09:44:35.748118341 +0400
++++ broadcom-sta-5.100.82.112/amd64/Makefile	2012-05-24 09:45:35.040119858 +0400
+@@ -16,7 +16,7 @@
+ ifneq ($(KERNELRELEASE),)
+ 
+   LINUXVER_GOODFOR_CFG80211:=$(strip $(shell \
+-    if [ "$(VERSION)" -ge "2" -a "$(PATCHLEVEL)" -ge "6" -a "$(SUBLEVEL)" -ge "32" ]; then \
++    if [ "$(VERSION)" -ge "3" -o "$(VERSION)" -ge "2" -a "$(PATCHLEVEL)" -ge "6" -a "$(SUBLEVEL)" -ge "32" ]; then \
+       echo TRUE; \
+     else \
+       echo FALSE; \
+@@ -24,7 +24,7 @@
+   ))
+ 
+     LINUXVER_WEXT_ONLY:=$(strip $(shell \
+-    if [ "$(VERSION)" -ge "2" -a "$(PATCHLEVEL)" -ge "6" -a "$(SUBLEVEL)" -ge "17" ]; then \
++    if [ "$(VERSION)" -ge "3" -o "$(VERSION)" -ge "2" -a "$(PATCHLEVEL)" -ge "6" -a "$(SUBLEVEL)" -ge "17" ]; then \
+       echo FALSE; \
+     else \
+       echo TRUE; \
