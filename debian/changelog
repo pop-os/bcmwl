@@ -1,3 +1,10 @@
+broadcom-sta (5.100.82.112-8) unstable; urgency=low
+
+  * Added 05-user_ioctl.patch to allow normal user to send ioctls.
+  * Reorded patches.
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 18 Nov 2012 10:56:27 +0400
+
 broadcom-sta (5.100.82.112-7) unstable; urgency=low
 
   * Revert architecture to all (Closes: #659732, #659509, #664476)
