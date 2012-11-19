@@ -6,6 +6,7 @@ broadcom-sta (5.100.82.112-8) unstable; urgency=low
   * Added 09-3.4.0.patch to compile with 3.4 kernels, thanks to Eugene San
     <eugenesan@gmail.com>
   * Reorded patches.
+  * Export KVER variable to `make` (Closes: #651787)
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 18 Nov 2012 10:56:27 +0400
 
