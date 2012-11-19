@@ -1,6 +1,6 @@
 amd64
 i386
 README.txt
-.*~$
-.*.swp$
+*~
+.*.swp
 .pc
