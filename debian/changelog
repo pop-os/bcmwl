@@ -3,6 +3,8 @@ broadcom-sta (5.100.82.112-8) unstable; urgency=low
   * Added 05-user_ioctl.patch to allow normal user to send ioctls.
   * Added 07-3.0.0.patch to use cfg80211 with 3.0 kernels, thanks to Jacopo
     Corbetta <jacopo.corbetta@gmail.com> (Closes: #672677)
+  * Added 09-3.4.0.patch to compile with 3.4 kernels, thanks to Eugene San
+    <eugenesan@gmail.com>
   * Reorded patches.
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 18 Nov 2012 10:56:27 +0400
