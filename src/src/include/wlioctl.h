@@ -4,15 +4,21 @@
  *
  * Definitions subject to change without notice.
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlioctl.h,v 1.782.2.36.2.3 2011-01-26 01:17:15 Exp $
+ * $Id: wlioctl.h 286249 2011-09-27 01:39:42Z $
  */
 
 #ifndef _wlioctl_h_
@@ -20,53 +26,16 @@
 
 #include <typedefs.h>
 #include <proto/ethernet.h>
-#include <proto/bcmeth.h>
 #include <proto/bcmevent.h>
 #include <proto/802.11.h>
 #include <bcmwifi.h>
-#include <bcmcdc.h>
 
 #ifndef INTF_NAME_SIZ
 #define INTF_NAME_SIZ	16
 #endif
 
-typedef struct remote_ioctl {
-	cdc_ioctl_t 	msg;
-	uint		data_len;
-	char            intf_name[INTF_NAME_SIZ];
-} rem_ioctl_t;
-#define REMOTE_SIZE	sizeof(rem_ioctl_t)
-
-#define ACTION_FRAME_SIZE 1800
-
-typedef struct wl_action_frame {
-	struct ether_addr 	da;
-	uint16 			len;
-	uint32 			packetId;
-	uint8			data[ACTION_FRAME_SIZE];
-} wl_action_frame_t;
-
-#define WL_WIFI_ACTION_FRAME_SIZE sizeof(struct wl_action_frame)
-
-typedef struct wl_af_params {
-	uint32 			channel;
-	int32 			dwell_time;
-	struct ether_addr 	BSSID;
-	wl_action_frame_t	action_frame;
-} wl_af_params_t;
-
-#define WL_WIFI_AF_PARAMS_SIZE sizeof(struct wl_af_params)
-
-#define MFP_TEST_FLAG_NORMAL	0
-#define MFP_TEST_FLAG_ANY_KEY	1
-typedef struct wl_sa_query {
-	uint32			flag;
-	uint8 			action;
-	uint16 			id;
-	struct ether_addr 	da;
-} wl_sa_query_t;
-
 #define BWL_DEFAULT_PACKING
+
 #include <packed_section_start.h>
 
 #define	LEGACY2_WL_BSS_INFO_VERSION	108		
@@ -153,21 +122,50 @@ typedef struct wl_bss_config {
 	uint32	chanspec;
 } wl_bss_config_t;
 
-#ifdef DONGLEOVERLAYS
-typedef struct {
-	uint32 flags_idx;	
-	uint32 offset;		
-	uint32 len;			
+#define DLOAD_HANDLER_VER			1	
+#define DLOAD_FLAG_VER_MASK		0xf000	
+#define DLOAD_FLAG_VER_SHIFT	12	
 
-} wl_ioctl_overlay_t;
+#define DL_CRC_NOT_INUSE 			0x0001
 
-#define OVERLAY_IDX_MASK	0x000000ff
-#define OVERLAY_IDX_SHIFT	0
-#define OVERLAY_FLAGS_MASK	0xffffff00
-#define OVERLAY_FLAGS_SHIFT	8
+enum {
+	DL_TYPE_UCODE = 1,
+	DL_TYPE_CLM = 2
+};
 
-#define OVERLAY_DOWNLOAD_CHUNKSIZE	1024
-#endif 
+enum {
+	UCODE_FW,
+	INIT_VALS,
+	BS_INIT_VALS
+};
+
+struct wl_dload_data {
+	uint16 flag;
+	uint16 dload_type;
+	uint32 len;
+	uint32 crc;
+	uint8  data[1];
+};
+typedef struct wl_dload_data wl_dload_data_t;
+
+struct wl_ucode_info {
+	uint32 ucode_type;
+	uint32 num_chunks;
+	uint32 chunk_len;
+	uint32 chunk_num;
+	uint8  data_chunk[1];
+};
+typedef struct wl_ucode_info wl_ucode_info_t;
+
+struct wl_clm_dload_info {
+	uint32 ds_id;
+	uint32 clm_total_len;
+	uint32 num_chunks;
+	uint32 chunk_len;
+	uint32 chunk_offset;
+	uint8  data_chunk[1];
+};
+typedef struct wl_clm_dload_info wl_clm_dload_info_t;
 
 typedef struct wlc_ssid {
 	uint32		SSID_len;
@@ -177,6 +175,19 @@ typedef struct wlc_ssid {
 #define WL_BSSTYPE_INFRA 1
 #define WL_BSSTYPE_INDEP 0
 #define WL_BSSTYPE_ANY   2
+
+typedef struct wl_scan_params_hyb {
+	wlc_ssid_t ssid;		
+	struct ether_addr bssid;
+	int8 bss_type;
+	uint8 scan_type;		
+	int32 pad2;			
+	int32 pad3;			
+	int32 pad4;			
+	int32 pad5;			
+	int32 pad6;
+	uint16 pad7[1];			
+} wl_scan_params_hyb_t;
 
 typedef struct wl_scan_results {
 	uint32 buflen;
@@ -234,6 +245,16 @@ typedef struct wl_join_params {
 	wlc_ssid_t ssid;
 	wl_assoc_params_t params;	
 } wl_join_params_t;
+#define WL_JOIN_PARAMS_FIXED_SIZE 	(OFFSETOF(wl_join_params_t, params) + \
+					 WL_ASSOC_PARAMS_FIXED_SIZE)
+
+#define WLC_CNTRY_BUF_SZ	4		
+
+typedef struct wl_country {
+	char country_abbrev[WLC_CNTRY_BUF_SZ];	
+	int32 rev;				
+	char ccode[WLC_CNTRY_BUF_SZ];		
+} wl_country_t;
 
 #define	CRYPTO_ALGO_OFF			0
 #define	CRYPTO_ALGO_WEP1		1
@@ -243,6 +264,7 @@ typedef struct wl_join_params {
 #define CRYPTO_ALGO_AES_OCB_MSDU	5
 #define CRYPTO_ALGO_AES_OCB_MPDU	6
 #define CRYPTO_ALGO_NALG		7
+#define CRYPTO_ALGO_PMK			12	
 
 #define WSEC_GEN_MIC_ERROR	0x0001
 #define WSEC_GEN_REPLAY		0x0002
@@ -293,10 +315,13 @@ typedef struct {
 #define AES_ENABLED		0x0004
 #define WSEC_SWFLAG		0x0008
 #define SES_OW_ENABLED		0x0040	
-#ifdef MFP
-#define MFP_CAPABLE		0x0200
-#define MFP_REQUIRED	0x0400
-#endif 
+
+#define WSEC_WEP_ENABLED(wsec)	((wsec) & WEP_ENABLED)
+#define WSEC_TKIP_ENABLED(wsec)	((wsec) & TKIP_ENABLED)
+#define WSEC_AES_ENABLED(wsec)	((wsec) & AES_ENABLED)
+
+#define WSEC_ENABLED(wsec)	((wsec) & (WEP_ENABLED | TKIP_ENABLED | AES_ENABLED))
+#define WSEC_SES_OW_ENABLED(wsec)	((wsec) & SES_OW_ENABLED)
 
 #define WPA_AUTH_DISABLED	0x0000	
 #define WPA_AUTH_NONE		0x0001	
@@ -305,12 +330,8 @@ typedef struct {
 
 #define WPA2_AUTH_UNSPECIFIED	0x0040	
 #define WPA2_AUTH_PSK		0x0080	
-#ifdef BCMWAPI_WAI
-#define WAPI_AUTH_NONE		WPA_AUTH_NONE	
-#define WAPI_AUTH_UNSPECIFIED	0x0400	
-#define WAPI_AUTH_PSK		0x0800	
-#endif 
 #define WPA2_AUTH_MFP           0x1000  
+#define WPA2_AUTH_TPK		0x2000 	
 
 #define WPA_AUTH_PFN_ANY	0xffffffff	
 
@@ -379,8 +400,45 @@ typedef struct {
 	int isvalid;            
 } wl_lq_t; 
 
+#define MCS_INDEX_SIZE                  33
+
+typedef enum wl_wakeup_reason_type {
+	LCD_ON = 1,
+	LCD_OFF,
+	DRC1_WAKE,
+	DRC2_WAKE,
+	REASON_LAST
+} wl_wr_type_t;
+
+typedef struct {
+
+	uint32	id;
+
+	uint8	reason;
+} wl_wr_t;
+
+typedef struct {
+	struct	ether_addr ea;	
+	uint8	ac_cat;	
+	uint8	num_pkts;	
+} wl_mac_ratehisto_cmd_t;	
+
+typedef struct {
+	uint32	rate[WLC_MAXRATE + 1];	
+	uint32	mcs_index[MCS_INDEX_SIZE];	
+	uint32	tsf_timer[2][2];	
+} wl_mac_ratehisto_res_t;	
+
 #define WLC_TXFILTER_OVERRIDE_DISABLED  0
 #define WLC_TXFILTER_OVERRIDE_ENABLED   1
+
+#define WL_IOCTL_ACTION_GET				0x0
+#define WL_IOCTL_ACTION_SET				0x1
+#define WL_IOCTL_ACTION_OVL_IDX_MASK	0x1e
+#define WL_IOCTL_ACTION_OVL_RSV			0x20
+#define WL_IOCTL_ACTION_OVL				0x40
+#define WL_IOCTL_ACTION_MASK			0x7e
+#define WL_IOCTL_ACTION_OVL_SHIFT		1
 
 typedef struct wl_ioctl {
 	uint cmd;	
@@ -415,7 +473,7 @@ typedef struct wl_ioctl {
 #define WLC_SET_MSGLEVEL			8
 #define WLC_GET_PROMISC				9
 #define WLC_SET_PROMISC				10
-#define WLC_OVERLAY_IOCTL			11
+
 #define WLC_GET_RATE				12
 #define WLC_GET_MAX_RATE			13
 #define WLC_GET_INSTANCE			14
@@ -701,7 +759,7 @@ typedef struct wl_ioctl {
 #define WLC_SET_NUM_PEERS			305     
 #define WLC_GET_NUM_BSS				306	
 #define WLC_PHY_SAMPLE_COLLECT			307	
-#define WLC_UM_PRIV				308	
+
 #define WLC_GET_CMD				309
 
 #define WLC_SET_INTERFERENCE_OVERRIDE_MODE	311	
@@ -713,9 +771,17 @@ typedef struct wl_ioctl {
 #define WLC_GET_NAT_STATE			317
 #define WLC_LAST				318
 
+#ifndef EPICTRL_COOKIE
+#define EPICTRL_COOKIE		0xABADCEDE
+#endif
+
+#define CMN_IOCTL_OFF 0x180
+
+#define WL_OID_BASE		0xFFE41420
+
 #define WL_AUTH_OPEN_SYSTEM		0	
 #define WL_AUTH_SHARED_KEY		1	
-#define WL_AUTH_OPEN_SHARED		2	
+#define WL_AUTH_OPEN_SHARED		3	
 
 #define WL_RADIO_SW_DISABLE		(1<<0)
 #define WL_RADIO_HW_DISABLE		(1<<1)
@@ -727,8 +793,21 @@ typedef struct wl_ioctl {
 #define	WL_SPURAVOID_ON2	2
 
 #define WL_TXPWR_OVERRIDE	(1U<<31)
+#define WL_TXPWR_NEG   (1U<<30)
 
 #define WL_PHY_PAVARS_LEN	6	
+
+#define WL_PHY_PAVARS2_NUM	3	
+#define WL_PHY_PAVAR_VER	1	
+typedef struct wl_pavars2 {
+	uint16 ver;		
+	uint16 len;		
+	uint16 inuse;		
+	uint16 phy_type;	
+	uint16 bandrange;
+	uint16 chain;
+	uint16 inpa[WL_PHY_PAVARS2_NUM];	
+} wl_pavars2_t;
 
 typedef struct wl_po {
 	uint16	phy_type;	
@@ -773,6 +852,12 @@ typedef struct wl_po {
 #define WL_CHAN_FREQ_RANGE_5GM     2
 #define WL_CHAN_FREQ_RANGE_5GH     3
 
+#define WL_CHAN_FREQ_RANGE_5GLL_5BAND    4
+#define WL_CHAN_FREQ_RANGE_5GLH_5BAND    5
+#define WL_CHAN_FREQ_RANGE_5GML_5BAND    6
+#define WL_CHAN_FREQ_RANGE_5GMH_5BAND    7
+#define WL_CHAN_FREQ_RANGE_5GH_5BAND     8
+
 #define	WLC_PHY_TYPE_A		0
 #define	WLC_PHY_TYPE_B		1
 #define	WLC_PHY_TYPE_G		2
@@ -781,6 +866,7 @@ typedef struct wl_po {
 #define	WLC_PHY_TYPE_SSN	6
 #define	WLC_PHY_TYPE_HT		7
 #define	WLC_PHY_TYPE_LCN	8
+#define	WLC_PHY_TYPE_LCN40	10
 #define	WLC_PHY_TYPE_NULL	0xf
 
 #define WLC_MACMODE_DISABLED	0	
@@ -827,6 +913,8 @@ typedef struct wl_po {
 
 #define WLC_N_SGI_20			0x01
 #define WLC_N_SGI_40			0x02
+
+#define WLC_SGI_ALL				0x02
 
 #define PM_OFF	0
 #define PM_MAX	1
@@ -893,7 +981,7 @@ typedef struct wl_samplecollect_args {
 	bool downsamp;
 	bool be_deaf;
 	bool agc;		
-	bool filter;		 
+	bool filter;		
 } wl_samplecollect_args_t;
 
 #define	WL_SAMPLEDATA_HEADER_TYPE	1
@@ -938,7 +1026,7 @@ typedef struct wl_sampledata {
 #define WL_MPC_VAL		0x00400000
 #define WL_APSTA_VAL		0x00800000
 #define WL_DFS_VAL		0x01000000
-#define WL_BA_VAL		0x02000000
+#define WL_BA_VAL		0x02000000	
 #define WL_ACI_VAL		0x04000000
 #define WL_MBSS_VAL		0x04000000
 #define WL_CAC_VAL		0x08000000
@@ -958,6 +1046,7 @@ typedef struct wl_sampledata {
 #define WL_P2P_VAL		0x00000200
 #define WL_ITFR_VAL		0x00000400
 #define WL_MCHAN_VAL		0x00000800
+#define WL_TDLS_VAL		0x00001000
 
 #define	WL_LED_NUMGPIO		32	
 
@@ -1002,6 +1091,7 @@ typedef struct wl_sampledata {
 #define WL_JOIN_PREF_WPA	2	
 #define WL_JOIN_PREF_BAND	3	
 #define WL_JOIN_PREF_RSSI_DELTA	4	
+#define WL_JOIN_PREF_TRANS_PREF	5	
 
 #define WLJP_BAND_ASSOC_PREF	255	
 
@@ -1013,7 +1103,7 @@ struct tsinfo_arg {
 
 #define	NFIFO			6	
 
-#define	WL_CNT_T_VERSION	6	
+#define	WL_CNT_T_VERSION	8	
 
 typedef struct {
 	uint16	version;	
@@ -1113,9 +1203,9 @@ typedef struct {
 	uint32	txcgprsfail;	
 	uint32	txcgprssuc;	
 	uint32	prs_timeout;	
-	uint32	rxnack;
-	uint32	frmscons;
-	uint32	txnack;
+	uint32	rxnack;		
+	uint32	frmscons;	
+	uint32	txnack;		
 	uint32	txglitch_nack;	
 	uint32	txburst;	
 
@@ -1147,23 +1237,7 @@ typedef struct {
 	uint32	tkipicverr;	
 	uint32	wepexcluded;	
 
-	uint32	rxundec_mcst;	
-
-	uint32	tkipmicfaill_mcst;	
-	uint32	tkipcntrmsr_mcst;	
-	uint32	tkipreplay_mcst;	
-	uint32	ccmpfmterr_mcst;	
-	uint32	ccmpreplay_mcst;	
-	uint32	ccmpundec_mcst;	
-	uint32	fourwayfail_mcst;	
-	uint32	wepundec_mcst;	
-	uint32	wepicverr_mcst;	
-	uint32	decsuccess_mcst;	
-	uint32	tkipicverr_mcst;	
-	uint32	wepexcluded_mcst;	
-
 	uint32	txchanrej;	
-	uint32	txexptime;	
 	uint32	psmwds;		
 	uint32	phywatchdog;	
 
@@ -1203,11 +1277,225 @@ typedef struct {
 	uint32	rfdisable;	
 	uint32	bphy_rxcrsglitch;	
 
+	uint32	txexptime;	
+
 	uint32	txmpdu_sgi;	
 	uint32	rxmpdu_sgi;	
 	uint32	txmpdu_stbc;	
 	uint32	rxmpdu_stbc;	
+
+	uint32	rxundec_mcst;	
+
+	uint32	tkipmicfaill_mcst;	
+	uint32	tkipcntrmsr_mcst;	
+	uint32	tkipreplay_mcst;	
+	uint32	ccmpfmterr_mcst;	
+	uint32	ccmpreplay_mcst;	
+	uint32	ccmpundec_mcst;	
+	uint32	fourwayfail_mcst;	
+	uint32	wepundec_mcst;	
+	uint32	wepicverr_mcst;	
+	uint32	decsuccess_mcst;	
+	uint32	tkipicverr_mcst;	
+	uint32	wepexcluded_mcst;	
+
+	uint32	dma_hang;	
+	uint32	reinit;		
 } wl_cnt_t;
+
+typedef struct {
+	uint16  version;    
+	uint16  length;     
+
+	uint32  txframe;    
+	uint32  txbyte;     
+	uint32  txretrans;  
+	uint32  txerror;    
+	uint32  txctl;      
+	uint32  txprshort;  
+	uint32  txserr;     
+	uint32  txnobuf;    
+	uint32  txnoassoc;  
+	uint32  txrunt;     
+	uint32  txchit;     
+	uint32  txcmiss;    
+
+	uint32  txuflo;     
+	uint32  txphyerr;   
+	uint32  txphycrs;
+
+	uint32  rxframe;    
+	uint32  rxbyte;     
+	uint32  rxerror;    
+	uint32  rxctl;      
+	uint32  rxnobuf;    
+	uint32  rxnondata;  
+	uint32  rxbadds;    
+	uint32  rxbadcm;    
+	uint32  rxfragerr;  
+	uint32  rxrunt;     
+	uint32  rxgiant;    
+	uint32  rxnoscb;    
+	uint32  rxbadproto; 
+	uint32  rxbadsrcmac;    
+	uint32  rxbadda;    
+	uint32  rxfilter;   
+
+	uint32  rxoflo;     
+	uint32  rxuflo[NFIFO];  
+
+	uint32  d11cnt_txrts_off;   
+	uint32  d11cnt_rxcrc_off;   
+	uint32  d11cnt_txnocts_off; 
+
+	uint32  dmade;      
+	uint32  dmada;      
+	uint32  dmape;      
+	uint32  reset;      
+	uint32  tbtt;       
+	uint32  txdmawar;
+	uint32  pkt_callback_reg_fail;  
+
+	uint32  txallfrm;   
+	uint32  txrtsfrm;   
+	uint32  txctsfrm;   
+	uint32  txackfrm;   
+	uint32  txdnlfrm;   
+	uint32  txbcnfrm;   
+	uint32  txfunfl[8]; 
+	uint32  txtplunfl;  
+	uint32  txphyerror; 
+	uint32  rxfrmtoolong;   
+	uint32  rxfrmtooshrt;   
+	uint32  rxinvmachdr;    
+	uint32  rxbadfcs;   
+	uint32  rxbadplcp;  
+	uint32  rxcrsglitch;    
+	uint32  rxstrt;     
+	uint32  rxdfrmucastmbss; 
+	uint32  rxmfrmucastmbss; 
+	uint32  rxcfrmucast;    
+	uint32  rxrtsucast; 
+	uint32  rxctsucast; 
+	uint32  rxackucast; 
+	uint32  rxdfrmocast;    
+	uint32  rxmfrmocast;    
+	uint32  rxcfrmocast;    
+	uint32  rxrtsocast; 
+	uint32  rxctsocast; 
+	uint32  rxdfrmmcast;    
+	uint32  rxmfrmmcast;    
+	uint32  rxcfrmmcast;    
+	uint32  rxbeaconmbss;   
+	uint32  rxdfrmucastobss; 
+	uint32  rxbeaconobss;   
+	uint32  rxrsptmout; 
+	uint32  bcntxcancl; 
+	uint32  rxf0ovfl;   
+	uint32  rxf1ovfl;   
+	uint32  rxf2ovfl;   
+	uint32  txsfovfl;   
+	uint32  pmqovfl;    
+	uint32  rxcgprqfrm; 
+	uint32  rxcgprsqovfl;   
+	uint32  txcgprsfail;    
+	uint32  txcgprssuc; 
+	uint32  prs_timeout;    
+	uint32  rxnack;
+	uint32  frmscons;
+	uint32  txnack;
+	uint32  txglitch_nack;  
+	uint32  txburst;    
+
+	uint32  txfrag;     
+	uint32  txmulti;    
+	uint32  txfail;     
+	uint32  txretry;    
+	uint32  txretrie;   
+	uint32  rxdup;      
+	uint32  txrts;      
+	uint32  txnocts;    
+	uint32  txnoack;    
+	uint32  rxfrag;     
+	uint32  rxmulti;    
+	uint32  rxcrc;      
+	uint32  txfrmsnt;   
+	uint32  rxundec;    
+
+	uint32  tkipmicfaill;   
+	uint32  tkipcntrmsr;    
+	uint32  tkipreplay; 
+	uint32  ccmpfmterr; 
+	uint32  ccmpreplay; 
+	uint32  ccmpundec;  
+	uint32  fourwayfail;    
+	uint32  wepundec;   
+	uint32  wepicverr;  
+	uint32  decsuccess; 
+	uint32  tkipicverr; 
+	uint32  wepexcluded;    
+
+	uint32  rxundec_mcst;   
+
+	uint32  tkipmicfaill_mcst;  
+	uint32  tkipcntrmsr_mcst;   
+	uint32  tkipreplay_mcst;    
+	uint32  ccmpfmterr_mcst;    
+	uint32  ccmpreplay_mcst;    
+	uint32  ccmpundec_mcst; 
+	uint32  fourwayfail_mcst;   
+	uint32  wepundec_mcst;  
+	uint32  wepicverr_mcst; 
+	uint32  decsuccess_mcst;    
+	uint32  tkipicverr_mcst;    
+	uint32  wepexcluded_mcst;   
+
+	uint32  txchanrej;  
+	uint32  txexptime;  
+	uint32  psmwds;     
+	uint32  phywatchdog;    
+
+	uint32  prq_entries_handled;    
+	uint32  prq_undirected_entries; 
+	uint32  prq_bad_entries;    
+	uint32  atim_suppress_count;    
+	uint32  bcn_template_not_ready; 
+	uint32  bcn_template_not_ready_done; 
+	uint32  late_tbtt_dpc;  
+
+	uint32  rx1mbps;    
+	uint32  rx2mbps;    
+	uint32  rx5mbps5;   
+	uint32  rx6mbps;    
+	uint32  rx9mbps;    
+	uint32  rx11mbps;   
+	uint32  rx12mbps;   
+	uint32  rx18mbps;   
+	uint32  rx24mbps;   
+	uint32  rx36mbps;   
+	uint32  rx48mbps;   
+	uint32  rx54mbps;   
+	uint32  rx108mbps;  
+	uint32  rx162mbps;  
+	uint32  rx216mbps;  
+	uint32  rx270mbps;  
+	uint32  rx324mbps;  
+	uint32  rx378mbps;  
+	uint32  rx432mbps;  
+	uint32  rx486mbps;  
+	uint32  rx540mbps;  
+
+	uint32  pktengrxducast; 
+	uint32  pktengrxdmcast; 
+
+	uint32  rfdisable;  
+	uint32  bphy_rxcrsglitch;   
+
+	uint32  txmpdu_sgi; 
+	uint32  rxmpdu_sgi; 
+	uint32  txmpdu_stbc;    
+	uint32  rxmpdu_stbc;    
+} wl_cnt_ver_six_t;
 
 #define WL_WME_CNT_VERSION	1	
 
@@ -1279,165 +1567,12 @@ typedef struct wl_pfn {
 	int32			bss_type;		
 	int32			infra;			
 	int32			auth;			
-	int32			wpa_auth;		
+	uint32			wpa_auth;		
 	int32			wsec;			
 } wl_pfn_t;
 
 #define TOE_TX_CSUM_OL		0x00000001
 #define TOE_RX_CSUM_OL		0x00000002
-
-#define TOE_ERRTEST_TX_CSUM	0x00000001
-#define TOE_ERRTEST_RX_CSUM	0x00000002
-#define TOE_ERRTEST_RX_CSUM2	0x00000004
-
-struct toe_ol_stats_t {
-
-	uint32 tx_summed;
-
-	uint32 tx_iph_fill;
-	uint32 tx_tcp_fill;
-	uint32 tx_udp_fill;
-	uint32 tx_icmp_fill;
-
-	uint32 rx_iph_good;
-	uint32 rx_iph_bad;
-	uint32 rx_tcp_good;
-	uint32 rx_tcp_bad;
-	uint32 rx_udp_good;
-	uint32 rx_udp_bad;
-	uint32 rx_icmp_good;
-	uint32 rx_icmp_bad;
-
-	uint32 tx_tcp_errinj;
-	uint32 tx_udp_errinj;
-	uint32 tx_icmp_errinj;
-
-	uint32 rx_tcp_errinj;
-	uint32 rx_udp_errinj;
-	uint32 rx_icmp_errinj;
-};
-
-#define ARP_OL_AGENT		0x00000001
-#define ARP_OL_SNOOP		0x00000002
-#define ARP_OL_HOST_AUTO_REPLY	0x00000004
-#define ARP_OL_PEER_AUTO_REPLY	0x00000008
-
-#define ARP_ERRTEST_REPLY_PEER	0x1
-#define ARP_ERRTEST_REPLY_HOST	0x2
-
-#define ARP_MULTIHOMING_MAX	8	
-
-struct arp_ol_stats_t {
-	uint32  host_ip_entries;	
-	uint32  host_ip_overflow;	
-
-	uint32  arp_table_entries;	
-	uint32  arp_table_overflow;	
-
-	uint32  host_request;		
-	uint32  host_reply;		
-	uint32  host_service;		
-
-	uint32  peer_request;		
-	uint32  peer_request_drop;	
-	uint32  peer_reply;		
-	uint32  peer_reply_drop;	
-	uint32  peer_service;		
-};
-
-typedef struct wl_keep_alive_pkt {
-	uint32	period_msec;	
-	uint16	len_bytes;	
-	uint8	data[1];	
-} wl_keep_alive_pkt_t;
-
-#define WL_KEEP_ALIVE_FIXED_LEN		OFFSETOF(wl_keep_alive_pkt_t, data)
-
-typedef enum wl_pkt_filter_type {
-	WL_PKT_FILTER_TYPE_PATTERN_MATCH	
-} wl_pkt_filter_type_t;
-
-#define WL_PKT_FILTER_TYPE wl_pkt_filter_type_t
-
-typedef struct wl_pkt_filter_pattern {
-	uint32	offset;		
-	uint32	size_bytes;	
-	uint8   mask_and_pattern[1]; 
-} wl_pkt_filter_pattern_t;
-
-typedef struct wl_pkt_filter {
-	uint32	id;		
-	uint32	type;		
-	uint32	negate_match;	
-	union {			
-		wl_pkt_filter_pattern_t pattern;	
-	} u;
-} wl_pkt_filter_t;
-
-#define WL_PKT_FILTER_FIXED_LEN		  OFFSETOF(wl_pkt_filter_t, u)
-#define WL_PKT_FILTER_PATTERN_FIXED_LEN	  OFFSETOF(wl_pkt_filter_pattern_t, mask_and_pattern)
-
-typedef struct wl_pkt_filter_enable {
-	uint32	id;		
-	uint32	enable;		
-} wl_pkt_filter_enable_t;
-
-typedef struct wl_pkt_filter_list {
-	uint32	num;		
-	wl_pkt_filter_t	filter[1];	
-} wl_pkt_filter_list_t;
-
-#define WL_PKT_FILTER_LIST_FIXED_LEN	  OFFSETOF(wl_pkt_filter_list_t, filter)
-
-typedef struct wl_pkt_filter_stats {
-	uint32	num_pkts_matched;	
-	uint32	num_pkts_forwarded;	
-	uint32	num_pkts_discarded;	
-} wl_pkt_filter_stats_t;
-
-typedef struct wl_seq_cmd_ioctl {
-	uint32 cmd;		
-	uint32 len;		
-} wl_seq_cmd_ioctl_t;
-
-#define WL_SEQ_CMD_ALIGN_BYTES	4
-
-#define WL_SEQ_CMDS_GET_IOCTL_FILTER(cmd) \
-	(((cmd) == WLC_GET_MAGIC)		|| \
-	 ((cmd) == WLC_GET_VERSION)		|| \
-	 ((cmd) == WLC_GET_AP)			|| \
-	 ((cmd) == WLC_GET_INSTANCE))
-
-#define WL_PKTENG_PER_TX_START			0x01
-#define WL_PKTENG_PER_TX_STOP			0x02
-#define WL_PKTENG_PER_RX_START			0x04
-#define WL_PKTENG_PER_RX_WITH_ACK_START 	0x05
-#define WL_PKTENG_PER_TX_WITH_ACK_START 	0x06
-#define WL_PKTENG_PER_RX_STOP			0x08
-#define WL_PKTENG_PER_MASK			0xff
-
-#define WL_PKTENG_SYNCHRONOUS			0x100	
-
-typedef struct wl_pkteng {
-	uint32 flags;
-	uint32 delay;			
-	uint32 nframes;			
-	uint32 length;			
-	uint8  seqno;			
-	struct ether_addr dest;		
-	struct ether_addr src;		
-} wl_pkteng_t;
-
-#define NUM_80211b_RATES	4
-#define NUM_80211ag_RATES	8
-#define NUM_80211n_RATES	32
-#define NUM_80211_RATES		(NUM_80211b_RATES+NUM_80211ag_RATES+NUM_80211n_RATES)
-typedef struct wl_pkteng_stats {
-	uint32 lostfrmcnt;		
-	int32 rssi;			
-	int32 snr;			
-	uint16 rxpktcnt[NUM_80211_RATES+1];
-} wl_pkteng_stats_t;
 
 typedef struct wl_sslpnphy_papd_debug_data {
 	uint8 psat_pwr;
@@ -1445,8 +1580,32 @@ typedef struct wl_sslpnphy_papd_debug_data {
 	uint8 final_idx;
 	uint8 start_idx;
 	int32 min_phase;
+	int32 voltage;
+	int8 temperature;
 } wl_sslpnphy_papd_debug_data_t;
-
+typedef struct wl_sslpnphy_debug_data {
+	int16 papdcompRe [64];
+	int16 papdcompIm [64];
+} wl_sslpnphy_debug_data_t;
+typedef struct wl_sslpnphy_spbdump_data {
+	uint16 tbl_length;
+	int16 spbreal[256];
+	int16 spbimg[256];
+} wl_sslpnphy_spbdump_data_t;
+typedef struct wl_sslpnphy_percal_debug_data {
+	uint cur_idx;
+	uint tx_drift;
+	uint8 prev_cal_idx;
+	uint percal_ctr;
+	int nxt_cal_idx;
+	uint force_1idxcal;
+	uint onedxacl_req;
+	int32 last_cal_volt;
+	int8 last_cal_temp;
+	uint vbat_ripple;
+	uint exit_route;
+	int32 volt_winner;
+} wl_sslpnphy_percal_debug_data_t;
 #define WL_WOWL_MAGIC	(1 << 0)	
 #define WL_WOWL_NET	(1 << 1)	
 #define WL_WOWL_DIS	(1 << 2)	
@@ -1455,6 +1614,7 @@ typedef struct wl_sslpnphy_papd_debug_data {
 #define WL_WOWL_TST	(1 << 5)	
 #define WL_WOWL_M1      (1 << 6)        
 #define WL_WOWL_EAPID   (1 << 7)        
+#define WL_WOWL_PME_GPIO (1 << 8)   
 #define WL_WOWL_KEYROT  (1 << 14)       
 #define WL_WOWL_BCAST	(1 << 15)	
 
@@ -1466,6 +1626,7 @@ typedef struct {
 	uint patternoffset;	
 	uint patternsize;	
 	ulong id;		
+	uint reasonsize;	
 
 } wl_wowl_pattern_t;
 
@@ -1540,6 +1701,47 @@ typedef struct wl_action_obss_coex_req {
 	uint8 num;
 	uint8 ch_list[1];
 } wl_action_obss_coex_req_t;
+
+#define WL_IOV_MAC_PARAM_LEN  4
+
+#define WL_IOV_PKTQ_LOG_PRECS 16
+
+typedef struct {
+	uint32 num_addrs;
+	char   addr_type[WL_IOV_MAC_PARAM_LEN];
+	struct ether_addr ea[WL_IOV_MAC_PARAM_LEN];
+} wl_iov_mac_params_t;
+
+typedef struct {
+	uint32 requested;      
+	uint32 stored;         
+	uint32 saved;          
+	uint32 selfsaved;      
+	uint32 full_dropped;   
+	uint32 dropped;        
+	uint32 sacrified;      
+	uint32 busy;           
+	uint32 retry;          
+	uint32 ps_retry;       
+	uint32 retry_drop;     
+	uint32 max_avail;      
+	uint32 max_used;       
+	uint32 queue_capacity; 
+} pktq_log_counters_v01_t;
+
+typedef struct {
+	uint8                num_prec[WL_IOV_MAC_PARAM_LEN];
+	pktq_log_counters_v01_t  counters[WL_IOV_MAC_PARAM_LEN][WL_IOV_PKTQ_LOG_PRECS];
+	char                 headings[1];
+} pktq_log_format_v01_t;
+
+typedef struct {
+	uint32               version;
+	wl_iov_mac_params_t  params;
+	union {
+		pktq_log_format_v01_t v01;
+	} pktq_log;
+} wl_iov_pktq_log_t;
 
 #define EXTLOG_CUR_VER		0x0100
 
@@ -1705,218 +1907,6 @@ typedef struct assertlog_results {
 #define LOGRRC_FIX_LEN	8
 #define IOBUF_ALLOWED_NUM_OF_LOGREC(type, len) ((len - LOGRRC_FIX_LEN)/sizeof(type))
 
-#ifdef BCMWAPI_WAI
-#define IV_LEN 16
-struct wapi_sta_msg_t
-{
-	uint16	msg_type;
-	uint16	datalen;
-	uint8	vap_mac[6];
-	uint8	reserve_data1[2];
-	uint8	sta_mac[6];
-	uint8	reserve_data2[2];
-	uint8	gsn[IV_LEN];
-	uint8	wie[256];
-};
-#endif 
-
-#define CHANIM_DISABLE	0	
-#define CHANIM_DETECT	1	
-#define CHANIM_ACT	2	
-#define CHANIM_MODE_MAX 2
-
-#define APCS_IOCTL 		1
-#define APCS_CHANIM 	2
-#define APCS_CSTIMER	3
-#define APCS_BTA		4
-
-#define CHANIM_ACS_RECORD			10
-
-typedef struct {
-	bool valid;
-	uint8 trigger;
-	chanspec_t selected_chspc;
-	uint32 glitch_cnt;
-	uint8 ccastats;
-	uint timestamp;
-} chanim_acs_record_t;
-
-typedef struct {
-	chanim_acs_record_t acs_record[CHANIM_ACS_RECORD];
-	uint8 count;
-	uint timestamp;
-} wl_acs_record_t;
-
-#define	AP_TPC_OFF		0
-#define	AP_TPC_BSS_PWR		1	
-#define AP_TPC_AP_PWR		2	
-#define	AP_TPC_AP_BSS_PWR	3	
-#define AP_TPC_MAX_LINK_MARGIN	127
-
-#define SMFS_VERSION 1
-
-typedef struct wl_smfs_elem {
-	uint32 count;
-	uint16 code;  
-} wl_smfs_elem_t;
-
-typedef struct wl_smf_stats {
-	uint32 version;
-	uint16 length;	
-	uint8 type;
-	uint8 codetype;
-	uint32 ignored_cnt;
-	uint32 malformed_cnt;
-	uint32 count_total; 
-	wl_smfs_elem_t elem[1];
-} wl_smf_stats_t;
-
-#define WL_SMFSTATS_FIXED_LEN OFFSETOF(wl_smf_stats_t, elem);
-
-enum {
-	SMFS_CODETYPE_SC,
-	SMFS_CODETYPE_RC
-};
-
-#define	SMFS_CODE_MALFORMED 0xFFFE
-#define SMFS_CODE_IGNORED 	0xFFFD
-
-typedef enum smfs_type {
-	SMFS_TYPE_AUTH,
-	SMFS_TYPE_ASSOC,
-	SMFS_TYPE_REASSOC,
-	SMFS_TYPE_DISASSOC_TX,
-	SMFS_TYPE_DISASSOC_RX,
-	SMFS_TYPE_DEAUTH_TX,
-	SMFS_TYPE_DEAUTH_RX,
-	SMFS_TYPE_MAX
-} smfs_type_t;
-
-#ifdef PHYMON
-
-#define PHYMON_VERSION 1
-
-typedef struct wl_phycal_core_state {
-
-	int16 tx_iqlocal_a;
-	int16 tx_iqlocal_b;
-	int8 tx_iqlocal_ci;
-	int8 tx_iqlocal_cq;
-	int8 tx_iqlocal_di;
-	int8 tx_iqlocal_dq;
-	int8 tx_iqlocal_ei;
-	int8 tx_iqlocal_eq;
-	int8 tx_iqlocal_fi;
-	int8 tx_iqlocal_fq;
-
-	int16 rx_iqcal_a;
-	int16 rx_iqcal_b;
-
-	uint8 tx_iqlocal_pwridx; 
-	uint32 papd_epsilon_table[64]; 
-	int16 papd_epsilon_offset; 
-	uint8 curr_tx_pwrindex; 
-	int8 idle_tssi; 
-	int8 est_tx_pwr; 
-	int8 est_rx_pwr; 
-	uint16 rx_gaininfo; 
-	uint16 init_gaincode; 
-	int8 estirr_tx;
-	int8 estirr_rx;
-
-} wl_phycal_core_state_t;
-
-typedef struct wl_phycal_state {
-	int version;
-	int8 num_phy_cores; 
-	int8 curr_temperature; 
-	chanspec_t chspec; 
-	bool aci_state; 
-	uint16 crsminpower; 
-	uint16 crsminpowerl; 
-	uint16 crsminpoweru; 
-	wl_phycal_core_state_t phycal_core[1];
-} wl_phycal_state_t;
-
-#define WL_PHYCAL_STAT_FIXED_LEN OFFSETOF(wl_phycal_state_t, phycal_core)
-#endif 
-
-#ifdef WLP2P
-
-typedef struct wl_p2p_disc_st {
-	uint8 state;	
-	chanspec_t chspec;	
-	uint16 dwell;	
-} wl_p2p_disc_st_t;
-
-#define WL_P2P_DISC_ST_SCAN	0
-#define WL_P2P_DISC_ST_LISTEN	1
-#define WL_P2P_DISC_ST_SEARCH	2
-
-typedef struct wl_p2p_scan {
-	uint8 type;		
-	uint8 reserved[3];
-
-} wl_p2p_scan_t;
-
-typedef struct wl_p2p_if {
-	struct ether_addr addr;
-	uint8 type;	
-	chanspec_t chspec;	
-} wl_p2p_if_t;
-
-#define WL_P2P_IF_CLIENT	0
-#define WL_P2P_IF_GO		1
-#define WL_P2P_IF_DYNBCN_GO	2
-#define WL_P2P_IF_DEV		3
-
-typedef struct wl_p2p_ifq {
-	uint bsscfgidx;
-	char ifname[BCM_MSG_IFNAME_MAX];
-} wl_p2p_ifq_t;
-
-typedef struct wl_p2p_ops {
-	uint8 ops;	
-	uint8 ctw;	
-} wl_p2p_ops_t;
-
-typedef struct wl_p2p_sched_desc {
-	uint32 start;
-	uint32 interval;
-	uint32 duration;
-	uint32 count;	
-} wl_p2p_sched_desc_t;
-
-#define WL_P2P_SCHED_RSVD	0
-#define WL_P2P_SCHED_REPEAT	255	
-
-typedef struct wl_p2p_sched {
-	uint8 type;	
-	uint8 action;	
-	uint8 option;	
-	wl_p2p_sched_desc_t desc[1];
-} wl_p2p_sched_t;
-#define WL_P2P_SCHED_FIXED_LEN		3
-
-#define WL_P2P_SCHED_TYPE_ABS		0	
-#define WL_P2P_SCHED_TYPE_REQ_ABS	1	
-
-#define WL_P2P_SCHED_ACTION_NONE	0	
-#define WL_P2P_SCHED_ACTION_DOZE	1	
-
-#define WL_P2P_SCHED_ACTION_GOOFF	2	
-
-#define WL_P2P_SCHED_ACTION_RESET	255	
-
-#define WL_P2P_SCHED_OPTION_NORMAL	0	
-#define WL_P2P_SCHED_OPTION_BCNPCT	1	
-
-#define WL_P2P_SCHED_OPTION_TSFOFS	2	
-
-#define WL_P2P_FEAT_GO_CSA	(1 << 0)	
-#define WL_P2P_FEAT_GO_NOLEGACY	(1 << 1)	
-#endif 
-
 #define BCM_ACTION_RFAWARE		0x77
 #define BCM_ACTION_RFAWARE_DCS  0x01
 
@@ -1984,6 +1974,20 @@ enum {
 	HCILogicalLinkCancel,
 	HCIAmpStateChange,
 	HCIWriteLogicalLinkAcceptTimeout
+};
+
+#define CHANNEL_5G_LOW_START	36	
+#define CHANNEL_5G_MID_START	52	
+#define CHANNEL_5G_HIGH_START	100	
+#define CHANNEL_5G_UPPER_START	149	
+
+enum {
+	SPATIAL_MODE_2G_IDX = 0,
+	SPATIAL_MODE_5G_LOW_IDX,
+	SPATIAL_MODE_5G_MID_IDX,
+	SPATIAL_MODE_5G_HIGH_IDX,
+	SPATIAL_MODE_5G_UPPER_IDX,
+	SPATIAL_MODE_MAX_IDX
 };
 
 #endif 

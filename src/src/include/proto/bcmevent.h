@@ -1,17 +1,23 @@
 /*
  * Broadcom Event  protocol definitions
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Dependencies: proto/bcmeth.h
  *
- * $Id: bcmevent.h,v 9.68.4.3.18.3 2011-01-19 09:32:15 Exp $
+ * $Id: bcmevent.h 289463 2011-10-12 23:00:00Z $
  *
  */
 
@@ -60,13 +66,6 @@ typedef BWL_PRE_PACKED_STRUCT struct
 	uint8	ifidx;			
 	uint8	bsscfgidx;		
 } BWL_POST_PACKED_STRUCT wl_event_msg_t;
-
-typedef BWL_PRE_PACKED_STRUCT struct bcm_event {
-	struct ether_header eth;
-	bcmeth_hdr_t		bcm_hdr;
-	wl_event_msg_t		event;
-
-} BWL_POST_PACKED_STRUCT bcm_event_t;
 
 #define BCM_MSG_LEN	(sizeof(bcm_event_t) - sizeof(bcmeth_hdr_t) - sizeof(struct ether_header))
 
@@ -122,9 +121,7 @@ typedef BWL_PRE_PACKED_STRUCT struct bcm_event {
 #define WLC_E_MULTICAST_DECODE_ERROR	51 
 #define WLC_E_TRACE		52
 #define WLC_E_IF		54	
-#ifdef WLP2P
 #define WLC_E_P2P_DISC_LISTEN_COMPLETE	55	
-#endif
 #define WLC_E_RSSI		56	
 #define WLC_E_PFN_SCAN_COMPLETE	57	
 #define WLC_E_EXTLOG_MSG	58
@@ -140,17 +137,18 @@ typedef BWL_PRE_PACKED_STRUCT struct bcm_event {
 #define WLC_E_WAI_MSG 		68	
 #define WLC_E_ESCAN_RESULT 	69	
 #define WLC_E_ACTION_FRAME_OFF_CHAN_COMPLETE 	70	
-#ifdef WLP2P
 #define WLC_E_PROBRESP_MSG	71	
 #define WLC_E_P2P_PROBREQ_MSG	72	
-#endif
 #define WLC_E_DCS_REQUEST	73
 #define WLC_E_FIFO_CREDIT_MAP	74	
 #define WLC_E_ACTION_FRAME_RX	75	
-#define WLC_E_ASSOC_IND_NDIS		76	
-#define WLC_E_REASSOC_IND_NDIS	77	
-#define WLC_E_CSA_COMPLETE_IND		78	
-#define WLC_E_LAST		79	
+#define WLC_E_WAKE_EVENT	76	
+#define WLC_E_OVERLAY_REQ	77	
+#define WLC_E_ASSOC_IND_NDIS		78	
+#define WLC_E_REASSOC_IND_NDIS		79	
+#define WLC_E_CSA_COMPLETE_IND		80	
+#define WLC_E_EXCESS_PM_WAKE_EVENT	81	
+#define WLC_E_LAST		82	
 
 typedef struct {
 	uint event;
@@ -189,6 +187,8 @@ extern const int		bcmevent_names_size;
 #define WLC_E_REASON_DIRECTED_ROAM	6	
 #define WLC_E_REASON_TSPEC_REJECTED	7	
 #define WLC_E_REASON_BETTER_AP		8	
+
+#define WLC_E_REASON_REQUESTED_ROAM 11	
 
 #define WLC_E_PRUNE_ENCR_MISMATCH	1	
 #define WLC_E_PRUNE_BCAST_BSSID		2	
@@ -254,6 +254,9 @@ typedef struct wl_event_data_if {
 #define WLC_E_LINK_DISASSOC	2	
 #define WLC_E_LINK_ASSOC_REC	3	
 #define WLC_E_LINK_BSSCFG_DIS	4	
+
+#define WLC_E_OVL_DOWNLOAD		0	
+#define WLC_E_OVL_UPDATE_IND	1	
 
 #include <packed_section_end.h>
 

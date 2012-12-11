@@ -2,15 +2,21 @@
  * Linux-specific abstractions to gain some independence from linux kernel versions.
  * Pave over some 2.2 versus 2.4 versus 2.6 kernel differences.
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: linuxver.h,v 13.53.12.3.2.2 2011-01-26 01:17:15 Exp $
+ * $Id: linuxver.h 260648 2011-05-19 22:16:03Z $
  */
 
 #ifndef _linuxver_h_
@@ -105,9 +111,6 @@ typedef irqreturn_t(*FN_ISR) (int irq, void *dev_id, struct pt_regs *ptregs);
 #endif 
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 17)
-#ifdef	CONFIG_NET_RADIO
-#define	CONFIG_WIRELESS_EXT
-#endif
 #endif	
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 67)
@@ -183,13 +186,8 @@ extern void pci_unregister_driver(struct pci_driver *drv);
 #endif
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 2, 18))
-#ifdef MODULE
-#define module_init(x) int init_module(void) { return x(); }
-#define module_exit(x) void cleanup_module(void) { x(); }
-#else
 #define module_init(x)	__initcall(x);
 #define module_exit(x)	__exitcall(x);
-#endif
 #endif	
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
@@ -469,7 +467,18 @@ do {									\
 
 #endif 
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
+#define KILL_PROC(nr, sig) \
+{ \
+struct task_struct *tsk; \
+struct pid *pid;    \
+pid = find_get_pid((pid_t)nr);    \
+tsk = pid_task(pid, PIDTYPE_PID);    \
+if (tsk) send_sig(sig, tsk, 1); \
+}
+#else
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && (LINUX_VERSION_CODE <= \
+	KERNEL_VERSION(2, 6, 30))
 #define KILL_PROC(pid, sig) \
 { \
 	struct task_struct *tsk; \
@@ -482,6 +491,11 @@ do {									\
 	kill_proc(pid, sig, 1); \
 }
 #endif
+#endif 
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0))
+#define netdev_priv(dev) dev->priv
+#endif 
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 #define WL_DEV_IF(dev)          ((wl_if_t*)netdev_priv(dev))

@@ -1,15 +1,21 @@
 /*
  * From FreeBSD 2.2.7: Fundamental constants relating to ethernet.
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: ethernet.h,v 9.56.18.1 2010-06-16 19:39:55 Exp $
+ * $Id: ethernet.h 261155 2011-05-23 23:51:32Z $
  */
 
 #ifndef _NET_ETHERNET_H_	  
@@ -45,9 +51,9 @@
 #define	ETHER_TYPE_802_1X	0x888e		
 #define	ETHER_TYPE_802_1X_PREAUTH 0x88c7	
 #define ETHER_TYPE_WAI		0x88b4		
+#define ETHER_TYPE_89_0D	0x890d		
 
 #define	ETHER_BRCM_SUBTYPE_LEN	4	
-#define	ETHER_BRCM_CRAM		1	
 
 #define ETHER_DEST_OFFSET	(0 * ETHER_ADDR_LEN)	
 #define ETHER_SRC_OFFSET	(1 * ETHER_ADDR_LEN)	
@@ -92,9 +98,9 @@ BWL_PRE_PACKED_STRUCT struct	ether_addr {
 			 !(((short*)(a))[2] == ((short*)(b))[2]))
 
 #define	ether_copy(s, d) { \
-		((short*)(d))[0] = ((short*)(s))[0]; \
-		((short*)(d))[1] = ((short*)(s))[1]; \
-		((short*)(d))[2] = ((short*)(s))[2]; }
+		((short*)(d))[0] = ((const short*)(s))[0]; \
+		((short*)(d))[1] = ((const short*)(s))[1]; \
+		((short*)(d))[2] = ((const short*)(s))[2]; }
 
 static const struct ether_addr ether_bcast = {{255, 255, 255, 255, 255, 255}};
 static const struct ether_addr ether_null = {{0, 0, 0, 0, 0, 0}};

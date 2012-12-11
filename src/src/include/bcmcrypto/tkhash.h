@@ -1,19 +1,6 @@
 /*
- * Declare directives for structure packing. No padding will be provided
- * between the members of packed structures, and therefore, there is no
- * guarantee that structure members will be aligned.
- *
- * Declaring packed structures is compiler specific. In order to handle all
- * cases, packed structures should be delared as:
- *
- * #include <packed_section_start.h>
- *
- * typedef BWL_PRE_PACKED_STRUCT struct foobar_t {
- *    some_struct_members;
- * } BWL_POST_PACKED_STRUCT foobar_t;
- *
- * #include <packed_section_end.h>
- *
+ * tkhash.h
+ * Prototypes for TKIP hash functions.
  *
  * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
  * 
@@ -28,14 +15,19 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- * $Id: packed_section_end.h 241182 2011-02-17 21:50:03Z $
+ *
+ * $Id: tkhash.h 326260 2012-04-06 20:38:09Z $
  */
 
-#ifdef BWL_PACKED_SECTION
-	#undef BWL_PACKED_SECTION
-#else
-	#error "BWL_PACKED_SECTION is NOT defined!"
-#endif
+#ifndef _TKHASH_H_
+#define _TKHASH_H_
 
-#undef	BWL_PRE_PACKED_STRUCT
-#undef	BWL_POST_PACKED_STRUCT
+#include <typedefs.h>
+
+#define TKHASH_P1_KEY_SIZE	10	
+#define TKHASH_P2_KEY_SIZE	16	
+
+extern void BCMROMFN(tkhash_phase1)(uint16 *P1K, const uint8 *TK, const uint8 *TA, uint32 IV32);
+extern void BCMROMFN(tkhash_phase2)(uint8 *RC4KEY, const uint8 *TK, const uint16 *P1K, uint16 IV16);
+
+#endif 

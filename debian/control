@@ -9,7 +9,9 @@ Build-Depends: debhelper (>= 7.0.50~),
 
 Package: bcmwl-kernel-source
 Architecture: i386 amd64
-Depends: ${misc:Depends}, dkms, linux-libc-dev, libc6-dev, linux-headers-generic-pae [i386] | linux-headers-generic [amd64] | linux-headers
+Depends: ${misc:Depends}, dkms, linux-libc-dev, libc6-dev,
+ linux-headers-generic | linux-headers-server |
+ linux-headers-lowlatency | linux-headers-virtual
 XB-Modaliases: ${modaliases}
 Conflicts: bcmwl-modaliases
 Replaces: bcmwl-modaliases

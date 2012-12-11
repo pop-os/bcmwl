@@ -1,30 +1,22 @@
 /*
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
- * $Id: typedefs.h,v 1.103.12.5 2010-08-17 18:10:20 Exp $
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * $Id: typedefs.h 285775 2011-09-23 05:11:53Z $
  */
 
 #ifndef _TYPEDEFS_H_
 #define _TYPEDEFS_H_
-
-#ifdef __cplusplus
-
-#define TYPEDEF_BOOL
-#ifndef FALSE
-#define FALSE	false
-#endif
-#ifndef TRUE
-#define TRUE	true
-#endif
-
-#else	
-
-#endif	
 
 #if defined(__x86_64__)
 #define TYPEDEF_UINTPTR
@@ -52,6 +44,10 @@ typedef unsigned long long int uintptr;
 #include <linux/version.h>
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19))
 #define TYPEDEF_BOOL
+#endif	
+
+#if (LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 18))
+#include <linux/compiler.h>
 #endif	
 #endif	
 #endif  
@@ -224,6 +220,7 @@ typedef float64 float_t;
 
 #define UNUSED_PARAMETER(x) (void)(x)
 
-#include <bcmdefs.h>
+#define DISCARD_QUAL(ptr, type) ((type *)(uintptr)(ptr))
 
+#include <bcmdefs.h>
 #endif 

@@ -1,3 +1,14 @@
+bcmwl (6.20.155.1+bdcom-0ubuntu1) raring; urgency=low
+
+  * New upstream release (LP: #923809):
+    - Added 43142 support.
+    - Added 4331 support.
+  * debian/control:
+    - depend on the different flavours of the linux-headers.
+  * Refresh 0002-Makefile.patch and 0001-MODULE_LICENSE.patch.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Tue, 11 Dec 2012 17:06:22 +0100
+
 bcmwl (5.100.82.112+bdcom-0ubuntu4) raring; urgency=low
 
   * debian/bcmwl-kernel-source.postinst: Silence the errors from rmmod about

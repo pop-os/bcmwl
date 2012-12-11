@@ -1,19 +1,24 @@
 /*
  * Linux Wireless Extensions support
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_iw.c,v 1.133.2.1.28.9 2011-01-26 22:23:18 Exp $
+ * $Id: wl_iw.c 277746 2011-08-16 18:18:43Z $
  */
 
 #if defined(USE_IW)
-
 #define LINUX_PORT
 
 #include <typedefs.h>
@@ -492,7 +497,7 @@ wl_iw_get_range(
 		return -EINVAL;
 
 	dwrq->length = sizeof(struct iw_range);
-	memset(range, 0, sizeof(range));
+	memset(range, 0, sizeof(*range));
 
 	range->min_nwid = range->max_nwid = 0;
 
@@ -539,7 +544,8 @@ wl_iw_get_range(
 	dev_wlc_intvar_get(dev, "nmode", &nmode);
 	dev_wlc_ioctl(dev, WLC_GET_PHYTYPE, &phytype, sizeof(phytype));
 
-	if (nmode == 1 && ((phytype == WLC_PHY_TYPE_SSN) || (phytype == WLC_PHY_TYPE_LCN))) {
+	if (nmode == 1 && ((phytype == WLC_PHY_TYPE_SSN) || (phytype == WLC_PHY_TYPE_LCN) ||
+		(phytype == WLC_PHY_TYPE_LCN40))) {
 		dev_wlc_intvar_get(dev, "mimo_bw_cap", &bw_cap);
 		dev_wlc_intvar_get(dev, "sgi_tx", &sgi_tx);
 		dev_wlc_ioctl(dev, WLC_GET_CHANNEL, &ci, sizeof(channel_info_t));
@@ -1011,7 +1017,7 @@ wl_iw_get_scan(
 	struct iw_event	iwe;
 	wl_bss_info_t *bi = NULL;
 	int error, i, j;
-	char *event = extra, *end = extra + IW_SCAN_MAX_DATA, *value;
+	char *event = extra, *end = extra + dwrq->length, *value;
 	uint buflen = dwrq->length;
 
 	WL_TRACE(("%s: SIOCGIWSCAN\n", dev->name));
@@ -1797,6 +1803,7 @@ wl_iw_set_encodeext(
 			dev_wlc_ioctl(dev, WLC_SET_KEY, &key, sizeof(key));
 		}
 	}
+
 	else {
 		if (iwe->key_len > sizeof(key.data))
 			return -EINVAL;
@@ -1852,6 +1859,7 @@ wl_iw_set_encodeext(
 	}
 	return 0;
 }
+
 #if WIRELESS_EXT > 17
 struct {
 	pmkid_list_t pmkids;
@@ -1868,6 +1876,7 @@ wl_iw_set_pmksa(
 	struct iw_pmksa *iwpmksa;
 	uint i;
 	char eabuf[ETHER_ADDR_STR_LEN];
+
 	WL_TRACE(("%s: SIOCSIWPMKSA\n", dev->name));
 	iwpmksa = (struct iw_pmksa *)extra;
 	bzero((char *)eabuf, ETHER_ADDR_STR_LEN);
@@ -2010,6 +2019,20 @@ wl_iw_set_wpaauth(
 		if (cipher_combined & IW_AUTH_CIPHER_CCMP)
 			val |= AES_ENABLED;
 
+		if (iw->privacy_invoked && !val) {
+			WL_WSEC(("%s: %s: 'Privacy invoked' TRUE but clearing wsec, assuming "
+			         "we're a WPS enrollee\n", dev->name, __FUNCTION__));
+			if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", TRUE))) {
+				WL_WSEC(("Failed to set iovar is_WPS_enrollee\n"));
+				return error;
+			}
+		} else if (val) {
+			if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", FALSE))) {
+				WL_WSEC(("Failed to clear iovar is_WPS_enrollee\n"));
+				return error;
+			}
+		}
+
 		if ((error = dev_wlc_intvar_set(dev, "wsec", val)))
 			return error;
 		break;
@@ -2079,9 +2102,36 @@ wl_iw_set_wpaauth(
 
 		break;
 
-	case IW_AUTH_PRIVACY_INVOKED:
-		WL_TRACE(("%s: IW_AUTH_PRIVACY_INVOKED\n", __FUNCTION__));
+	case IW_AUTH_PRIVACY_INVOKED: {
+		int wsec;
+
+		if (paramval == 0) {
+			iw->privacy_invoked = FALSE;
+			if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", FALSE))) {
+				WL_WSEC(("Failed to clear iovar is_WPS_enrollee\n"));
+				return error;
+			}
+		} else {
+			iw->privacy_invoked = TRUE;
+			if ((error = dev_wlc_intvar_get(dev, "wsec", &wsec)))
+				return error;
+
+			if (!WSEC_ENABLED(wsec)) {
+
+				if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", TRUE))) {
+					WL_WSEC(("Failed to set iovar is_WPS_enrollee\n"));
+					return error;
+				}
+			} else {
+				if ((error = dev_wlc_intvar_set(dev, "is_WPS_enrollee", FALSE))) {
+					WL_WSEC(("Failed to clear iovar is_WPS_enrollee\n"));
+					return error;
+				}
+			}
+		}
 		break;
+	}
+
 #endif 
 
 	default:
@@ -2169,14 +2219,18 @@ wl_iw_get_wpaauth(
 		else
 			paramval = FALSE;
 		break;
+
 #if WIRELESS_EXT > 17
+
 	case IW_AUTH_ROAMING_CONTROL:
 		WL_ERROR(("%s: IW_AUTH_ROAMING_CONTROL\n", __FUNCTION__));
 
 		break;
+
 	case IW_AUTH_PRIVACY_INVOKED:
-		WL_ERROR(("%s: IW_AUTH_PRIVACY_INVOKED\n", __FUNCTION__));
+		paramval = iw->privacy_invoked;
 		break;
+
 #endif 
 	}
 	vwrq->value = paramval;
@@ -2315,7 +2369,8 @@ wl_iw_ioctl(
 	struct iw_request_info info;
 	iw_handler handler;
 	char *extra = NULL;
-	int token_size = 1, max_tokens = 0, ret = 0;
+	size_t token_size = 1;
+	int max_tokens = 0, ret = 0;
 
 	if (cmd < SIOCIWFIRST ||
 		IW_IOCTL_IDX(cmd) >= ARRAYSIZE(wl_iw_handler) ||
@@ -2364,7 +2419,8 @@ wl_iw_ioctl(
 		token_size = sizeof(struct sockaddr) + sizeof(struct iw_quality);
 		max_tokens = IW_MAX_SPY;
 		break;
-
+	default:
+		break;
 	}
 
 	if (max_tokens && wrq->u.data.pointer) {
@@ -2525,6 +2581,7 @@ wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data)
 		bzero(wrqu.addr.sa_data, ETHER_ADDR_LEN);
 		bzero(&extra, ETHER_ADDR_LEN);
 		break;
+
 	case WLC_E_LINK:
 	case WLC_E_NDIS_LINK:
 		cmd = SIOCGIWAP;
@@ -2600,7 +2657,7 @@ wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data)
 #if WIRELESS_EXT > 14
 		cmd = SIOCGIWSCAN;
 #endif
-	break;
+		break;
 
 	default:
 
