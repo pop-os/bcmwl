@@ -1,3 +1,14 @@
+bcmwl (6.20.155.1+bdcom-0ubuntu2) raring; urgency=low
+
+  * Drop parsing of src/src/wl/sys/wl_linux.c, as the current upstream version
+    dropped all useful vendor matches in its pci_device_id struct and now has
+    a broken modalias. Keep a static debian/bcmwl-kernel-source.modaliases
+    instead which matches on any Broadcom network device (vendor 14E4 class 02
+    subclass 80). This brings back a proper "Modaliases:" package header.
+    (LP: #1089943)
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Thu, 13 Dec 2012 16:02:24 +0100
+
 bcmwl (6.20.155.1+bdcom-0ubuntu1) raring; urgency=low
 
   * New upstream release (LP: #923809):

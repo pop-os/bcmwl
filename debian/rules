@@ -27,10 +27,6 @@ override_dh_auto_install:
 			-e "s|#ARCH#|$(ARCH_SUFFIX)|"   \
 			debian/$$i.in > debian/$$i;      \
 	done
-	# Generate the modaliases
-	$(SHELL) $(CURDIR)/debian/bcmwl_supported \
-		$(CURDIR)/src/src/wl/sys/wl_linux.c wl $(PKG_kernel_src) \
-		> $(CURDIR)/debian/$(PKG_kernel_src).modaliases
 
 override_dh_clean:
 	dh_clean
@@ -38,5 +34,3 @@ override_dh_clean:
 	rm -f debian/dkms.conf \
 	debian/$(PKG_kernel_src).install \
 	rm -Rf $(CURDIR)/$(PKG_kernel_src)
-	rm -f $(CURDIR)/debian/$(PKG_kernel_src).modaliases
-
