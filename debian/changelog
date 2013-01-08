@@ -1,3 +1,10 @@
+bcmwl (6.20.155.1+bdcom-0ubuntu3) raring; urgency=low
+
+  * 0006-add-support-for-linux-3.8.0.patch:
+    - Add support for Linux 3.8 (LP: #1095751).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Tue, 08 Jan 2013 15:13:17 +0100
+
 bcmwl (6.20.155.1+bdcom-0ubuntu2) raring; urgency=low
 
   * Drop parsing of src/src/wl/sys/wl_linux.c, as the current upstream version
