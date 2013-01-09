@@ -1,12 +1,12 @@
-From 02fd6df8b680b14ebe55f4a7cf473acb8f929b78 Mon Sep 17 00:00:00 2001
+From d87d68449afea52ca90d6715c0daa0851373d2a5 Mon Sep 17 00:00:00 2001
 From: Alberto Milone <alberto.milone@canonical.com>
 Date: Tue, 8 Jan 2013 12:41:52 +0100
 Subject: [PATCH 1/1] Add support for Linux 3.8
 
 ---
  src/include/bcmutils.h   |    4 ++++
- src/wl/sys/wl_cfg80211.c |   23 +++++++++++++++++++++--
- 2 files changed, 25 insertions(+), 2 deletions(-)
+ src/wl/sys/wl_cfg80211.c |   25 ++++++++++++++++++++++++-
+ 2 files changed, 28 insertions(+), 1 deletion(-)
 
 diff --git a/src/include/bcmutils.h b/src/include/bcmutils.h
 index f806b5e..3633328 100644
@@ -25,19 +25,22 @@ index f806b5e..3633328 100644
  typedef uint32 mbool;
  
 diff --git a/src/wl/sys/wl_cfg80211.c b/src/wl/sys/wl_cfg80211.c
-index 796e3a9..529f38f 100644
+index 796e3a9..c54ae87 100644
 --- a/src/wl/sys/wl_cfg80211.c
 +++ b/src/wl/sys/wl_cfg80211.c
-@@ -702,7 +702,7 @@ wl_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
+@@ -702,7 +702,11 @@ wl_cfg80211_join_ibss(struct wiphy *wiphy, struct net_device *dev,
  	else
  		memset(&join_params.params.bssid, 0, ETHER_ADDR_LEN);
  
--	wl_ch_to_chanspec(params->channel, &join_params, &join_params_size);
++#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 8, 0)
+ 	wl_ch_to_chanspec(params->channel, &join_params, &join_params_size);
++#else
 +	wl_ch_to_chanspec(params->chandef.chan, &join_params, &join_params_size);
++#endif
  
  	err = wl_dev_ioctl(dev, WLC_SET_SSID, &join_params, join_params_size);
  	if (err) {
-@@ -1957,9 +1957,14 @@ static s32 wl_update_bss_info(struct wl_cfg80211_priv *wl)
+@@ -1957,9 +1961,14 @@ static s32 wl_update_bss_info(struct wl_cfg80211_priv *wl)
  	struct wlc_ssid *ssid;
  	struct bcm_tlv *tim;
  	s32 dtim_period;
@@ -53,7 +56,7 @@ index 796e3a9..529f38f 100644
  
  	ssid = &wl->profile->ssid;
  	bss = cfg80211_get_bss(wl_to_wiphy(wl), NULL, (s8 *)&wl->bssid,
-@@ -1988,8 +1993,22 @@ static s32 wl_update_bss_info(struct wl_cfg80211_priv *wl)
+@@ -1988,8 +1997,22 @@ static s32 wl_update_bss_info(struct wl_cfg80211_priv *wl)
  		ie_len = bi->ie_length;
  	} else {
  		WL_DBG(("Found the AP in the list - BSSID %pM\n", bss->bssid));

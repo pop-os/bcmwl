@@ -1,3 +1,11 @@
+bcmwl (6.20.155.1+bdcom-0ubuntu4) raring; urgency=low
+
+  * 0006-add-support-for-linux-3.8.0.patch:
+    - Make sure to pass the correct argument to wl_ch_to_chanspec
+      according to the kernel (LP: #1097729).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Wed, 09 Jan 2013 15:28:26 +0100
+
 bcmwl (6.20.155.1+bdcom-0ubuntu3) raring; urgency=low
 
   * 0006-add-support-for-linux-3.8.0.patch:
