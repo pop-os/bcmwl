@@ -1,3 +1,12 @@
+bcmwl (6.20.155.1+bdcom-0ubuntu5) raring; urgency=low
+
+  * 0007-nl80211-move-scan-API-to-wdev.patch:
+   - Move scan API to wdev. This fixes an issue with
+     Linux >= 3.6 (LP: #1098225).
+     Thanks to Robert Hooker for suggesting the patch.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Thu, 10 Jan 2013 18:09:48 +0100
+
 bcmwl (6.20.155.1+bdcom-0ubuntu4) raring; urgency=low
 
   * 0006-add-support-for-linux-3.8.0.patch:
