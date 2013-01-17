@@ -1,3 +1,10 @@
+bcmwl (6.20.155.1+bdcom-0ubuntu6) raring; urgency=low
+
+  * debian/control:
+    - Drop all the dependencies on the linux-headers.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Thu, 17 Jan 2013 16:31:46 +0100
+
 bcmwl (6.20.155.1+bdcom-0ubuntu5) raring; urgency=low
 
   * 0007-nl80211-move-scan-API-to-wdev.patch:
