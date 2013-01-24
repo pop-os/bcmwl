@@ -1,6 +1,7 @@
 broadcom-sta (5.100.82.112-9) unstable; urgency=low
 
   * Added bcma (which brcmsmac depends on) to blacklist (Closes: #697496).
+  * Added 10-3.6.0.patch to fix kernel oops with 3.6 serie (Closes: #698216).
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Thu, 24 Jan 2013 09:36:20 +0400
 
