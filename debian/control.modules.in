@@ -1,5 +1,5 @@
 Source: broadcom-sta
-Section: non-free/admin
+Section: non-free/kernel
 Priority: optional
 Maintainer: Cyril Lacoux <clacoux@easter-eggs.com>
 Build-Depends: debhelper (>= 8)
