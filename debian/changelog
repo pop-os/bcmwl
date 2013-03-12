@@ -3,7 +3,7 @@ broadcom-sta (5.100.82.112-10) unstable; urgency=low
   * Changed section from non-free/admin to non-free/kernel (See: #698894).
   * Added 11-3.8.0.patch for kernel 3.8 compatibility (Closes: #702788).
 
- -- Cyril Lacoux <yack@yack.ifeelgood.lan>  Tue, 12 Mar 2013 10:22:56 +0400
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Tue, 12 Mar 2013 10:22:56 +0400
 
 broadcom-sta (5.100.82.112-9) unstable; urgency=low
 
