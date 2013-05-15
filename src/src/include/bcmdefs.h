@@ -1,7 +1,7 @@
 /*
  * Misc system wide definitions
  *
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,7 +15,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: bcmdefs.h 261406 2011-05-24 22:29:18Z $
+ * $Id: bcmdefs.h 381895 2013-01-30 07:06:40Z $
  */
 
 #ifndef	_bcmdefs_h_
@@ -41,7 +41,18 @@
 #define	BCMNMIATTACHFN(_fn)	_fn
 #define	BCMNMIATTACHDATA(_data)	_data
 #define CONST	const
+#if defined(BCM47XX) && defined(__ARM_ARCH_7A__)
+#define BCM47XX_CA9
+#else
+#undef BCM47XX_CA9
+#endif
+#if defined(BCM47XX_CA9)
+#define BCMFASTPATH		__attribute__ ((__section__ (".text.fastpath")))
+#define BCMFASTPATH_HOST	__attribute__ ((__section__ (".text.fastpath_host")))
+#else
 #define BCMFASTPATH
+#define BCMFASTPATH_HOST
+#endif
 
 #define BCMROMDATA(_data)	_data
 #define BCMROMDAT_NAME(_data)	_data
@@ -95,7 +106,7 @@ typedef struct  {
 	uint32	  length;
 } hnddma_seg_t;
 
-#define MAX_DMA_SEGS 4
+#define MAX_DMA_SEGS 8
 
 typedef struct {
 	void *oshdmah; 
@@ -104,12 +115,9 @@ typedef struct {
 	hnddma_seg_t segs[MAX_DMA_SEGS];
 } hnddma_seg_map_t;
 
-#if defined(BCM_RPC_NOCOPY) || defined(BCM_RCP_TXNOCOPY)
+#define BCMEXTRAHDROOM 204
 
-#define BCMEXTRAHDROOM 220
-#else
-#define BCMEXTRAHDROOM 172
-#endif
+#define SDALIGN	32
 
 #define BCMDONGLEHDRSZ 12
 #define BCMDONGLEPADSZ 16
@@ -143,6 +151,8 @@ typedef struct {
 #undef	BCMSPACE
 #define bcmspace	FALSE	
 
+#ifndef MAXSZ_NVRAM_VARS
 #define	MAXSZ_NVRAM_VARS	4096
+#endif
 
 #endif 

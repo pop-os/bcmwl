@@ -4,7 +4,7 @@
  * Broadcom 802.11abg Networking Device Driver
  *  Derived from http://airsnort.shmoo.com/orinoco-09b-packet-1.diff
  *
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlc_ethereal.h 326246 2012-04-06 19:08:11Z $
+ * $Id: wlc_ethereal.h 328348 2012-04-18 22:57:38Z $
  */
 
 #ifndef _WLC_ETHEREAL_H_

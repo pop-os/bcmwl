@@ -1,3 +1,16 @@
+bcmwl (6.30.223.30+bdcom-0ubuntu1) saucy; urgency=low
+
+  * New upstream release.
+  * debian/dkms.conf.in:
+    - Drop patches for Linux 3.2 and 3.4.
+  * 0006-add-support-for-linux-3.8.0.patch,
+    0007-nl80211-move-scan-API-to-wdev.patch:
+    - Refresh against new release.
+  * 0008-add-support-for-linux-3.9.0.patch:
+    - Add support for Linux 3.9 (LP: #1157880).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Wed, 15 May 2013 13:11:43 +0200
+
 bcmwl (6.20.155.1+bdcom-0ubuntu6) raring; urgency=low
 
   * debian/control:

@@ -15,7 +15,7 @@
  * #include <packed_section_end.h>
  *
  *
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -28,7 +28,7 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- * $Id: packed_section_start.h 241182 2011-02-17 21:50:03Z $
+ * $Id: packed_section_start.h 286783 2011-09-29 06:18:57Z $
  */
 
 #ifdef BWL_PACKED_SECTION
@@ -37,7 +37,7 @@
 	#define BWL_PACKED_SECTION
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__lint)
 	#define	BWL_PRE_PACKED_STRUCT
 	#define	BWL_POST_PACKED_STRUCT	__attribute__ ((packed))
 #elif defined(__CC_ARM)

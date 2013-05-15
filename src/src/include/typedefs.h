@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -12,7 +12,7 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- * $Id: typedefs.h 285775 2011-09-23 05:11:53Z $
+ * $Id: typedefs.h 382996 2013-02-05 06:55:24Z $
  */
 
 #ifndef _TYPEDEFS_H_
@@ -23,23 +23,14 @@
 typedef unsigned long long int uintptr;
 #endif
 
-#if defined(TARGETOS_nucleus)
-
-#include <stddef.h>
-
-#define TYPEDEF_FLOAT_T
-#endif   
-
 #if defined(__sparc__)
 #define TYPEDEF_ULONG
 #endif
 
 #if defined(LINUX_PORT)
 #define TYPEDEF_UINT
-#ifndef TARGETENV_android
 #define TYPEDEF_USHORT
 #define TYPEDEF_ULONG
-#endif 
 #ifdef __KERNEL__
 #include <linux/version.h>
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19))
@@ -57,7 +48,7 @@ typedef unsigned long long int uintptr;
 #define TYPEDEF_UINT64
 #endif
 
-#if !defined(__BOB__) && !defined(TARGETOS_nucleus)
+#if !defined(__BOB__)
 
 #if defined(__KERNEL__)
 
@@ -178,7 +169,7 @@ typedef float64 float_t;
 #define	PTRSZ	sizeof(char*)
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__lint)
 	#define BWL_COMPILER_GNU
 #elif defined(__CC_ARM) && __CC_ARM
 	#define BWL_COMPILER_ARMCC

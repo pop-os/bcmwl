@@ -1,7 +1,7 @@
 /*
  * OS Abstraction Layer
  *
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,7 +15,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: osl.h 269227 2011-06-27 18:03:20Z $
+ * $Id: osl.h 382794 2013-02-04 17:34:08Z $
  */
 
 #ifndef _osl_h_
@@ -27,6 +27,9 @@ typedef struct osl_dmainfo osldma_t;
 #define OSL_PKTTAG_SZ	32 
 
 typedef void (*pktfree_cb_fn_t)(void *ctx, void *pkt, unsigned int status);
+
+typedef unsigned int (*osl_rreg_fn_t)(void *ctx, volatile void *reg, unsigned int size);
+typedef void  (*osl_wreg_fn_t)(void *ctx, volatile void *reg, unsigned int val, unsigned int size);
 
 #ifdef __mips__
 #define PREF_LOAD		0
@@ -79,6 +82,8 @@ MAKE_PREFETCH_RANGE_FN(PREF_STORE_RETAINED)
 #define PKTDBG_TRACE(osh, pkt, bit)
 #endif
 
+#define PKTCTFMAP(osh, p)
+
 #define	SET_REG(osh, r, mask, val)	W_REG((osh), (r), ((R_REG((osh), r) & ~(mask)) | (val)))
 
 #ifndef AND_REG
@@ -95,5 +100,33 @@ MAKE_PREFETCH_RANGE_FN(PREF_STORE_RETAINED)
 #else
 #define OSL_SYSUPTIME_SUPPORT TRUE
 #endif 
+
+#if !defined(PKTC_DONGLE)
+#define	PKTCGETATTR(s)		(0)
+#define	PKTCSETATTR(skb, f, p, b)
+#define	PKTCCLRATTR(skb)
+#define	PKTCCNT(skb)		(1)
+#define	PKTCLEN(skb)		PKTLEN(NULL, skb)
+#define	PKTCGETFLAGS(skb)	(0)
+#define	PKTCSETFLAGS(skb, f)
+#define	PKTCCLRFLAGS(skb)
+#define	PKTCFLAGS(skb)		(0)
+#define	PKTCSETCNT(skb, c)
+#define	PKTCINCRCNT(skb)
+#define	PKTCADDCNT(skb, c)
+#define	PKTCSETLEN(skb, l)
+#define	PKTCADDLEN(skb, l)
+#define	PKTCSETFLAG(skb, fb)
+#define	PKTCCLRFLAG(skb, fb)
+#define	PKTCLINK(skb)		NULL
+#define	PKTSETCLINK(skb, x)
+#define FOREACH_CHAINED_PKT(skb, nskb) \
+	for ((nskb) = NULL; (skb) != NULL; (skb) = (nskb))
+#define	PKTCFREE		PKTFREE
+#endif 
+
+#define PKTSETCHAINED(osh, skb)
+#define PKTCLRCHAINED(osh, skb)
+#define PKTISCHAINED(skb)	(FALSE)
 
 #endif	

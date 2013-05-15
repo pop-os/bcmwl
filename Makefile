@@ -2,7 +2,7 @@
 # Makefile fragment for Linux 2.6
 # Broadcom 802.11abg Networking Device Driver
 #
-# Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+# Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
 # 
 # Permission to use, copy, modify, and/or distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -16,7 +16,7 @@
 # OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 # CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #
-# $Id: Makefile_kbuild_portsrc 299811 2011-12-01 01:49:50Z $
+# $Id: Makefile_kbuild_portsrc 384222 2013-02-10 01:56:57Z $
 
 ifneq ($(KERNELRELEASE),)
 
@@ -115,14 +115,15 @@ endif
 
 obj-m              += wl.o
 
-wl-objs            := 
+wl-objs            :=
 wl-objs            += src/shared/linux_osl.o
 wl-objs            += src/wl/sys/wl_linux.o
 wl-objs            += src/wl/sys/wl_iw.o
-wl-objs            += src/wl/sys/wl_cfg80211.o
+wl-objs            += src/wl/sys/wl_cfg80211_hybrid.o
 
-EXTRA_CFLAGS       += -I$(src)/src/include
-EXTRA_CFLAGS       += -I$(src)/src/wl/sys -I$(src)/src/wl/clm/api -I$(src)/src/wl/phy
+EXTRA_CFLAGS       += -I$(src)/src/include -I$(src)/src/common/include
+EXTRA_CFLAGS       += -I$(src)/src/wl/sys -I$(src)/src/wl/phy -I$(src)/src/wl/ppr/include
+EXTRA_CFLAGS       += -I$(src)/src/shared/bcmwifi/include
 #EXTRA_CFLAGS       += -DBCMDBG_ASSERT
 
 EXTRA_LDFLAGS      := $(src)/lib/wlc_hybrid.o_shipped

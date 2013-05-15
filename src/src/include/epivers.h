@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -22,20 +22,20 @@
 
 #define	EPI_MAJOR_VERSION	6
 
-#define	EPI_MINOR_VERSION	20
+#define	EPI_MINOR_VERSION	30
 
-#define	EPI_RC_NUMBER		155
+#define	EPI_RC_NUMBER		223
 
-#define	EPI_INCREMENTAL_NUMBER	1
+#define	EPI_INCREMENTAL_NUMBER	30
 
 #define	EPI_BUILD_NUMBER	0
 
-#define	EPI_VERSION		6, 20, 155, 1
+#define	EPI_VERSION		6, 30, 223, 30
 
-#define	EPI_VERSION_NUM		0x06149b01
+#define	EPI_VERSION_NUM		0x061edf1e
 
-#define EPI_VERSION_DEV		6.20.155
+#define EPI_VERSION_DEV		6.30.223
 
-#define	EPI_VERSION_STR		"6.20.155.1 (r326264)"
+#define	EPI_VERSION_STR		"6.30.223.30 (r390414)"
 
 #endif 

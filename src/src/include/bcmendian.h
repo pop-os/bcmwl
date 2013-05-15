@@ -1,7 +1,7 @@
 /*
  * Byte order utilities
  *
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,7 +15,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- *  $Id: bcmendian.h 241182 2011-02-17 21:50:03Z $
+ *  $Id: bcmendian.h 370210 2012-11-21 05:35:27Z $
  *
  * This file by default provides proper behavior on little-endian architectures.
  * On big-endian architectures, IL_BIGENDIAN should be defined.
@@ -40,6 +40,20 @@
 	((uint32)((((uint32)(val) & (uint32)0x0000ffffU) << 16) | \
 		  (((uint32)(val) & (uint32)0xffff0000U) >> 16)))
 
+#define BCMSWAP64(val) \
+	((uint64)((((uint64)(val) & 0x00000000000000ffULL) << 56) | \
+	          (((uint64)(val) & 0x000000000000ff00ULL) << 40) | \
+	          (((uint64)(val) & 0x0000000000ff0000ULL) << 24) | \
+	          (((uint64)(val) & 0x00000000ff000000ULL) <<  8) | \
+	          (((uint64)(val) & 0x000000ff00000000ULL) >>  8) | \
+	          (((uint64)(val) & 0x0000ff0000000000ULL) >> 24) | \
+	          (((uint64)(val) & 0x00ff000000000000ULL) >> 40) | \
+	          (((uint64)(val) & 0xff00000000000000ULL) >> 56)))
+
+#define BCMSWAP64BY32(val) \
+	((uint64)((((uint64)(val) & 0x00000000ffffffffULL) << 32) | \
+	          (((uint64)(val) & 0xffffffff00000000ULL) >> 32)))
+
 #ifndef hton16
 #define HTON16(i) BCMSWAP16(i)
 #define	hton16(i) bcmswap16(i)
@@ -57,6 +71,8 @@
 #define htol16(i) (i)
 #define HTOL32(i) (i)
 #define htol32(i) (i)
+#define HTOL64(i) (i)
+#define htol64(i) (i)
 #endif 
 
 #define ltoh16_buf(buf, i)
@@ -94,6 +110,11 @@
 #define bcmswap32(val) ({ \
 	uint32 _val = (val); \
 	BCMSWAP32(_val); \
+})
+
+#define bcmswap64(val) ({ \
+	uint64 _val = (val); \
+	BCMSWAP64(_val); \
 })
 
 #define bcmswap32by16(val) ({ \
@@ -174,6 +195,12 @@ static INLINE uint32
 bcmswap32(uint32 val)
 {
 	return BCMSWAP32(val);
+}
+
+static INLINE uint64
+bcmswap64(uint64 val)
+{
+	return BCMSWAP64(val);
 }
 
 static INLINE uint32

@@ -1,7 +1,7 @@
 /*
  * Linux OS Independent Layer
  *
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,7 +15,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: linux_osl.h 241182 2011-02-17 21:50:03Z $
+ * $Id: linux_osl.h 383331 2013-02-06 10:27:24Z $
  */
 
 #ifndef _linux_osl_h_
@@ -71,10 +71,10 @@ extern void osl_pci_write_config(osl_t *osh, uint offset, uint size, uint val);
 #define OSL_PCI_SLOT(osh)	osl_pci_slot(osh)
 extern uint osl_pci_bus(osl_t *osh);
 extern uint osl_pci_slot(osl_t *osh);
+extern struct pci_dev *osl_pci_device(osl_t *osh);
 
 typedef struct {
 	bool pkttag;
-	uint pktalloced; 	
 	bool mmbus;		
 	pktfree_cb_fn_t tx_fn;  
 	void *tx_ctx;		
@@ -107,6 +107,12 @@ extern uint osl_malloc_failed(osl_t *osh);
 	osl_dma_alloc_consistent((osh), (size), (align), (tot), (pap))
 #define	DMA_FREE_CONSISTENT(osh, va, size, pa, dmah) \
 	osl_dma_free_consistent((osh), (void*)(va), (size), (pa))
+
+#define	DMA_ALLOC_CONSISTENT_FORCE32(osh, size, align, tot, pap, dmah) \
+	osl_dma_alloc_consistent((osh), (size), (align), (tot), (pap))
+#define	DMA_FREE_CONSISTENT_FORCE32(osh, va, size, pa, dmah) \
+	osl_dma_free_consistent((osh), (void*)(va), (size), (pa))
+
 extern uint osl_dma_consistent_align(void);
 extern void *osl_dma_alloc_consistent(osl_t *osh, uint size, uint16 align, uint *tot, ulong *pap);
 extern void osl_dma_free_consistent(osl_t *osh, void *va, uint size, ulong pa);
@@ -114,11 +120,10 @@ extern void osl_dma_free_consistent(osl_t *osh, void *va, uint size, ulong pa);
 #define	DMA_TX	1	
 #define	DMA_RX	2	
 
-#define	DMA_MAP(osh, va, size, direction, p, dmah) \
-	osl_dma_map((osh), (va), (size), (direction))
 #define	DMA_UNMAP(osh, pa, size, direction, p, dmah) \
 	osl_dma_unmap((osh), (pa), (size), (direction))
-extern uint osl_dma_map(osl_t *osh, void *va, uint size, int direction);
+extern uint osl_dma_map(osl_t *osh, void *va, uint size, int direction, void *p,
+	hnddma_seg_map_t *txp_dmah);
 extern void osl_dma_unmap(osl_t *osh, uint pa, uint size, int direction);
 
 #define OSL_DMADDRWIDTH(osh, addrwidth) do {} while (0)
@@ -266,9 +271,15 @@ extern void osl_reg_unmap(void *va);
 #define	W_SM(r, v)		(*(r) = (v))
 #define	BZERO_SM(r, len)	bzero((r), (len))
 
+#ifdef BCMDBG_CTRACE
+#define	PKTGET(osh, len, send)		osl_pktget((osh), (len), __LINE__, __FILE__)
+#define	PKTDUP(osh, skb)		osl_pktdup((osh), (skb), __LINE__, __FILE__)
+#define PKTFRMNATIVE(osh, skb)		osl_pkt_frmnative((osh), (skb), __LINE__, __FILE__)
+#else
 #define	PKTGET(osh, len, send)		osl_pktget((osh), (len))
 #define	PKTDUP(osh, skb)		osl_pktdup((osh), (skb))
 #define PKTFRMNATIVE(osh, skb)		osl_pkt_frmnative((osh), (skb))
+#endif 
 #define PKTLIST_DUMP(osh, buf)
 #define PKTDBG_TRACE(osh, pkt, bit)
 #define	PKTFREE(osh, skb, send)		osl_pktfree((osh), (skb), (send))
@@ -288,7 +299,6 @@ extern void osl_reg_unmap(void *va);
 #define	PKTPRIO(skb)			osl_pktprio((skb))
 #define	PKTSETPRIO(skb, x)		osl_pktsetprio((skb), (x))
 #define PKTSHARED(skb)                  osl_pktshared((skb))
-#define PKTALLOCED(osh)			osl_pktalloced((osh))
 #define PKTSETPOOL(osh, skb, x, y)	do {} while (0)
 #define PKTPOOL(osh, skb)		FALSE
 
@@ -312,6 +322,11 @@ extern uint osl_pktprio(void *skb);
 extern void osl_pktsetprio(void *skb, uint x);
 extern struct sk_buff *osl_pkt_tonative(osl_t *osh, void *pkt);
 extern bool osl_pktshared(void *skb);
+
+#define PKTALLOCED(osh)		osl_pktalloced(osh)
 extern uint osl_pktalloced(osl_t *osh);
+
+#define	DMA_MAP(osh, va, size, direction, p, dmah) \
+	osl_dma_map((osh), (va), (size), (direction), (p), (dmah))
 
 #endif	

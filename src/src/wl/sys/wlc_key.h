@@ -3,7 +3,7 @@
  * and exported functions for
  * Broadcom 802.11abg Networking Device Driver
  *
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -17,7 +17,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlc_key.h 241182 2011-02-17 21:50:03Z $
+ * $Id: wlc_key.h 382794 2013-02-04 17:34:08Z $
  */
 
 #ifndef _wlc_key_h_
@@ -49,6 +49,10 @@ typedef struct wsec_key {
 	wsec_iv_t	rxiv[WLC_NUMRXIVS];		
 	wsec_iv_t	txiv;		
 
+#ifdef WLOFFLD
+	wsec_iv_t	bk_iv;	
+	tkip_info_t	tkip_bk_tx;	
+#endif
 } wsec_key_t;
 
 #endif 

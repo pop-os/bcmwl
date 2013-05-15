@@ -1,7 +1,7 @@
 /*
  * Linux Wireless Extensions support
  *
- * Copyright (C) 2011, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,7 +15,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_iw.c 277746 2011-08-16 18:18:43Z $
+ * $Id: wl_iw.c 362836 2012-10-14 22:48:41Z $
  */
 
 #if defined(USE_IW)
@@ -57,11 +57,17 @@ extern struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
 #define IW_EVENT_IDX(cmd)	((cmd) - IWEVFIRST)
 #endif 
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-#define IW_DEV_IF(dev)        ((wl_iw_t *)netdev_priv(dev))
+typedef struct priv_link {
+	wl_iw_t *wliw;
+} priv_link_t;
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24))
+#define WL_DEV_LINK(dev)       (priv_link_t*)(dev->priv)
 #else
-#define IW_DEV_IF(dev)        ((wl_iw_t *)dev->priv)
+#define WL_DEV_LINK(dev)       (priv_link_t*)netdev_priv(dev)
 #endif
+
+#define IW_DEV_IF(dev)          ((wl_iw_t*)(WL_DEV_LINK(dev))->wliw)
 
 static void swap_key_from_BE(
 	        wl_wsec_key_t *key
@@ -178,6 +184,7 @@ dev_wlc_bufvar_get(
 		return -ENOMEM;
 	len = bcm_mkiovar(name, NULL, 0, ioctlbuf, MAX_WLIW_IOCTL_LEN);
 	ASSERT(len);
+	BCM_REFERENCE(len);
 	error = dev_wlc_ioctl(dev, WLC_GET_VAR, (void *)ioctlbuf, MAX_WLIW_IOCTL_LEN);
 	if (!error)
 		bcopy(ioctlbuf, buf, buflen);
@@ -269,6 +276,29 @@ wl_iw_set_pm(
 	return error;
 }
 #endif 
+
+int
+wl_iw_send_priv_event(
+	struct net_device *dev,
+	char *flag
+)
+{
+	union iwreq_data wrqu;
+	char extra[IW_CUSTOM_MAX + 1];
+	int cmd;
+
+	cmd = IWEVCUSTOM;
+	memset(&wrqu, 0, sizeof(wrqu));
+	if (strlen(flag) > sizeof(extra))
+		return -1;
+
+	strcpy(extra, flag);
+	wrqu.data.length = strlen(extra);
+	wireless_send_event(dev, cmd, &wrqu, extra);
+	WL_TRACE(("Send IWEVCUSTOM Event as %s\n", extra));
+
+	return 0;
+}
 
 static int
 wl_iw_config_commit(
@@ -542,7 +572,8 @@ wl_iw_get_range(
 	for (i = 0; i < rateset.count && i < IW_MAX_BITRATES; i++)
 		range->bitrate[i] = (rateset.rates[i] & 0x7f) * 500000; 
 	dev_wlc_intvar_get(dev, "nmode", &nmode);
-	dev_wlc_ioctl(dev, WLC_GET_PHYTYPE, &phytype, sizeof(phytype));
+	if ((error = dev_wlc_ioctl(dev, WLC_GET_PHYTYPE, &phytype, sizeof(phytype))))
+		return error;
 
 	if (nmode == 1 && ((phytype == WLC_PHY_TYPE_SSN) || (phytype == WLC_PHY_TYPE_LCN) ||
 		(phytype == WLC_PHY_TYPE_LCN40))) {
@@ -635,6 +666,8 @@ wl_iw_get_range(
 	IW_EVENT_CAPA_SET(range->event_capa, SIOCGIWSCAN);
 	IW_EVENT_CAPA_SET(range->event_capa, IWEVTXDROP);
 	IW_EVENT_CAPA_SET(range->event_capa, IWEVMICHAELMICFAILURE);
+	IW_EVENT_CAPA_SET(range->event_capa, IWEVASSOCREQIE);
+	IW_EVENT_CAPA_SET(range->event_capa, IWEVASSOCRESPIE);
 	IW_EVENT_CAPA_SET(range->event_capa, IWEVPMKIDCAND);
 
 #if WIRELESS_EXT >= 22 && defined(IW_SCAN_CAPA_ESSID)
@@ -1876,6 +1909,7 @@ wl_iw_set_pmksa(
 	struct iw_pmksa *iwpmksa;
 	uint i;
 	char eabuf[ETHER_ADDR_STR_LEN];
+	pmkid_t * pmkid_array = pmkid_list.pmkids.pmkid;
 
 	WL_TRACE(("%s: SIOCSIWPMKSA\n", dev->name));
 	iwpmksa = (struct iw_pmksa *)extra;
@@ -1899,34 +1933,35 @@ wl_iw_set_pmksa(
 			WL_TRACE(("\n"));
 		}
 		for (i = 0; i < pmkid_list.pmkids.npmkid; i++)
-			if (!bcmp(&iwpmksa->bssid.sa_data[0], &pmkid_list.pmkids.pmkid[i].BSSID,
+			if (!bcmp(&iwpmksa->bssid.sa_data[0], &pmkid_array[i].BSSID,
 				ETHER_ADDR_LEN))
 				break;
 		for (; i < pmkid_list.pmkids.npmkid; i++) {
-			bcopy(&pmkid_list.pmkids.pmkid[i+1].BSSID,
-				&pmkid_list.pmkids.pmkid[i].BSSID,
+			bcopy(&pmkid_array[i+1].BSSID,
+				&pmkid_array[i].BSSID,
 				ETHER_ADDR_LEN);
-			bcopy(&pmkid_list.pmkids.pmkid[i+1].PMKID,
-				&pmkid_list.pmkids.pmkid[i].PMKID,
+			bcopy(&pmkid_array[i+1].PMKID,
+				&pmkid_array[i].PMKID,
 				WPA2_PMKID_LEN);
 		}
 		pmkid_list.pmkids.npmkid--;
 	}
 	if (iwpmksa->cmd == IW_PMKSA_ADD) {
 		bcopy(&iwpmksa->bssid.sa_data[0],
-			&pmkid_list.pmkids.pmkid[pmkid_list.pmkids.npmkid].BSSID,
+			&pmkid_array[pmkid_list.pmkids.npmkid].BSSID,
 			ETHER_ADDR_LEN);
-		bcopy(&iwpmksa->pmkid[0], &pmkid_list.pmkids.pmkid[pmkid_list.pmkids.npmkid].PMKID,
+		bcopy(&iwpmksa->pmkid[0], &pmkid_array[pmkid_list.pmkids.npmkid].PMKID,
 			WPA2_PMKID_LEN);
 		{
 			uint j;
 			uint k;
 			k = pmkid_list.pmkids.npmkid;
+			BCM_REFERENCE(k);
 			WL_TRACE(("wl_iw_set_pmksa,IW_PMKSA_ADD - PMKID: %s = ",
-				bcm_ether_ntoa(&pmkid_list.pmkids.pmkid[k].BSSID,
+				bcm_ether_ntoa(&pmkid_array[k].BSSID,
 				eabuf)));
 			for (j = 0; j < WPA2_PMKID_LEN; j++)
-				WL_TRACE(("%02x ", pmkid_list.pmkids.pmkid[k].PMKID[j]));
+				WL_TRACE(("%02x ", pmkid_array[k].PMKID[j]));
 			WL_TRACE(("\n"));
 		}
 		pmkid_list.pmkids.npmkid++;
@@ -1935,10 +1970,10 @@ wl_iw_set_pmksa(
 	for (i = 0; i < pmkid_list.pmkids.npmkid; i++) {
 		uint j;
 		WL_TRACE(("PMKID[%d]: %s = ", i,
-			bcm_ether_ntoa(&pmkid_list.pmkids.pmkid[i].BSSID,
+			bcm_ether_ntoa(&pmkid_array[i].BSSID,
 			eabuf)));
 		for (j = 0; j < WPA2_PMKID_LEN; j++)
-			WL_TRACE(("%02x ", pmkid_list.pmkids.pmkid[i].PMKID[j]));
+			WL_TRACE(("%02x ", pmkid_array[i].PMKID[j]));
 		printf("\n");
 	}
 	WL_TRACE(("\n"));
@@ -2625,6 +2660,21 @@ wl_iw_event(struct net_device *dev, wl_event_msg_t *e, void* data)
 
 		break;
 	}
+
+	case WLC_E_ASSOC_REQ_IE:
+		cmd = IWEVASSOCREQIE;
+		wrqu.data.length = datalen;
+		if (datalen < sizeof(extra))
+			memcpy(extra, data, datalen);
+		break;
+
+	case WLC_E_ASSOC_RESP_IE:
+		cmd = IWEVASSOCRESPIE;
+		wrqu.data.length = datalen;
+		if (datalen < sizeof(extra))
+			memcpy(extra, data, datalen);
+		break;
+
 	case WLC_E_PMKID_CACHE: {
 		struct iw_pmkid_cand *iwpmkidcand = (struct iw_pmkid_cand *)&extra;
 		pmkid_cand_list_t *pmkcandlist;
@@ -2767,7 +2817,8 @@ done:
 	return res;
 }
 
-int wl_iw_attach(struct net_device *dev)
+int
+wl_iw_attach(struct net_device *dev, void * dhdp)
 {
 	return 0;
 }
