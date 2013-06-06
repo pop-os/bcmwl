@@ -3,7 +3,7 @@ Section: non-free/kernel
 Priority: optional
 Maintainer: Cyril Lacoux <clacoux@easter-eggs.com>
 Build-Depends: debhelper (>= 8)
-Standards-Version: 3.9.2
+Standards-Version: 3.9.4
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
 
 Package: broadcom-sta-modules-_KVERS_

@@ -1,6 +1,7 @@
 broadcom-sta (5.100.82.112-11) unstable; urgency=low
 
   * Added 12-3.9.0.patch for kernel 3.9 compatibility (Closes: #711227).
+  * Bumped standards version to 3.9.3 (No changes).
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Thu, 06 Jun 2013 17:32:29 +0400
 
