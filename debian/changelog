@@ -1,3 +1,11 @@
+bcmwl (6.30.223.30+bdcom-0ubuntu3) saucy; urgency=low
+
+  * debian/dkms.conf.in:
+    - Make sure 0009-add-support-for-linux-3.10.0.patch
+      is applied only against Linux 3.10.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 01 Jul 2013 15:22:30 +0200
+
 bcmwl (6.30.223.30+bdcom-0ubuntu2) saucy; urgency=low
 
   * debian/dkms.conf.in,
