@@ -1,5 +1,7 @@
+
 Broadcom Linux hybrid wireless driver
-Version 5.100.82.1XX
+Release Version: 6.30.223.141
+Release Date: Wed 31 Jul 2013 11:47:12 PM PDT
 
 DISCLAIMER
 ----------
@@ -8,7 +10,7 @@ Broadcom based hardware.
 
 WHERE TO GET THE RELEASE
 ------------------------
-http://www.broadcom.com/support/802.11/linux_sta.php
+For General Web releases: http://www.broadcom.com/support/802.11/linux_sta.php
 
 IMPORTANT NOTE AND DISCUSSION OF HYBRID DRIVER
 ----------------------------------------------
@@ -16,7 +18,7 @@ There are separate tarballs for 32 bit and 64 bit x86 CPU architectures.
 Make sure you use the appropriate tarball for your machine.
 
 Other than 32 vs 64 bit, the hybrid binary is agnostic to the specific
-versions (2.6.X) and distributions (Fedora, Ubuntu, SuSE, etc).  It performs
+versions (3.5.X) and distributions (Fedora, Ubuntu, SuSE, etc).  It performs
 all interactions with the OS through OS specific files (wl_linux.c, wl_iw.c,
 osl_linux.c) that are shipped in source form. You compile this source on
 your system and link with a precompiled binary file (wlc_hybrid.o_shipped)
@@ -49,7 +51,7 @@ here may also work.
           4311 Dualband	    0x14e4	0x4312  	Dell 1490
           4311 5 Ghz	    0x14e4    	0x4313  	
           4312 2.4 Ghz	    0x14e4	0x4315  	Dell 1395
-          4313 2.4 Ghz	    0x14e4	0x4727 		Dell 1501
+          4313 2.4 Ghz	    0x14e4	0x4727 		Dell 1501/1504
           4321 Dualband	    0x14e4	0x4328  	Dell 1505
           4321 Dualband	    0x14e4	0x4328  	Dell 1500
           4321 2.4 Ghz	    0x14e4	0x4329  	
@@ -57,37 +59,42 @@ here may also work.
           4322 	Dualband    0x14e4	0x432b  	Dell 1510
           4322 2.4 Ghz      0x14e4 	0x432c  	
           4322 5 Ghz        0x14e4 	0x432d  	
+          43142 2.4 Ghz     0x14e4	0x4365
           43224 Dualband    0x14e4	0x4353  	Dell 1520
           43225 2.4 Ghz     0x14e4	0x4357  	
           43227 2.4 Ghz     0x14e4	0x4358
-          43228 Dualband    0x14e4	0x4359  	Dell 1530
+          43228 Dualband    0x14e4	0x4359  	Dell 1530/1540
+          4331  Dualband    0x14e4	0x4331
+          4360  Dualband    0x14e4	0x43a0
+          4352  Dualband    0x14e4	0x43a0
 
 To find the Device ID's of Broadcom cards on your machines do:
 # lspci -n | grep 14e4
 
 NOTABLE CHANGES
 ---------------
-	Added Cfg80211 support (described below)
-	Added Monitor mode     (described below)
+	Upgraded to support 3.8.x.
+	Added 4352 support.
+	Dropped WEXT support.
 
 REQUIREMENTS
 ------------
 Building this driver requires that your machine have the proper tools,
-packages, header files and libraries to build a standard a kernel module.  
-This usually is done by installing the kernel developer or kernel source 
+packages, header files and libraries to build a standard kernel module.
+This usually is done by installing the kernel developer or kernel source
 package and varies from distro to distro. Consult the documentation for
 your specific OS.
 
-If you cannot successfully build a module that comes with your distro's 
-kernel developer or kernel source package, you will not be able to build 
+If you cannot successfully build a module that comes with your distro's
+kernel developer or kernel source package, you will not be able to build
 this module either.
 
-If you try to build this module but get an error message that looks like 
+If you try to build this module but get an error message that looks like
 this:
 
 make: *** /lib/modules/"release"/build: No such file or directory. Stop.
 
-Then you do not have the proper packages installed, since installing the 
+Then you do not have the proper packages installed, since installing the
 proper packages will create /lib/modules/"release"/build on your system.
 
 On Fedora install 'kernel-devel' (Development Package for building kernel
@@ -106,13 +113,14 @@ BUILD INSTRUCTIONS
 ------------------
 1. Setup the directory by untarring the proper tarball:
 
-For 32 bit: 	hybrid-portsrc.tar.gz
-For 64 bit: 	hybrid-portsrc-x86_64.tar.gz
+For 32 bit: 	hybrid-v35-nodebug-pcoem-portsrc.tar.gz
+For 64 bit: 	hybrid-v35_64-nodebug-pcoem-portsrc.tar.gz
 
 Example:
 # mkdir hybrid_wl
 # cd hybrid_wl
-# tar xzf <path>/hybrid-portsrc.tar or <path>/hybrid-portsrc-x86_64.tar.gz
+# tar xzf <path>/hybrid-v35-nodebug-pcoem-portsrc.tar.gz or 
+	<path>/hybrid-v35_64-nodebug-pcoem-portsrc.tar.gz
 
 2. Build the driver as a Linux loadable kernel module (LKM):
 
@@ -125,14 +133,13 @@ directory.
 If your driver does not build, check to make sure you have installed the
 kernel package described in the requirements above.
 
-This driver now supports the new linux cfg80211 wireless configuration API in
-addition to the older Wireless Extensions (Wext).  The makefile will
-automaticly build the right version for your system but it can be
-overridden if needed:
+This driver uses cfg80211 API. Code for Wext API is present and can be built
+but we have dropped support for it.
+As before, the Makefile will still build the matching version for your system.
 
-# make API=WEXT
- or
 # make API=CFG80211
+ or
+# make API=WEXT (deprecated)
 
 INSTALL INSTRUCTIONS
 --------------------
@@ -157,9 +164,10 @@ Fresh installation:
 1: Remove any other drivers for the Broadcom wireless device.
 
 There are several other drivers (besides this one) that can drive 
-Broadcom 802.11 chips such as b43, bcma and ssb. They will conflict with 
-this driver and need to be uninstalled before this driver can be installed.
-Any previous revisions of the wl driver also need to be removed.
+Broadcom 802.11 chips. These include b43, brcmsmac, bcma and ssb. They will
+conflict with this driver and need to be uninstalled before this driver
+can be installed.  Any previous revisions of the wl driver also need to
+be removed.
 
 Note: On some systems such as Ubuntu 9.10, the ssb module may load during
 boot even though it is blacklisted (see note under Common Issues on how to
@@ -167,10 +175,11 @@ resolve this. Nevertheless, ssb still must be removed
 (by hand or script) before wl is loaded. The wl driver will not function 
 properly if ssb the module is loaded.
 
-# lsmod  | grep "b43\|ssb\|bcma\|wl"
+# lsmod  | grep "brcmsmac\|b43\|ssb\|bcma\|wl"
 
 If any of these are installed, remove them:
 # rmmod b43
+# rmmod brcmsmac
 # rmmod ssb
 # rmmod bcma
 # rmmod wl
@@ -179,6 +188,7 @@ To blacklist these drivers and prevent them from loading in the future:
 # echo "blacklist ssb" >> /etc/modprobe.d/blacklist.conf
 # echo "blacklist bcma" >> /etc/modprobe.d/blacklist.conf
 # echo "blacklist b43" >> /etc/modprobe.d/blacklist.conf
+# echo "blacklist brcmsmac" >> /etc/modprobe.d/blacklist.conf
 
 2: Insmod the driver.
 
@@ -229,9 +239,10 @@ Common issues:
   seen on Ubuntu/Debian systems).
 
   Check to see if ssb, bcma, wl or b43 is loaded:
-  # lsmod | grep "ssb\|wl\|b43\|bcma"
+  # lsmod | grep "brcmsmac\|ssb\|wl\|b43\|bcma"
 
   If any of these are installed, remove them:
+  # rmmod brcmsmac
   # rmmod ssb
   # rmmod bcma
   # rmmod wl
@@ -272,26 +283,81 @@ the user to lower the tx power to levels below the regulatory limit.
 Internally, the actual tx power is always kept within regulatory limits
 no matter what the user request is set to.
 
+WHAT'S NEW IN RELEASE 6.30.223.126
+----------------------------------
++ Upgraded to Support 3.8.x
++ Added 43142 support
++ Added 4352 support
++ Dropped WEXT support
 
-ISSUES FIXED AND WHAT'S NEW IN THIS RELEASE
--------------------------------------------
+WHAT'S NEW IN RELEASE 5.100.82.116
+----------------------------------
++ Support for Linux kernels > 3.0
+
+WHAT'S NEW IN RELEASE 5.100.82.115
+----------------------------------
 + Added cfg80211 API support. The choice of API is done at compile time. If
 kernel version >= 2.6.32, cfg80211 is used, otherwise wireless extension 
 is used. (End users should notice little difference.)
 + Supports Linux kernel 2.6.38
 + Fix for problem with rebooting while wireless disabled via airline switch.
-+ Fixed a kernel panic observed on some 64-bit systems
++ Fix for PR102197 STA does not connect to hidden SSID
++ Fix for PR102214: Could not get rssi (-22)" print comes in 'dmesg' output
++ Supports monitor mode
++ Supports hidden networks
++ Supports rfkill
 
-HOW TO USE MONITOR MODE
------------------------
-To enable monitor mode:
-$ echo 1 > /proc/brcm_monitor0
+WHAT'S NEW IN RELEASE 5.100.82.38
+---------------------------------
++ Support for bcm43227 and bcm43228
++ Fix for issue where iwconfig was sometime reporting rate incorrectly
++ Supports rfkill in kernels 2.6.31 to 2.6.36
++ Supports scan complete event (SIOCGIWSCAN)
++ Adds EAGAIN (busy signal) to query of scan results
 
-Enabling monitor mode will create a 'prism0' network interface. Wireshark and
-other netwokk tools can use this new prism0 interface.
+WHAT'S NEW IN RELEASE 5.100.57.15
+---------------------------------
++ Following fixes (issues introduced in 5.100.57.13)
+    Issue #87477 - 4313: DUT is not able to associate in WPA2-PSK TKIP/AES
+    Issue #87533 - NetworkManager: 4313: Unable to associate to APs with WPA2-PSK
 
-To disable monitor mode:
-$ echo 0 > /proc/brcm_monitor0
+WHAT'S NEW IN RELEASE 5.100.57.13
+---------------------------------
++ 4313 PHY fixes to improve throughput stability at different ranges
++ Fix for interop issues with different APs
++ Fix for hangs seen during Fn-F2 sequence
+- Support for rfkill in kernels 2.6.31 to 2.6.36
+
+WHAT'S NEW IN RELEASE 5.60.246.6
+--------------------------------
++ Supports rfkill in kernels 2.6.31 to 2.6.36
++ Fix for compile error with multicast list in kernel 2.6.34
++ Fix for #76743 - Ubuntu9.04: Network manager displays n/w's with radio disabled
+
+WHAT'S NEW IN RELEASE 5.60.246.2
+--------------------------------
++ Supports up to linux kernel 2.6.36 (from 2.6.32)
++ Fix for #86668: [Canonical] Bug #611575/617369: System will hang if
+    you use the F2 hot key to enable/disable wireless quickly while
+    wireless is still in the process of re-association with AP
+
+WHAT'S NEW IN RELEASE 5.60.48.36
+--------------------------------
++ Supports up to linux kernel 2.6.32
++ Supports hidden networks
++ Supports rfkill in kernels < 2.6.31
++ Setting power level via 'iwconfig eth1 txpower X' now operational
++ Support for bcm4313
++ Additional channels in both 2.4 and 5 Ghz bands
++ Fixed issue with tkip group keys that caused this message to repeat often:
+    TKIP: RX tkey->key_idx=2 frame keyidx=1 priv=ffff8800cf80e840
++ Following fixes
+    Issue #72216 - Ubuntu 8.04: standby/resume with WPA2 and wpa_supplicant causes
+                     a continuous assoc/disassoc loop (issue in 2.6.24 kernel)
+    Issue #72324 - Ubuntu 8.04: cannot ping when Linux STA is IBSS creator with WEP
+    Issue #76739 - Ubuntu 9.04: unable to connect to hidden network after stdby/resume
+    Issue #80392 - S4 resume hang with SuSE SLED 11 and 43225
+    Issue #80792 - LSTA is not able to associate to AP with transit
 
 
 ISSUES FIXED AND WHAT'S NEW IN RECENT RELEASES
@@ -315,7 +381,7 @@ wpa_supplicant fixes the issue)
 
 
 KNOWN ISSUES AND LIMITATIONS IN EXTERNAL COMPONENTS
-----------------------------
+---------------------------------------------------
 
 wpa_supplicant 0.6.3 + nl80211 + WEP - (Note: This would only affect you if 
 you are using wpa_supplicant directly from the command line and specify 
@@ -332,6 +398,16 @@ Some kernel versions of Ubuntu such as 2.6.35-22 (released with Ubuntu
 10.10) may have problems that affect WPA/WPA2 connections created through 
 nl80211. Upgrade to 2.6.35-25 or later should solve this problem.
 
+HOW TO USE MONITOR MODE
+-----------------------
+To enable monitor mode:
+$ echo 1 > /proc/brcm_monitor0
+
+Enabling monitor mode will create a 'prism0' network interface. Wireshark and
+other netwokk tools can use this new prism0 interface.
+
+To disable monitor mode:
+$ echo 0 > /proc/brcm_monitor0
 
 HOW TO INSTALL A PRE-COMPILED DRIVER
 -----------------------------------

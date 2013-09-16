@@ -1,15 +1,21 @@
 /*
  * Fundamental types and constants relating to WPA
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wpa.h,v 1.19.24.1 2010-05-28 15:27:16 Exp $
+ * $Id: wpa.h 367468 2012-11-08 05:49:44Z $
  */
 
 #ifndef _proto_wpa_h_
@@ -92,30 +98,16 @@ typedef BWL_PRE_PACKED_STRUCT struct
 #define WPA_CIPHER_AES_OCB	3	
 #define WPA_CIPHER_AES_CCM	4	
 #define WPA_CIPHER_WEP_104	5	
-
-#ifdef BCMWAPI_WAI
-#define WAPI_CIPHER_NONE	WPA_CIPHER_NONE
-#define WAPI_CIPHER_SMS4	11
-
-#define WAPI_CSE_WPI_SMS4	1
-#endif 
+#define WPA_CIPHER_BIP		6	
+#define WPA_CIPHER_TPK		7	
 
 #define IS_WPA_CIPHER(cipher)	((cipher) == WPA_CIPHER_NONE || \
 				 (cipher) == WPA_CIPHER_WEP_40 || \
 				 (cipher) == WPA_CIPHER_WEP_104 || \
 				 (cipher) == WPA_CIPHER_TKIP || \
 				 (cipher) == WPA_CIPHER_AES_OCB || \
-				 (cipher) == WPA_CIPHER_AES_CCM)
-#ifdef BCMWAPI_WAI
-#define IS_WAPI_CIPHER(cipher)	((cipher) == WAPI_CIPHER_NONE || \
-				 (cipher) == WAPI_CSE_WPI_SMS4)
-
-#define WAPI_CSE_WPI_2_CIPHER(cse) ((cse) == WAPI_CSE_WPI_SMS4 ? \
-				WAPI_CIPHER_SMS4 : WAPI_CIPHER_NONE)
-
-#define WAPI_CIPHER_2_CSE_WPI(cipher) ((cipher) == WAPI_CIPHER_SMS4 ? \
-				WAPI_CSE_WPI_SMS4 : WAPI_CIPHER_NONE)
-#endif 
+				 (cipher) == WPA_CIPHER_AES_CCM || \
+				 (cipher) == WPA_CIPHER_TPK)
 
 #define WPA_TKIP_CM_DETECT	60	
 #define WPA_TKIP_CM_BLOCK	60	
@@ -132,32 +124,24 @@ typedef BWL_PRE_PACKED_STRUCT struct
 #define RSN_CAP_2_REPLAY_CNTRS		1
 #define RSN_CAP_4_REPLAY_CNTRS		2
 #define RSN_CAP_16_REPLAY_CNTRS		3
-#ifdef MFP
 #define RSN_CAP_MFPR			0x0040
 #define RSN_CAP_MFPC			0x0080
-#endif
+#define RSN_CAP_SPPC			0x0400
+#define RSN_CAP_SPPR			0x0800
 
 #define WPA_CAP_4_REPLAY_CNTRS		RSN_CAP_4_REPLAY_CNTRS
 #define WPA_CAP_16_REPLAY_CNTRS		RSN_CAP_16_REPLAY_CNTRS
 #define WPA_CAP_REPLAY_CNTR_SHIFT	RSN_CAP_PTK_REPLAY_CNTR_SHIFT
 #define WPA_CAP_REPLAY_CNTR_MASK	RSN_CAP_PTK_REPLAY_CNTR_MASK
 
+#define WPA_CAP_PEER_KEY_ENABLE		(0x1 << 1)	
+
 #define WPA_CAP_LEN	RSN_CAP_LEN	
+#define WPA_PMKID_CNT_LEN	2 	
 
 #define	WPA_CAP_WPA2_PREAUTH		RSN_CAP_PREAUTH
 
-#ifdef BCMWAPI_WAI
-#define WAPI_CAP_PREAUTH		RSN_CAP_PREAUTH
-
-#define WAPI_WAI_REQUEST		0x00F1
-#define WAPI_UNICAST_REKEY		0x00F2
-#define WAPI_STA_AGING			0x00F3
-#define WAPI_MUTIL_REKEY		0x00F4
-#define WAPI_STA_STATS			0x00F5
-
-#define WAPI_USK_REKEY_COUNT		0x4000000 
-#define WAPI_MSK_REKEY_COUNT		0x4000000 
-#endif 
+#define WPA2_PMKID_COUNT_LEN	2
 
 #include <packed_section_end.h>
 

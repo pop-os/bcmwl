@@ -2,15 +2,21 @@
  * Linux-specific abstractions to gain some independence from linux kernel versions.
  * Pave over some 2.2 versus 2.4 versus 2.6 kernel differences.
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: linuxver.h,v 13.53.12.3.2.2 2011-01-26 01:17:15 Exp $
+ * $Id: linuxver.h 372519 2012-12-04 01:21:16Z $
  */
 
 #ifndef _linuxver_h_
@@ -20,14 +26,17 @@
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0))
 #include <linux/config.h>
 #else
-
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 33))
-#include <linux/autoconf.h>
-#else
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33))
 #include <generated/autoconf.h>
+#else
+#include <linux/autoconf.h>
+#endif
+#endif 
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0))
+#include <linux/kconfig.h>
 #endif
 
-#endif 
 #include <linux/module.h>
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 3, 0))
@@ -58,9 +67,14 @@
 #include <linux/pci.h>
 #include <linux/interrupt.h>
 #include <linux/netdevice.h>
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27))
+#include <linux/semaphore.h>
+#else
+#include <asm/semaphore.h>
+#endif 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 28))
 #undef IP_TOS
-#endif
+#endif 
 #include <asm/io.h>
 
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 5, 41))
@@ -81,11 +95,28 @@
 #endif
 #endif	
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0))
+#define DAEMONIZE(a) daemonize(a); \
+	allow_signal(SIGKILL); \
+	allow_signal(SIGTERM);
+#else 
+#define RAISE_RX_SOFTIRQ() \
+	cpu_raise_softirq(smp_processor_id(), NET_RX_SOFTIRQ)
+#define DAEMONIZE(a) daemonize(); \
+	do { if (a) \
+		strncpy(current->comm, a, MIN(sizeof(current->comm), (strlen(a)))); \
+	} while (0);
+#endif 
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19)
 #define	MY_INIT_WORK(_work, _func)	INIT_WORK(_work, _func)
 #else
 #define	MY_INIT_WORK(_work, _func)	INIT_WORK(_work, _func, _work)
+#if !(LINUX_VERSION_CODE == KERNEL_VERSION(2, 6, 18) && defined(RHEL_MAJOR) && \
+	(RHEL_MAJOR == 5))
+
 typedef void (*work_func_t)(void *work);
+#endif
 #endif	
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0))
@@ -105,9 +136,6 @@ typedef irqreturn_t(*FN_ISR) (int irq, void *dev_id, struct pt_regs *ptregs);
 #endif 
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 17)
-#ifdef	CONFIG_NET_RADIO
-#define	CONFIG_WIRELESS_EXT
-#endif
 #endif	
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 5, 67)
@@ -122,13 +150,17 @@ typedef irqreturn_t(*FN_ISR) (int irq, void *dev_id, struct pt_regs *ptregs);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 #include <net/lib80211.h>
 #endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 #include <linux/ieee80211.h>
 #else
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
 #include <net/ieee80211.h>
 #endif
 #endif 
+
+#ifdef CUSTOMER_HW4
+#include <linux/kthread.h>
+#endif
 
 #ifndef __exit
 #define __exit
@@ -183,13 +215,8 @@ extern void pci_unregister_driver(struct pci_driver *drv);
 #endif
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 2, 18))
-#ifdef MODULE
-#define module_init(x) int init_module(void) { return x(); }
-#define module_exit(x) void cleanup_module(void) { x(); }
-#else
 #define module_init(x)	__initcall(x);
 #define module_exit(x)	__exitcall(x);
-#endif
 #endif	
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)
@@ -430,6 +457,85 @@ pci_restore_state(struct pci_dev *dev, u32 *buffer)
 #define CHECKSUM_HW	CHECKSUM_PARTIAL
 #endif
 
+typedef struct {
+	void 	*parent;  
+	struct	task_struct *p_task;
+	long 	thr_pid;
+	int 	prio; 
+	struct	semaphore sema;
+	int	terminated;
+	struct	completion completed;
+} tsk_ctl_t;
+
+#define DBG_THR(x)
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0))
+#define SMP_RD_BARRIER_DEPENDS(x) smp_read_barrier_depends(x)
+#else
+#define SMP_RD_BARRIER_DEPENDS(x) smp_rmb(x)
+#endif
+
+#define PROC_START(thread_func, owner, tsk_ctl, flags) \
+{ \
+	sema_init(&((tsk_ctl)->sema), 0); \
+	init_completion(&((tsk_ctl)->completed)); \
+	(tsk_ctl)->parent = owner; \
+	(tsk_ctl)->terminated = FALSE; \
+	(tsk_ctl)->thr_pid = kernel_thread(thread_func, tsk_ctl, flags); \
+	if ((tsk_ctl)->thr_pid > 0) \
+		wait_for_completion(&((tsk_ctl)->completed)); \
+	DBG_THR(("%s thr:%lx started\n", __FUNCTION__, (tsk_ctl)->thr_pid)); \
+}
+
+#ifdef USE_KTHREAD_API
+#define PROC_START2(thread_func, owner, tsk_ctl, flags, name) \
+{ \
+	sema_init(&((tsk_ctl)->sema), 0); \
+	init_completion(&((tsk_ctl)->completed)); \
+	(tsk_ctl)->parent = owner; \
+	(tsk_ctl)->terminated = FALSE; \
+	(tsk_ctl)->p_task  = kthread_run(thread_func, tsk_ctl, (char*)name); \
+	(tsk_ctl)->thr_pid = (tsk_ctl)->p_task->pid; \
+	DBG_THR(("%s thr:%lx created\n", __FUNCTION__, (tsk_ctl)->thr_pid)); \
+}
+#endif
+
+#define PROC_STOP(tsk_ctl) \
+{ \
+	(tsk_ctl)->terminated = TRUE; \
+	smp_wmb(); \
+	up(&((tsk_ctl)->sema));	\
+	wait_for_completion(&((tsk_ctl)->completed)); \
+	DBG_THR(("%s thr:%lx terminated OK\n", __FUNCTION__, (tsk_ctl)->thr_pid)); \
+	(tsk_ctl)->thr_pid = -1; \
+}
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
+#define KILL_PROC(nr, sig) \
+{ \
+struct task_struct *tsk; \
+struct pid *pid;    \
+pid = find_get_pid((pid_t)nr);    \
+tsk = pid_task(pid, PIDTYPE_PID);    \
+if (tsk) send_sig(sig, tsk, 1); \
+}
+#else
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)) && (LINUX_VERSION_CODE <= \
+	KERNEL_VERSION(2, 6, 30))
+#define KILL_PROC(pid, sig) \
+{ \
+	struct task_struct *tsk; \
+	tsk = find_task_by_vpid(pid); \
+	if (tsk) send_sig(sig, tsk, 1); \
+}
+#else
+#define KILL_PROC(pid, sig) \
+{ \
+	kill_proc(pid, sig, 1); \
+}
+#endif
+#endif 
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 0))
 #include <linux/time.h>
 #include <linux/wait.h>
@@ -469,24 +575,10 @@ do {									\
 
 #endif 
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27))
-#define KILL_PROC(pid, sig) \
-{ \
-	struct task_struct *tsk; \
-	tsk = find_task_by_vpid(pid); \
-	if (tsk) send_sig(sig, tsk, 1); \
-}
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24))
+#define DEV_PRIV(dev)	(dev->priv)
 #else
-#define KILL_PROC(pid, sig) \
-{ \
-	kill_proc(pid, sig, 1); \
-}
-#endif
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-#define WL_DEV_IF(dev)          ((wl_if_t*)netdev_priv(dev))
-#else
-#define WL_DEV_IF(dev)          ((wl_if_t*)(dev)->priv)
+#define DEV_PRIV(dev)	netdev_priv(dev)
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20)
@@ -495,10 +587,8 @@ do {									\
 #define WL_ISR(i, d, p)         wl_isr((i), (d), (p))
 #endif  
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-#define NETDEV_PRIV(dev)          (netdev_priv(dev))
-#else
-#define NETDEV_PRIV(dev)          ((dev)->priv)
-#endif
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 0))
+#define netdev_priv(dev) dev->priv
+#endif 
 
 #endif 
