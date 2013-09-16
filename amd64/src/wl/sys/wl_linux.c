@@ -2,15 +2,21 @@
  * Linux-specific portion of
  * Broadcom 802.11abg Networking Device Driver
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_linux.c,v 1.524.2.40.2.15 2011-02-09 02:28:28 Exp $
+ * $Id: wl_linux.c 397462 2013-04-18 22:02:26Z $
  */
 
 #define LINUX_PORT
@@ -37,10 +43,15 @@
 #include <linux/string.h>
 #include <linux/ethtool.h>
 #include <linux/completion.h>
+#include <linux/usb.h>
 #include <linux/pci_ids.h>
 #define WLC_MAXBSSCFG		1	
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
+#include <asm/switch_to.h>
+#else
 #include <asm/system.h>
+#endif
 #include <asm/io.h>
 #include <asm/irq.h>
 #include <asm/pgtable.h>
@@ -57,7 +68,7 @@
 #include <wlioctl.h>
 #include <wlc_key.h>
 
-typedef const struct si_pub	si_t;
+typedef const struct si_pub si_t;
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 4, 5)
 #error "No support for Kernel Rev <= 2.4.5, As the older kernel revs doesn't support Tasklets"
@@ -77,32 +88,20 @@ struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
 
 #include <wl_linux.h>
 
-#ifdef WL_THREAD
-#include <linux/kthread.h>
-#endif 
-
 #if defined(USE_CFG80211)
-#include <wl_cfg80211.h>
-#endif
+#include <wl_cfg80211_hybrid.h>
+#endif 
 
 static void wl_timer(ulong data);
 static void _wl_timer(wl_timer_t *t);
+static struct net_device *wl_alloc_linux_if(wl_if_t *wlif);
 
 static int wl_monitor_start(struct sk_buff *skb, struct net_device *dev);
 
-#ifdef WL_ALL_PASSIVE
-static void wl_start_txqwork(struct wl_task *task);
+static void wl_start_txqwork(wl_task_t *task);
 static void wl_txq_free(wl_info_t *wl);
-#define TXQ_LOCK(_wl)	spin_lock_bh(&(_wl)->txq_lock)
-#define TXQ_UNLOCK(_wl)	spin_unlock_bh(&(_wl)->txq_lock)
-
-static void wl_set_multicast_list_workitem(struct work_struct *work);
-
-static void wl_timer_task(wl_task_t *task);
-static void wl_dpc_rxwork(struct wl_task *task);
-#else
-
-#endif 
+#define TXQ_LOCK(_wl) spin_lock_bh(&(_wl)->txq_lock)
+#define TXQ_UNLOCK(_wl) spin_unlock_bh(&(_wl)->txq_lock)
 
 static int wl_reg_proc_entry(wl_info_t *wl);
 
@@ -139,15 +138,20 @@ struct ieee80211_tkip_data {
 	u8 rx_hdr[16], tx_hdr[16];
 };
 
-#define	WL_INFO(dev)		((wl_info_t*)(WL_DEV_IF(dev)->wl))	
+typedef struct priv_link {
+	wl_if_t *wlif;
+} priv_link_t;
+
+#define WL_DEV_IF(dev)          ((wl_if_t*)((priv_link_t*)DEV_PRIV(dev))->wlif)
+
+#ifdef WL_INFO
+#undef WL_INFO
+#endif
+#define WL_INFO(dev)	((wl_info_t*)(WL_DEV_IF(dev)->wl))	
 
 static int wl_open(struct net_device *dev);
 static int wl_close(struct net_device *dev);
-#ifdef WL_THREAD
-static int wl_start_wlthread(struct sk_buff *skb, struct net_device *dev);
-#else
 static int BCMFASTPATH wl_start(struct sk_buff *skb, struct net_device *dev);
-#endif
 static int wl_start_int(wl_info_t *wl, wl_if_t *wlif, struct sk_buff *skb);
 
 static struct net_device_stats *wl_get_stats(struct net_device *dev);
@@ -155,24 +159,14 @@ static int wl_set_mac_address(struct net_device *dev, void *addr);
 static void wl_set_multicast_list(struct net_device *dev);
 static void _wl_set_multicast_list(struct net_device *dev);
 static int wl_ethtool(wl_info_t *wl, void *uaddr, wl_if_t *wlif);
-#ifdef NAPI_POLL
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-static int wl_poll(struct napi_struct *napi, int budget);
-#else
-static int wl_poll(struct net_device *dev, int *budget);
-#endif 
-#else 
 static void wl_dpc(ulong data);
-#endif 
+static void wl_tx_tasklet(ulong data);
 static void wl_link_up(wl_info_t *wl, char * ifname);
 static void wl_link_down(wl_info_t *wl, char *ifname);
 static int wl_schedule_task(wl_info_t *wl, void (*fn)(struct wl_task *), void *context);
-#ifdef WL_THREAD
-static int wl_start_enqueue_wlthread(wl_info_t *wl, struct sk_buff *skb);
-#endif 
 #if defined(BCMDBG)
 static int wl_dump(wl_info_t *wl, struct bcmstrbuf *b);
-#endif 
+#endif
 static struct wl_if *wl_alloc_if(wl_info_t *wl, int iftype, uint unit, struct wlc_if* wlc_if);
 static void wl_free_if(wl_info_t *wl, wl_if_t *wlif);
 static void wl_get_driver_info(struct net_device *dev, struct ethtool_drvinfo *info);
@@ -185,28 +179,16 @@ static int wl_set_radio_block(void *data, bool blocked);
 static void wl_report_radio_state(wl_info_t *wl);
 #endif
 
-static struct pci_device_id wl_id_table[] = {
-	{ PCI_VENDOR_ID_BROADCOM, 0x4311, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4312, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4313, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4315, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4328, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4329, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x432a, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x432b, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x432c, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x432d, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4353, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0xA99D, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4357, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4727, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4358, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x4359, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x435a, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
-	{ PCI_VENDOR_ID_BROADCOM, 0x0576, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0 }, 
+static struct pci_device_id wl_id_table[] =
+{
+	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+	PCI_CLASS_NETWORK_OTHER << 8, 0xffff00, 0 },
 	{ 0 }
 };
+
 MODULE_DEVICE_TABLE(pci, wl_id_table);
+
+static unsigned int online_cpus = 1;
 
 #ifdef BCMDBG
 static int msglevel = 0xdeadbeef;
@@ -217,16 +199,14 @@ static int phymsglevel = 0xdeadbeef;
 module_param(phymsglevel, int, 0);
 #endif 
 
-#if defined(WL_ALL_PASSIVE)
+#ifdef BCMDBG_ASSERT
+static int assert_type = 0xdeadbeef;
+module_param(assert_type, int, 0);
+#endif
 
-#ifdef WLP2P
-static int passivemode = 1;
-module_param(passivemode, int, 1);
-#else
-static int passivemode = 0;
-module_param(passivemode, int, 0);
-#endif 
-#endif 
+#define WL_TXQ_THRESH	0
+static int wl_txq_thresh = WL_TXQ_THRESH;
+module_param(wl_txq_thresh, int, 0);
 
 static int oneonly = 0;
 module_param(oneonly, int, 0);
@@ -234,7 +214,7 @@ module_param(oneonly, int, 0);
 static int piomode = 0;
 module_param(piomode, int, 0);
 
-static int instance_base = 0;	
+static int instance_base = 0; 
 module_param(instance_base, int, 0);
 
 #if defined(BCMDBG)
@@ -255,57 +235,161 @@ module_param(nompc, int, 0);
 #define to_str(s) #s
 #define quote_str(s) to_str(s)
 
-#ifndef BRCM_WLAN_IFNAME
 #define BRCM_WLAN_IFNAME eth%d
-#endif
 
-static char name[IFNAMSIZ] = quote_str(BRCM_WLAN_IFNAME);
+static char intf_name[IFNAMSIZ] = quote_str(BRCM_WLAN_IFNAME);
 
-module_param_string(name, name, IFNAMSIZ, 0);
+module_param_string(intf_name, intf_name, IFNAMSIZ, 0);
 
-#define WL_RADIOTAP_BRCM_SNS	0x01
-#define WL_RADIOTAP_BRCM_MCS	0x00000001
+static const u_int8_t brcm_oui[] =  {0x00, 0x10, 0x18};
 
-#define	IEEE80211_RADIOTAP_HTMOD_40		0x01
-#define	IEEE80211_RADIOTAP_HTMOD_SGI		0x02
-#define	IEEE80211_RADIOTAP_HTMOD_GF		0x04
-#define	IEEE80211_RADIOTAP_HTMOD_LDPC		0x08
-#define	IEEE80211_RADIOTAP_HTMOD_STBC_MASK	0x30
-#define	IEEE80211_RADIOTAP_HTMOD_STBC_SHIFT	4
+#define WL_RADIOTAP_BRCM2_HT_SNS	0x01
+#define WL_RADIOTAP_BRCM2_HT_MCS	0x00000001
+
+#define WL_RADIOTAP_LEGACY_SNS		0x02
+#define WL_RADIOTAP_LEGACY_VHT		0x00000001
+
+#define IEEE80211_RADIOTAP_HTMOD_40		0x01
+#define IEEE80211_RADIOTAP_HTMOD_SGI		0x02
+#define IEEE80211_RADIOTAP_HTMOD_GF		0x04
+#define IEEE80211_RADIOTAP_HTMOD_LDPC		0x08
+#define IEEE80211_RADIOTAP_HTMOD_STBC_MASK	0x30
+#define IEEE80211_RADIOTAP_HTMOD_STBC_SHIFT	4
+
+#define WL_RADIOTAP_F_NONHT_VHT_DYN_BW			0x01
+
+#define WL_RADIOTAP_F_NONHT_VHT_BW			0x02
+
+struct wl_radiotap_nonht_vht {
+	u_int8_t len;				
+	u_int8_t flags;
+	u_int8_t bw;
+} __attribute__ ((packed));
+
+typedef struct wl_radiotap_nonht_vht wl_radiotap_nonht_vht_t;
 
 struct wl_radiotap_legacy {
-	struct ieee80211_radiotap_header	ieee_radiotap;
-	uint32       tsft_h;
-	uint32       tsft_l;
-	uint8        flags;
-	uint8        rate;
-	uint16       channel_freq;
-	uint16       channel_flags;
-	uint8        signal;
-	uint8        noise;
-	uint8        antenna;
-} __attribute__((__packed__));
+	struct ieee80211_radiotap_header ieee_radiotap;
+	u_int32_t it_present_ext;
+	u_int32_t pad1;
+	uint32 tsft_l;
+	uint32 tsft_h;
+	uint8 flags;
+	uint8 rate;
+	uint16 channel_freq;
+	uint16 channel_flags;
+	uint8 signal;
+	uint8 noise;
+	int8 antenna;
+	uint8 pad2;
+	u_int8_t vend_oui[3];
+	u_int8_t vend_sns;
+	u_int16_t vend_skip_len;
+	wl_radiotap_nonht_vht_t nonht_vht;
+} __attribute__ ((__packed__));
+
+typedef struct wl_radiotap_legacy wl_radiotap_legacy_t;
+
+#define WL_RADIOTAP_LEGACY_SKIP_LEN htol16(sizeof(struct wl_radiotap_legacy) - \
+	offsetof(struct wl_radiotap_legacy, nonht_vht))
+
+#define WL_RADIOTAP_NONHT_VHT_LEN (sizeof(wl_radiotap_nonht_vht_t) - 1)
+
+struct wl_radiotap_ht_brcm_2 {
+	struct ieee80211_radiotap_header ieee_radiotap;
+	u_int32_t it_present_ext;
+	u_int32_t pad1;
+	uint32 tsft_l;
+	uint32 tsft_h;
+	u_int8_t flags;
+	u_int8_t pad2;
+	u_int16_t channel_freq;
+	u_int16_t channel_flags;
+	u_int8_t signal;
+	u_int8_t noise;
+	u_int8_t antenna;
+	u_int8_t pad3;
+	u_int8_t vend_oui[3];
+	u_int8_t vend_sns;
+	u_int16_t vend_skip_len;
+	u_int8_t mcs;
+	u_int8_t htflags;
+} __attribute__ ((packed));
+
+typedef struct wl_radiotap_ht_brcm_2 wl_radiotap_ht_brcm_2_t;
+
+#define WL_RADIOTAP_HT_BRCM2_SKIP_LEN htol16(sizeof(struct wl_radiotap_ht_brcm_2) - \
+	offsetof(struct wl_radiotap_ht_brcm_2, mcs))
+
+struct wl_radiotap_ht_brcm_3 {
+	struct ieee80211_radiotap_header ieee_radiotap;
+	u_int32_t it_present_ext;
+	u_int32_t pad1;
+	uint32 tsft_l;
+	uint32 tsft_h;
+	u_int8_t flags;
+	u_int8_t pad2;
+	u_int16_t channel_freq;
+	u_int16_t channel_flags;
+	u_int8_t signal;
+	u_int8_t noise;
+	u_int8_t antenna;
+	u_int8_t mcs_known;
+	u_int8_t mcs_flags;
+	u_int8_t mcs_index;
+	u_int8_t vend_oui[3];
+	u_int8_t vend_sns;
+	u_int16_t vend_skip_len;
+	wl_radiotap_nonht_vht_t nonht_vht;
+} __attribute__ ((packed));
+
+typedef struct wl_radiotap_ht_brcm_3 wl_radiotap_ht_brcm_3_t;
 
 struct wl_radiotap_ht {
-	struct ieee80211_radiotap_header        ieee_radiotap;
-	uint32_t				it_present_ext;
-	uint32_t	pad1;
-	uint32		tsft_h;
-	uint32		tsft_l;
-	u_int8_t        flags;
-	u_int8_t        pad2;
-	u_int16_t       channel_freq;
-	u_int16_t       channel_flags;
-	u_int8_t        signal;
-	u_int8_t        noise;
-	u_int8_t        antenna;
-	u_int8_t        pad3;
-	u_int8_t	vend_oui[3];
-	u_int8_t	vend_sns;
-	u_int16_t	vend_skip_len;
-	u_int8_t	mcs;
-	u_int8_t	htflags;
-} __attribute__((packed));
+	struct ieee80211_radiotap_header ieee_radiotap;
+	uint32 tsft_l;
+	uint32 tsft_h;
+	u_int8_t flags;
+	u_int8_t pad1;
+	u_int16_t channel_freq;
+	u_int16_t channel_flags;
+	u_int8_t signal;
+	u_int8_t noise;
+	u_int8_t antenna;
+	u_int8_t mcs_known;
+	u_int8_t mcs_flags;
+	u_int8_t mcs_index;
+} __attribute__ ((packed));
+
+typedef struct wl_radiotap_ht wl_radiotap_ht_t;
+
+struct wl_radiotap_vht {
+	struct ieee80211_radiotap_header ieee_radiotap;
+	uint32 tsft_l;			
+	uint32 tsft_h;			
+	u_int8_t flags;			
+	u_int8_t pad1;
+	u_int16_t channel_freq;		
+	u_int16_t channel_flags;	
+	u_int8_t signal;		
+	u_int8_t noise;			
+	u_int8_t antenna;		
+	u_int8_t pad2;
+	u_int16_t pad3;
+	uint32 ampdu_ref_num;		
+	u_int16_t ampdu_flags;		
+	u_int8_t ampdu_delim_crc;	
+	u_int8_t ampdu_reserved;
+	u_int16_t vht_known;		
+	u_int8_t vht_flags;		
+	u_int8_t vht_bw;		
+	u_int8_t vht_mcs_nss[4];	
+	u_int8_t vht_coding;		
+	u_int8_t vht_group_id;		
+	u_int16_t vht_partial_aid;	
+} __attribute__ ((packed));
+
+typedef struct wl_radiotap_vht wl_radiotap_vht_t;
 
 #define WL_RADIOTAP_PRESENT_LEGACY			\
 	((1 << IEEE80211_RADIOTAP_TSFT) |		\
@@ -314,9 +398,11 @@ struct wl_radiotap_ht {
 	 (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |	\
 	 (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |	\
 	 (1 << IEEE80211_RADIOTAP_FLAGS) |		\
-	 (1 << IEEE80211_RADIOTAP_ANTENNA))
+	 (1 << IEEE80211_RADIOTAP_ANTENNA) |		\
+	 (1 << IEEE80211_RADIOTAP_VENDOR_NAMESPACE) |	\
+	 (1 << IEEE80211_RADIOTAP_EXT))
 
-#define WL_RADIOTAP_PRESENT_HT				\
+#define WL_RADIOTAP_PRESENT_HT_BRCM2			\
 	((1 << IEEE80211_RADIOTAP_TSFT) |		\
 	 (1 << IEEE80211_RADIOTAP_FLAGS) |		\
 	 (1 << IEEE80211_RADIOTAP_CHANNEL) |		\
@@ -326,12 +412,31 @@ struct wl_radiotap_ht {
 	 (1 << IEEE80211_RADIOTAP_VENDOR_NAMESPACE) |	\
 	 (1 << IEEE80211_RADIOTAP_EXT))
 
+#define WL_RADIOTAP_PRESENT_HT				\
+	((1 << IEEE80211_RADIOTAP_TSFT) |		\
+	 (1 << IEEE80211_RADIOTAP_FLAGS) |		\
+	 (1 << IEEE80211_RADIOTAP_CHANNEL) |		\
+	 (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |	\
+	 (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |	\
+	 (1 << IEEE80211_RADIOTAP_ANTENNA) |		\
+	 (1 << IEEE80211_RADIOTAP_MCS))
+
+#define WL_RADIOTAP_PRESENT_VHT			\
+	((1 << IEEE80211_RADIOTAP_TSFT) |		\
+	 (1 << IEEE80211_RADIOTAP_FLAGS) |		\
+	 (1 << IEEE80211_RADIOTAP_CHANNEL) |		\
+	 (1 << IEEE80211_RADIOTAP_DBM_ANTSIGNAL) |	\
+	 (1 << IEEE80211_RADIOTAP_DBM_ANTNOISE) |	\
+	 (1 << IEEE80211_RADIOTAP_ANTENNA) |		\
+	 (1 << IEEE80211_RADIOTAP_AMPDU) |		\
+	 (1 << IEEE80211_RADIOTAP_VHT))
+
 #ifndef ARPHRD_IEEE80211_RADIOTAP
 #define ARPHRD_IEEE80211_RADIOTAP 803
 #endif
 
-#ifndef	SRCBASE
-#define	SRCBASE "."
+#ifndef SRCBASE
+#define SRCBASE "."
 #endif
 
 #if WIRELESS_EXT >= 19 || LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
@@ -341,35 +446,8 @@ static struct ethtool_ops wl_ethtool_ops =
 static const struct ethtool_ops wl_ethtool_ops =
 #endif 
 {
-	.get_drvinfo = wl_get_driver_info
+	.get_drvinfo = wl_get_driver_info,
 };
-#endif 
-#ifdef WL_THREAD
-static int wl_thread_dpc_wlthread(void *data)
-{
-	wl_info_t *wl = (wl_info_t *) data;
-
-	current->flags |= PF_NOFREEZE;
-
-	while (1) {
-		wait_event_interruptible_timeout
-		(wl->thread_wqh,
-			skb_queue_len(&wl->rpc_queue) ||
-			skb_queue_len(&wl->tx_queue),
-			1);
-
-		if (kthread_should_stop())
-			break;
-
-		wl_rpcq_dispatch_wlthread(wl);
-		wl_start_txqwork_wlthread(wl);
-	}
-
-	skb_queue_purge(&wl->tx_queue);
-	skb_queue_purge(&wl->rpc_queue);
-
-	return 0;
-}
 #endif 
 
 #if defined(WL_USE_NETDEV_OPS)
@@ -378,14 +456,14 @@ static const struct net_device_ops wl_netdev_ops =
 {
 	.ndo_open = wl_open,
 	.ndo_stop = wl_close,
-#ifdef WL_THREAD
-	.ndo_start_xmit = wl_start_wlthread,
-#else
 	.ndo_start_xmit = wl_start,
-#endif
 	.ndo_get_stats = wl_get_stats,
 	.ndo_set_mac_address = wl_set_mac_address,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
+	.ndo_set_rx_mode = wl_set_multicast_list,
+#else
 	.ndo_set_multicast_list = wl_set_multicast_list,
+#endif
 	.ndo_do_ioctl = wl_ioctl
 };
 
@@ -397,39 +475,19 @@ static const struct net_device_ops wl_netdev_monitor_ops =
 };
 #endif 
 
-static
-void wl_if_setup(struct net_device *dev)
+static void
+wl_if_setup(struct net_device *dev)
 {
 #if defined(WL_USE_NETDEV_OPS)
 	dev->netdev_ops = &wl_netdev_ops;
 #else
 	dev->open = wl_open;
 	dev->stop = wl_close;
-#ifdef WL_THREAD
-	dev->hard_start_xmit = wl_start_wlthread;
-#else
 	dev->hard_start_xmit = wl_start;
-#endif
 	dev->get_stats = wl_get_stats;
 	dev->set_mac_address = wl_set_mac_address;
 	dev->set_multicast_list = wl_set_multicast_list;
 	dev->do_ioctl = wl_ioctl;
-#endif 
-#ifdef NAPI_POLL
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-	{
-		struct wl_info *wl = WL_INFO(dev);
-
-		netif_napi_add(dev, &wl->napi, wl_poll, 64);
-		napi_enable(&wl->napi);
-	}
-#else
-	dev->poll = wl_poll;
-	dev->weight = 64;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 21)
-	netif_poll_enable(dev);
-#endif 
-#endif  
 #endif 
 
 #ifdef USE_IW
@@ -439,19 +497,16 @@ void wl_if_setup(struct net_device *dev)
 #if WIRELESS_EXT > 12
 	dev->wireless_handlers = (struct iw_handler_def *) &wl_iw_handler_def;
 #endif
+#endif 
+
 #if WIRELESS_EXT >= 19 || LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
 	dev->ethtool_ops = &wl_ethtool_ops;
 #endif
-#endif 
-
-#if defined(USE_CFG80211) && LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-	dev->ethtool_ops = &wl_ethtool_ops;
-#endif 
-
 }
 
 static wl_info_t *
-wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam, uint irq)
+wl_attach(uint16 vendor, uint16 device, ulong regs,
+	uint bustype, void *btparam, uint irq, uchar* bar1_addr, uint32 bar1_size)
 {
 	struct net_device *dev;
 	wl_if_t *wlif;
@@ -490,25 +545,20 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 	wl->unit = unit;
 	atomic_set(&wl->callbacks, 0);
 
-#ifdef WL_ALL_PASSIVE
-	wl->all_dispatch_mode = (passivemode == 0) ? TRUE : FALSE;
-	if (WL_ALL_PASSIVE_ENAB(wl)) {
-
-		MY_INIT_WORK(&wl->txq_task.work, (work_func_t)wl_start_txqwork);
-		wl->txq_task.context = wl;
-		wl->txq_dispatched = FALSE;
-		wl->txq_head = wl->txq_tail = NULL;
-
-		MY_INIT_WORK(&wl->multicast_task.work, (work_func_t)wl_set_multicast_list_workitem);
-
-		MY_INIT_WORK(&wl->wl_dpc_task.work, (work_func_t)wl_dpc_rxwork);
-		wl->wl_dpc_task.context = wl;
-	}
-#endif  
+	wl->txq_dispatched = FALSE;
+	wl->txq_head = wl->txq_tail = NULL;
+	wl->txq_cnt = 0;
 
 	wlif = wl_alloc_if(wl, WL_IFTYPE_BSS, unit, NULL);
 	if (!wlif) {
-		WL_ERROR(("wl%d: wl_alloc_if failed\n", unit));
+		WL_ERROR(("wl%d: %s: wl_alloc_if failed\n", unit, __FUNCTION__));
+		MFREE(osh, wl, sizeof(wl_info_t));
+		osl_detach(osh);
+		return NULL;
+	}
+
+	if (wl_alloc_linux_if(wlif) == NULL) {
+		WL_ERROR(("wl%d: %s: wl_alloc_linux_if failed\n", unit, __FUNCTION__));
 		MFREE(osh, wl, sizeof(wl_info_t));
 		osl_detach(osh);
 		return NULL;
@@ -517,10 +567,6 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 	dev = wlif->dev;
 	wl->dev = dev;
 	wl_if_setup(dev);
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-	wlif = netdev_priv(dev);
-#endif
 
 	dev->base_addr = regs;
 
@@ -547,22 +593,27 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 		goto fail;
 	}
 
+#ifdef WLOFFLD
+	wl->bar1_addr = bar1_addr;
+	wl->bar1_size = bar1_size;
+#endif
+
 	spin_lock_init(&wl->lock);
 	spin_lock_init(&wl->isr_lock);
 
-	if (WL_ALL_PASSIVE_ENAB(wl)) {
-#ifdef WL_ALL_PASSIVE
-		spin_lock_init(&wl->txq_lock);
-#endif 
+	if (WL_ALL_PASSIVE_ENAB(wl))
 		sema_init(&wl->sem, 1);
-	}
+
+	spin_lock_init(&wl->txq_lock);
 
 	if (!(wl->wlc = wlc_attach((void *) wl, vendor, device, unit, wl->piomode,
 		osh, wl->regsva, wl->bcm_bustype, btparam, &err))) {
-		printf("%s: %s driver failed with code %d\n", dev->name, EPI_VERSION_STR, err);
+		printf("wl driver %s failed with code %d\n", EPI_VERSION_STR, err);
 		goto fail;
 	}
 	wl->pub = wlc_pub(wl->wlc);
+
+	wlif->wlcif = wlc_wlcif_get_by_index(wl->wlc, 0);
 
 	if (nompc) {
 		if (wlc_iovar_setint(wl->wlc, "mpc", 0)) {
@@ -575,23 +626,43 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 	wlc_iovar_setint(wl->wlc, "qtxpower", 23 * 4);
 
 #ifdef BCMDBG
-	if (macaddr != NULL) {  
-		int err;
+	if (macaddr != NULL) { 
+		int dbg_err;
 
 		WL_ERROR(("wl%d: setting MAC ADDRESS %s\n", unit, macaddr));
 		bcm_ether_atoe(macaddr, &local_ea);
 
-		err = wlc_iovar_op(wl->wlc, "cur_etheraddr", NULL, 0, &local_ea,
+		dbg_err = wlc_iovar_op(wl->wlc, "cur_etheraddr", NULL, 0, &local_ea,
 			ETHER_ADDR_LEN, IOV_SET, NULL);
-		if (err)
+		if (dbg_err)
 			WL_ERROR(("wl%d: Error setting MAC ADDRESS\n", unit));
 	}
-#endif	
+#endif 
 	bcopy(&wl->pub->cur_etheraddr, dev->dev_addr, ETHER_ADDR_LEN);
 
-#ifndef NAPI_POLL
+#ifdef CONFIG_SMP
+
+	online_cpus = num_online_cpus();
+#if defined(BCM47XX_CA9)
+	if (online_cpus > 1 && wl_txq_thresh == 0)
+		wl_txq_thresh = 512;
+#endif
+#else
+	online_cpus = 1;
+#endif 
+
+	WL_ERROR(("wl%d: online cpus %d\n", unit, online_cpus));
 
 	tasklet_init(&wl->tasklet, wl_dpc, (ulong)wl);
+
+	tasklet_init(&wl->tx_tasklet, wl_tx_tasklet, (ulong)wl);
+
+#ifdef KEEP_ALIVE
+
+	if ((wl->keep_alive_info = wl_keep_alive_attach(wl->wlc)) == NULL) {
+		WL_ERROR(("wl%d: wl_keep_alive_attach failed\n", unit));
+		goto fail;
+	}
 #endif
 
 	{
@@ -621,6 +692,7 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 		goto fail;
 	}
 #else
+
 	if (wl->bcm_bustype == PCI_BUS) {
 		struct pci_dev *pci_dev = (struct pci_dev *)btparam;
 		if (pci_dev != NULL)
@@ -674,23 +746,11 @@ wl_attach(uint16 vendor, uint16 device, ulong regs, uint bustype, void *btparam,
 		WL_ERROR(("wl%d: Error setting infra_mode to infrastructure\n", unit));
 	}
 
-#ifdef DEFAULT_EAPVER_AP
-
-	if (wlc_iovar_setint(wl->wlc, "sup_wpa2_eapver", -1)) {
-		WL_ERROR(("wl%d: Error setting sup_wpa2_eapver \n", unit));
+	if (wlc_module_register(wl->pub, NULL, "linux", wl, NULL, wl_linux_watchdog, NULL, NULL)) {
+		WL_ERROR(("wl%d: %s wlc_module_register() failed\n",
+		          wl->pub->unit, __FUNCTION__));
+		goto fail;
 	}
-	if (wlc_iovar_setint(wl->wlc, "sup_m3sec_ok", 1)) {
-		WL_ERROR(("wl%d: Error setting sup_m3sec_ok \n", unit));
-	}
-#endif 
-#ifdef DISABLE_HT_RATE_FOR_WEP_TKIP
-
-	if (wlc_iovar_setint(wl->wlc, "ht_wsec_restrict", 0x3)) {
-		WL_ERROR(("wl%d: Error setting ht_wsec_restrict \n", unit));
-	}
-#endif 
-
-	wlc_module_register(wl->pub, NULL, "linux", wl, NULL, wl_linux_watchdog, NULL);
 
 #ifdef BCMDBG
 	wlc_dump_register(wl->pub, "wl", (dump_fn_t)wl_dump, (void *)wl);
@@ -722,24 +782,26 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	int rc;
 	wl_info_t *wl;
 	uint32 val;
+	uint32 bar1_size = 0;
+	void* bar1_addr = NULL;
 
 	WL_TRACE(("%s: bus %d slot %d func %d irq %d\n", __FUNCTION__,
-	          pdev->bus->number, PCI_SLOT(pdev->devfn), PCI_FUNC(pdev->devfn), pdev->irq));
+		pdev->bus->number, PCI_SLOT(pdev->devfn), PCI_FUNC(pdev->devfn), pdev->irq));
 
 	if ((pdev->vendor != PCI_VENDOR_ID_BROADCOM) ||
 	    (((pdev->device & 0xff00) != 0x4300) &&
-		(pdev->device != 0x576) &&
+	     (pdev->device != 0x576) &&
 	     ((pdev->device & 0xff00) != 0x4700) &&
 	     ((pdev->device < 43000) || (pdev->device > 43999)))) {
 		WL_TRACE(("%s: unsupported vendor %x device %x\n", __FUNCTION__,
-		          pdev->vendor, pdev->device));
+			pdev->vendor, pdev->device));
 		return (-ENODEV);
 	}
 
 	rc = pci_enable_device(pdev);
 	if (rc) {
 		WL_ERROR(("%s: Cannot enable device %d-%d_%d\n", __FUNCTION__,
-		          pdev->bus->number, PCI_SLOT(pdev->devfn), PCI_FUNC(pdev->devfn)));
+			pdev->bus->number, PCI_SLOT(pdev->devfn), PCI_FUNC(pdev->devfn)));
 		return (-ENODEV);
 	}
 	pci_set_master(pdev);
@@ -747,9 +809,14 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_read_config_dword(pdev, 0x40, &val);
 	if ((val & 0x0000ff00) != 0)
 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
-
+#ifdef WLOFFLD
+		bar1_size = pci_resource_len(pdev, 2);
+		bar1_addr = (uchar *)ioremap_nocache(pci_resource_start(pdev, 2),
+			bar1_size);
+#endif
 	wl = wl_attach(pdev->vendor, pdev->device, pci_resource_start(pdev, 0), PCI_BUS, pdev,
-		pdev->irq);
+		pdev->irq, bar1_addr, bar1_size);
+
 	if (!wl)
 		return -ENODEV;
 
@@ -792,7 +859,7 @@ wl_resume(struct pci_dev *pdev)
 
 	if (!wl) {
 		WL_ERROR(("wl: wl_resume: pci_get_drvdata failed\n"));
-	        return -ENODEV;
+		return -ENODEV;
 	}
 
 	err = pci_set_power_state(pdev, PCI_D0);
@@ -852,10 +919,6 @@ static struct pci_driver wl_pci_driver = {
 	id_table:	wl_id_table,
 	};
 
-#define	wl_read_nvram_file() do {} while (0)
-
-#define usbap_parse_nvram()	do {} while (0)
-
 static int __init
 wl_module_init(void)
 {
@@ -865,7 +928,7 @@ wl_module_init(void)
 	if (msglevel != 0xdeadbeef)
 		wl_msg_level = msglevel;
 	else {
-		char *var = getvar(NULL, "wl_msglevel");
+		const char *var = getvar(NULL, "wl_msglevel");
 		if (var)
 			wl_msg_level = bcm_strtoul(var, NULL, 0);
 	}
@@ -873,7 +936,7 @@ wl_module_init(void)
 	if (msglevel2 != 0xdeadbeef)
 		wl_msg_level2 = msglevel2;
 	else {
-		char *var = getvar(NULL, "wl_msglevel2");
+		const char *var = getvar(NULL, "wl_msglevel2");
 		if (var)
 			wl_msg_level2 = bcm_strtoul(var, NULL, 0);
 	}
@@ -884,20 +947,30 @@ wl_module_init(void)
 		if (phymsglevel != 0xdeadbeef)
 			phyhal_msg_level = phymsglevel;
 		else {
-			char *var = getvar(NULL, "phy_msglevel");
+			const char *var = getvar(NULL, "phy_msglevel");
 			if (var)
 				phyhal_msg_level = bcm_strtoul(var, NULL, 0);
 		}
 		printf("%s: phymsglevel set to 0x%x\n", __FUNCTION__, phyhal_msg_level);
 	}
-#if defined(WL_ALL_PASSIVE)
-	{
-		char *var = getvar(NULL, "wl_dispatch_mode");
-		if (var)
-			passivemode = bcm_strtoul(var, NULL, 0);
-		printf("%s: dhssivemode set to 0x%x\n", __FUNCTION__, passivemode);
-	}
 #endif 
+
+#ifdef BCMDBG_ASSERT
+
+	if (assert_type != 0xdeadbeef)
+		g_assert_type = assert_type;
+#endif 
+
+#if defined(CONFIG_WL_ALL_PASSIVE_RUNTIME)
+	{
+		char *var = getvar(NULL, "wl_txq_thresh");
+		if (var)
+			wl_txq_thresh = bcm_strtoul(var, NULL, 0);
+#ifdef BCMDBG
+			WL_INFORM(("%s: wl_txq_thresh set to 0x%x\n",
+				__FUNCTION__, wl_txq_thresh));
+#endif
+	}
 #endif 
 
 	if (!(error = pci_module_init(&wl_pci_driver)))
@@ -933,37 +1006,29 @@ wl_free(wl_info_t *wl)
 	wl_uninit_rfkill(wl);
 #endif
 
-#ifdef NAPI_POLL
-	clear_bit(__LINK_STATE_START, &wl->dev->state);
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-	napi_disable(&wl->napi);
-#elif  LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 21)
-	netif_poll_disable(wl->dev);
-#endif 	
-#endif 
-
 	if (wl->dev) {
 		wl_free_if(wl, WL_DEV_IF(wl->dev));
 		wl->dev = NULL;
 	}
 
-#ifndef NAPI_POLL
+#ifdef KEEP_ALIVE
+	wl_keep_alive_detach(wl->keep_alive_info);
+#endif
 
 	tasklet_kill(&wl->tasklet);
-#endif
+
+	tasklet_kill(&wl->tx_tasklet);
+
 	if (wl->pub) {
 		wlc_module_unregister(wl->pub, "linux", wl);
 	}
 
 	if (wl->wlc) {
-
 		{
 		char tmp1[128];
 		sprintf(tmp1, "%s%d", HYBRID_PROC, wl->pub->unit);
 		remove_proc_entry(tmp1, 0);
 		}
-
 		wlc_detach(wl->wlc);
 		wl->wlc = NULL;
 		wl->pub = NULL;
@@ -981,11 +1046,6 @@ wl_free(wl_info_t *wl)
 		MFREE(wl->osh, t, sizeof(wl_timer_t));
 	}
 
-	if (wl->monitor_dev) {
-		wl_free_if(wl, WL_DEV_IF(wl->monitor_dev));
-		wl->monitor_dev = NULL;
-	}
-
 	osh = wl->osh;
 
 	if (wl->regsva && BUSTYPE(wl->bcm_bustype) != SDIO_BUS &&
@@ -993,6 +1053,13 @@ wl_free(wl_info_t *wl)
 		iounmap((void*)wl->regsva);
 	}
 	wl->regsva = NULL;
+
+#ifdef WLOFFLD
+	if (wl->bar1_addr) {
+		iounmap(wl->bar1_addr);
+		wl->bar1_addr = NULL;
+	}
+#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
 
@@ -1011,13 +1078,13 @@ wl_free(wl_info_t *wl)
 	}
 #endif 
 
-#ifdef WL_ALL_PASSIVE
-	if (WL_ALL_PASSIVE_ENAB(wl))
-		wl_txq_free(wl);
-#endif 
+	wl_txq_free(wl);
 
 	MFREE(osh, wl, sizeof(wl_info_t));
 
+#ifdef BCMDBG_CTRACE
+	PKT_CTRACE_DUMP(osh, NULL);
+#endif
 	if (MALLOCED(osh)) {
 		printf("Memory leak of bytes %d\n", MALLOCED(osh));
 		ASSERT(0);
@@ -1041,7 +1108,7 @@ wl_open(struct net_device *dev)
 
 	WL_LOCK(wl);
 	WL_APSTA_UPDN(("wl%d: (%s): wl_open() -> wl_up()\n",
-	               wl->pub->unit, wl->dev->name));
+		wl->pub->unit, wl->dev->name));
 
 	error = wl_up(wl);
 	if (!error) {
@@ -1058,8 +1125,7 @@ wl_open(struct net_device *dev)
 		return -1;
 	}
 #endif
-
-	return (error? -ENODEV: 0);
+	return (error? -ENODEV : 0);
 }
 
 static int
@@ -1073,7 +1139,6 @@ wl_close(struct net_device *dev)
 #if defined(USE_CFG80211)
 	wl_cfg80211_down(dev);
 #endif
-
 	wl = WL_INFO(dev);
 
 	WL_TRACE(("wl%d: wl_close\n", wl->pub->unit));
@@ -1081,7 +1146,10 @@ wl_close(struct net_device *dev)
 	WL_LOCK(wl);
 	WL_APSTA_UPDN(("wl%d (%s): wl_close() -> wl_down()\n",
 		wl->pub->unit, wl->dev->name));
-	wl_down(wl);
+
+	if (wl->if_list == NULL) {
+		wl_down(wl);
+	}
 	WL_UNLOCK(wl);
 
 	OLD_MOD_DEC_USE_COUNT;
@@ -1089,22 +1157,35 @@ wl_close(struct net_device *dev)
 	return (0);
 }
 
+void * BCMFASTPATH
+wl_get_ifctx(struct wl_info *wl, int ctx_id, wl_if_t *wlif)
+{
+	void *ifctx = NULL;
+
+	switch (ctx_id) {
+	case IFCTX_NETDEV:
+		ifctx = (void *)((wlif == NULL) ? wl->dev : wlif->dev);
+		break;
+
+	default:
+		break;
+	}
+
+	return ifctx;
+}
+
 static int BCMFASTPATH
 wl_start_int(wl_info_t *wl, wl_if_t *wlif, struct sk_buff *skb)
 {
 	void *pkt;
 
-	WL_TRACE(("wl%d: wl_start: len %d summed %d\n", wl->pub->unit, skb->len, skb->ip_summed));
+	WL_TRACE(("wl%d: wl_start: len %d data_len %d summed %d csum: 0x%x\n",
+		wl->pub->unit, skb->len, skb->data_len, skb->ip_summed, (uint32)skb->csum));
 
 	WL_LOCK(wl);
 
-	if ((pkt = PKTFRMNATIVE(wl->osh, skb)) == NULL) {
-		WL_ERROR(("wl%d: PKTFRMNATIVE failed!\n", wl->pub->unit));
-		WLCNTINCR(wl->pub->_cnt->txnobuf);
-		PKTFREE(wl->osh, skb, TRUE);
-		WL_UNLOCK(wl);
-		return 0;
-	}
+	pkt = PKTFRMNATIVE(wl->osh, skb);
+	ASSERT(pkt != NULL);
 
 	if (WME_ENAB(wl->pub) && (PKTPRIO(pkt) == 0))
 		pktsetprio(pkt, FALSE);
@@ -1125,6 +1206,8 @@ wl_txflowcontrol(wl_info_t *wl, struct wl_if *wlif, bool state, int prio)
 
 	if (wlif == NULL)
 		dev = wl->dev;
+	else if (!wlif->dev_registed)
+		return;
 	else
 		dev = wlif->dev;
 
@@ -1162,59 +1245,21 @@ wl_schedule_task(wl_info_t *wl, void (*fn)(struct wl_task *task), void *context)
 }
 
 static struct wl_if *
-wl_alloc_if(wl_info_t *wl, int iftype, uint subunit, struct wlc_if* wlcif)
+wl_alloc_if(wl_info_t *wl, int iftype, uint subunit, struct wlc_if *wlcif)
 {
-	struct net_device *dev;
 	wl_if_t *wlif;
 	wl_if_t *p;
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29))
 	if (!(wlif = MALLOC(wl->osh, sizeof(wl_if_t)))) {
 		WL_ERROR(("wl%d: wl_alloc_if: out of memory, malloced %d bytes\n",
-		          (wl->pub)?wl->pub->unit:subunit, MALLOCED(wl->osh)));
+			(wl->pub)?wl->pub->unit:subunit, MALLOCED(wl->osh)));
 		return NULL;
 	}
 	bzero(wlif, sizeof(wl_if_t));
-#endif 
-
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24))
-	if (!(dev = MALLOC(wl->osh, sizeof(struct net_device)))) {
-		MFREE(wl->osh, wlif, sizeof(wl_if_t));
-		WL_ERROR(("wl%d: wl_alloc_if: out of memory, malloced %d bytes\n",
-		          (wl->pub)?wl->pub->unit:subunit, MALLOCED(wl->osh)));
-		return NULL;
-	}
-	bzero(dev, sizeof(struct net_device));
-	ether_setup(dev);
-	strncpy(dev->name, name, IFNAMSIZ);
-#else
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29))
-
-	dev = alloc_netdev(sizeof(wl_if_t), name, ether_setup);
-	wlif = netdev_priv(dev);
-	if (!dev) {
-#else
-	dev = alloc_netdev(0, name, ether_setup);
-	if (!dev) {
-		MFREE(wl->osh, wlif, sizeof(wl_if_t));
-#endif 
-		WL_ERROR(("wl%d: wl_alloc_if: out of memory, alloc_netdev\n",
-			(wl->pub)?wl->pub->unit:subunit));
-		return NULL;
-	}
-#endif 
-
-	wlif->dev = dev;
 	wlif->wl = wl;
 	wlif->wlcif = wlcif;
 	wlif->subunit = subunit;
 	wlif->if_type = iftype;
-#if LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29)
-	dev->priv = wlif;
-#endif
-
-	if (iftype != WL_IFTYPE_MON && wl->dev && netif_queue_stopped(wl->dev))
-		netif_stop_queue(dev);
 
 	if (wl->if_list == NULL)
 		wl->if_list = wlif;
@@ -1224,6 +1269,7 @@ wl_alloc_if(wl_info_t *wl, int iftype, uint subunit, struct wlc_if* wlcif)
 			p = p->next;
 		p->next = wlif;
 	}
+
 	return wlif;
 }
 
@@ -1231,14 +1277,19 @@ static void
 wl_free_if(wl_info_t *wl, wl_if_t *wlif)
 {
 	wl_if_t *p;
+	ASSERT(wlif);
+	ASSERT(wl);
+
+	WL_TRACE(("%s\n", __FUNCTION__));
 
 	if (wlif->dev_registed) {
+		ASSERT(wlif->dev);
 		unregister_netdev(wlif->dev);
+		wlif->dev_registed = FALSE;
 	}
 
 #if defined(USE_CFG80211)
-	if (wlif->if_type != WL_IFTYPE_MON)
-		wl_cfg80211_detach(wlif->dev);
+	wl_cfg80211_detach(wlif->dev);
 #endif
 
 	p = wl->if_list;
@@ -1253,24 +1304,78 @@ wl_free_if(wl_info_t *wl, wl_if_t *wlif)
 
 	if (wlif->dev) {
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24))
+		MFREE(wl->osh, wlif->dev->priv, sizeof(priv_link_t));
 		MFREE(wl->osh, wlif->dev, sizeof(struct net_device));
 #else
 		free_netdev(wlif->dev);
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29))
-		return;
-#endif	
-#endif	
+#endif 
 	}
+
 	MFREE(wl->osh, wlif, sizeof(wl_if_t));
+}
+
+static struct net_device *
+wl_alloc_linux_if(wl_if_t *wlif)
+{
+	wl_info_t *wl = wlif->wl;
+	struct net_device *dev;
+	priv_link_t *priv_link;
+
+	WL_TRACE(("%s\n", __FUNCTION__));
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24))
+	dev = MALLOC(wl->osh, sizeof(struct net_device));
+	if (!dev) {
+		WL_ERROR(("wl%d: %s: malloc of net_device failed\n",
+			(wl->pub)?wl->pub->unit:wlif->subunit, __FUNCTION__));
+		return NULL;
+	}
+	bzero(dev, sizeof(struct net_device));
+	ether_setup(dev);
+
+	strncpy(dev->name, intf_name, IFNAMSIZ-1);
+	dev->name[IFNAMSIZ-1] = '\0';
+
+	priv_link = MALLOC(wl->osh, sizeof(priv_link_t));
+	if (!priv_link) {
+		WL_ERROR(("wl%d: %s: malloc of priv_link failed\n",
+			(wl->pub)?wl->pub->unit:wlif->subunit, __FUNCTION__));
+		MFREE(wl->osh, dev, sizeof(struct net_device));
+		return NULL;
+	}
+	dev->priv = priv_link;
+#else
+
+	dev = alloc_netdev(sizeof(priv_link_t), intf_name, ether_setup);
+	if (!dev) {
+		WL_ERROR(("wl%d: %s: alloc_netdev failed\n",
+			(wl->pub)?wl->pub->unit:wlif->subunit, __FUNCTION__));
+		return NULL;
+	}
+	priv_link = netdev_priv(dev);
+	if (!priv_link) {
+		WL_ERROR(("wl%d: %s: cannot get netdev_priv\n",
+			(wl->pub)?wl->pub->unit:wlif->subunit, __FUNCTION__));
+		return NULL;
+	}
+#endif 
+
+	priv_link->wlif = wlif;
+	wlif->dev = dev;
+
+	if (wlif->if_type != WL_IFTYPE_MON && wl->dev && netif_queue_stopped(wl->dev))
+		netif_stop_queue(dev);
+
+	return dev;
 }
 
 char *
 wl_ifname(wl_info_t *wl, wl_if_t *wlif)
 {
-	if (wlif)
-		return wlif->dev->name;
-	else
+	if (wlif) {
+		return wlif->name;
+	} else {
 		return wl->dev->name;
+	}
 }
 
 void
@@ -1286,9 +1391,15 @@ wl_init(wl_info_t *wl)
 uint
 wl_reset(wl_info_t *wl)
 {
+	uint32 macintmask;
+
 	WL_TRACE(("wl%d: wl_reset\n", wl->pub->unit));
 
+	macintmask = wl_intrsoff(wl);
+
 	wlc_reset(wl->wlc);
+
+	wl_intrsrestore(wl, macintmask);
 
 	wl->resched = 0;
 
@@ -1337,6 +1448,7 @@ int
 wl_up(wl_info_t *wl)
 {
 	int error = 0;
+	wl_if_t *wlif;
 
 	WL_TRACE(("wl%d: wl_up\n", wl->pub->unit));
 
@@ -1346,16 +1458,10 @@ wl_up(wl_info_t *wl)
 	error = wlc_up(wl->wlc);
 
 	if (!error) {
-		wl_if_t *wlif;
-
 		for (wlif = wl->if_list; wlif != NULL; wlif = wlif->next) {
 			wl_txflowcontrol(wl, wlif, OFF, ALLPRIO);
 		}
 	}
-
-#ifdef NAPI_POLL
-	set_bit(__LINK_STATE_START, &wl->dev->state);
-#endif 
 
 	return (error);
 }
@@ -1370,8 +1476,10 @@ wl_down(wl_info_t *wl)
 	WL_TRACE(("wl%d: wl_down\n", wl->pub->unit));
 
 	for (wlif = wl->if_list; wlif != NULL; wlif = wlif->next) {
-		netif_down(wlif->dev);
-		netif_stop_queue(wlif->dev);
+		if (wlif->dev) {
+			netif_down(wlif->dev);
+			netif_stop_queue(wlif->dev);
+		}
 	}
 
 	if (wl->monitor_dev) {
@@ -1381,21 +1489,14 @@ wl_down(wl_info_t *wl)
 		}
 	}
 
-	ret_val = wlc_down(wl->wlc);
+	if (wl->wlc)
+		ret_val = wlc_down(wl->wlc);
+
 	callbacks = atomic_read(&wl->callbacks) - ret_val;
+	BCM_REFERENCE(callbacks);
 
 	WL_UNLOCK(wl);
 
-#ifdef WL_ALL_PASSIVE
-	if (WL_ALL_PASSIVE_ENAB(wl)) {
-		int i = 0;
-		for (i = 0; (atomic_read(&wl->callbacks) > callbacks) && i < 10000; i++) {
-			schedule();
-			flush_scheduled_work();
-		}
-	}
-	else
-#endif 
 	{
 
 		SPINWAIT((atomic_read(&wl->callbacks) > callbacks), 100 * 1000);
@@ -1429,9 +1530,15 @@ static void
 wl_get_driver_info(struct net_device *dev, struct ethtool_drvinfo *info)
 {
 	wl_info_t *wl = WL_INFO(dev);
+
+#if WIRELESS_EXT >= 19 || LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
+	if (!wl || !wl->pub || !wl->wlc || !wl->dev)
+		return;
+#endif
 	bzero(info, sizeof(struct ethtool_drvinfo));
-	sprintf(info->driver, "wl%d", wl->pub->unit);
-	strcpy(info->version, EPI_VERSION_STR);
+	snprintf(info->driver, sizeof(info->driver), "wl%d", wl->pub->unit);
+	strncpy(info->version, EPI_VERSION_STR, sizeof(info->version));
+	info->version[(sizeof(info->version))-1] = '\0';
 }
 
 static int
@@ -1447,6 +1554,7 @@ wl_ethtool(wl_info_t *wl, void *uaddr, wl_if_t *wlif)
 		return -ENODEV;
 
 	WL_TRACE(("wl%d: %s\n", wl->pub->unit, __FUNCTION__));
+
 	if (copy_from_user(&cmd, uaddr, sizeof(uint32)))
 		return (-EFAULT);
 
@@ -1526,18 +1634,12 @@ wl_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
 
 	wl = WL_INFO(dev);
 	wlif = WL_DEV_IF(dev);
-	if (wlif == NULL || wl == NULL)
+	if (wlif == NULL || wl == NULL || wl->dev == NULL)
 		return -ENETDOWN;
 
 	bcmerror = 0;
 
 	WL_TRACE(("wl%d: wl_ioctl: cmd 0x%x\n", wl->pub->unit, cmd));
-
-#ifdef CONFIG_PREEMPT
-	if (preempt_count())
-		WL_ERROR(("wl%d: wl_ioctl: cmd = 0x%x, preempt_count=%d\n",
-			wl->pub->unit, cmd, preempt_count()));
-#endif
 
 #ifdef USE_IW
 
@@ -1606,6 +1708,7 @@ wl_get_stats(struct net_device *dev)
 	struct net_device_stats *stats_watchdog = NULL;
 	struct net_device_stats *stats = NULL;
 	wl_info_t *wl;
+	wl_if_t *wlif;
 
 	if (!dev)
 		return NULL;
@@ -1613,17 +1716,16 @@ wl_get_stats(struct net_device *dev)
 	if ((wl = WL_INFO(dev)) == NULL)
 		return NULL;
 
-	if (!(wl->pub))
+	if ((wlif = WL_DEV_IF(dev)) == NULL)
+		return NULL;
+
+	if ((stats = &wlif->stats) == NULL)
 		return NULL;
 
 	WL_TRACE(("wl%d: wl_get_stats\n", wl->pub->unit));
 
-	if ((stats = &wl->stats) == NULL)
-		return NULL;
-
-	ASSERT(wl->stats_id < 2);
-	stats_watchdog = &wl->stats_watchdog[wl->stats_id];
-
+	ASSERT(wlif->stats_id < 2);
+	stats_watchdog = &wlif->stats_watchdog[wlif->stats_id];
 	memcpy(stats, stats_watchdog, sizeof(struct net_device_stats));
 	return (stats);
 }
@@ -1642,16 +1744,21 @@ wl_get_wireless_stats(struct net_device *dev)
 	if (!dev)
 		return NULL;
 
-	wl = WL_INFO(dev);
-	wlif = WL_DEV_IF(dev);
+	if ((wl = WL_INFO(dev)) == NULL)
+		return NULL;
+
+	if ((wlif = WL_DEV_IF(dev)) == NULL)
+		return NULL;
+
+	if ((wstats = &wlif->wstats) == NULL)
+		return NULL;
 
 	WL_TRACE(("wl%d: wl_get_wireless_stats\n", wl->pub->unit));
 
-	wstats = &wl->wstats;
-	ASSERT(wl->stats_id < 2);
-	wstats_watchdog = &wl->wstats_watchdog[wl->stats_id];
+	ASSERT(wlif->stats_id < 2);
+	wstats_watchdog = &wlif->wstats_watchdog[wlif->stats_id];
 
-	phy_noise = wl->phy_noise;
+	phy_noise = wlif->phy_noise;
 #if WIRELESS_EXT > 11
 	wstats->discard.nwid = 0;
 	wstats->discard.code = wstats_watchdog->discard.code;
@@ -1731,17 +1838,6 @@ wl_set_multicast_list(struct net_device *dev)
 {
 	if (!WL_ALL_PASSIVE_ENAB((wl_info_t *)WL_INFO(dev)))
 		_wl_set_multicast_list(dev);
-#ifdef WL_ALL_PASSIVE
-	else {
-		wl_info_t *wl = WL_INFO(dev);
-		wl->multicast_task.context = dev;
-
-		if (schedule_work(&wl->multicast_task.work)) {
-
-			atomic_inc(&wl->callbacks);
-		}
-	}
-#endif 
 }
 
 static void
@@ -1750,8 +1846,7 @@ _wl_set_multicast_list(struct net_device *dev)
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 34)
 	struct dev_mc_list *mclist;
 #else
-	struct netdev_hw_addr   *ha;
-	int num;
+	struct netdev_hw_addr *ha;
 #endif
 	wl_info_t *wl;
 	int i, buflen;
@@ -1784,24 +1879,25 @@ _wl_set_multicast_list(struct net_device *dev)
 			bcopy(mclist->dmi_addr, &maclist->ea[i++], ETHER_ADDR_LEN);
 		}
 #else
-		num = min_t(int, netdev_mc_count(dev), MAXMULTILIST);
 		netdev_for_each_mc_addr(ha, dev) {
-			if (i >= num) {
+			if (i >= MAXMULTILIST) {
 				allmulti = TRUE;
 				i = 0;
 				break;
 			}
-			bcopy(ha->addr,  &maclist->ea[i++], ETHER_ADDR_LEN);
+			bcopy(ha->addr, &maclist->ea[i++], ETHER_ADDR_LEN);
 		}
 #endif 
 		maclist->count = i;
 
 		WL_LOCK(wl);
 
-		wlc_iovar_setint(wl->wlc, "allmulti", allmulti);
+		wlc_iovar_op(wl->wlc, "allmulti", NULL, 0, &allmulti, sizeof(allmulti), IOV_SET,
+			(WL_DEV_IF(dev))->wlcif);
 		wlc_set(wl->wlc, WLC_SET_PROMISC, (dev->flags & IFF_PROMISC));
 
-		wlc_iovar_op(wl->wlc, "mcast_list", NULL, 0, maclist, buflen, IOV_SET, NULL);
+		wlc_iovar_op(wl->wlc, "mcast_list", NULL, 0, maclist, buflen, IOV_SET,
+			(WL_DEV_IF(dev))->wlcif);
 
 		WL_UNLOCK(wl);
 		MFREE(wl->pub->osh, maclist, buflen);
@@ -1830,24 +1926,7 @@ wl_isr(int irq, void *dev_id, struct pt_regs *ptregs)
 		if (wantdpc) {
 
 			ASSERT(wl->resched == FALSE);
-#ifdef NAPI_POLL
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-			napi_schedule(&wl->napi);
-#else
-			netif_rx_schedule(wl->dev);
-#endif 
-#else 
-#ifdef WL_ALL_PASSIVE
-			if (WL_ALL_PASSIVE_ENAB(wl)) {
-				if (schedule_work(&wl->wl_dpc_task.work))
-					atomic_inc(&wl->callbacks);
-				else
-					ASSERT(0);
-			} else
-#endif 
 			tasklet_schedule(&wl->tasklet);
-#endif 
 		}
 	}
 
@@ -1856,37 +1935,18 @@ wl_isr(int irq, void *dev_id, struct pt_regs *ptregs)
 	return IRQ_RETVAL(ours);
 }
 
-#ifdef NAPI_POLL
-static int BCMFASTPATH
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-wl_poll(struct napi_struct *napi, int budget)
-#else
-wl_poll(struct net_device *dev, int *budget)
-#endif 
-#else 
 static void BCMFASTPATH
 wl_dpc(ulong data)
-#endif 
 {
 	wl_info_t *wl;
-
-#ifdef NAPI_POLL
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-	wl = (wl_info_t *)container_of(napi, wl_info_t, napi);
-	wl->pub->tunables->rxbnd = min(RXBND, budget);
-#else
-	wl = WL_INFO(dev);
-	wl->pub->tunables->rxbnd = min(RXBND, *budget);
-	ASSERT(wl->pub->tunables->rxbnd <= dev->quota);
-#endif 	
-#else 
 
 	wl = (wl_info_t *)data;
 
 	WL_LOCK(wl);
-#endif 
 
 	if (wl->pub->up) {
+		wlc_dpc_info_t dpci = {0};
+
 		if (wl->resched) {
 			unsigned long flags = 0;
 			INT_LOCK(wl, flags);
@@ -1894,116 +1954,45 @@ wl_dpc(ulong data)
 			INT_UNLOCK(wl, flags);
 		}
 
-		wl->resched = wlc_dpc(wl->wlc, TRUE);
+		wl->resched = wlc_dpc(wl->wlc, TRUE, &dpci);
+
+		wl->processed = dpci.processed;
 	}
 
 	if (!wl->pub->up) {
-#ifdef WL_ALL_PASSIVE
-
-		if ((WL_ALL_PASSIVE_ENAB(wl))) {
-			atomic_dec(&wl->callbacks);
-		}
-#endif 
 		goto done;
 	}
 
-#ifndef NAPI_POLL
-#ifdef WL_ALL_PASSIVE
-	if (wl->resched) {
-		if (!(WL_ALL_PASSIVE_ENAB(wl)))
-			tasklet_schedule(&wl->tasklet);
-		else
-			if (!schedule_work(&wl->wl_dpc_task.work))
-
-				ASSERT(0);
-	}
-	else {
-
-		if (WL_ALL_PASSIVE_ENAB(wl))
-			atomic_dec(&wl->callbacks);
-		wl_intrson(wl);
-	}
-#else 
 	if (wl->resched)
 		tasklet_schedule(&wl->tasklet);
 	else {
 
 		wl_intrson(wl);
 	}
-#endif 
 
 done:
 	WL_UNLOCK(wl);
 	return;
-#else 
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30)
-	WL_TRACE(("wl%d: wl_poll: rxbnd %d budget %d processed %d\n",
-		wl->pub->unit, wl->pub->rxbnd, budget, wl->pub->processed));
-
-	ASSERT(wl->pub->processed <= wl->pub->tunables->rxbnd);
-
-	if (!wl->resched) {
-		napi_complete(&wl->napi);
-
-		wl_intrson(wl);
-	}
-	return wl->pub->processed;
-done:
-	return 0;
-
-#else 
-	WL_TRACE(("wl%d: wl_poll: rxbnd %d quota %d budget %d processed %d\n",
-	          wl->pub->unit, wl->pub->rxbnd, dev->quota,
-	          *budget, wl->pub->processed));
-
-	ASSERT(wl->pub->processed <= wl->pub->tunables->rxbnd);
-
-	*budget -= wl->pub->processed;
-	dev->quota -= wl->pub->processed;
-
-	if (wl->resched)
-
-		return 1;
-
-	netif_rx_complete(dev);
-
-	wl_intrson(wl);
-done:
-	return 0;
-#endif 
-#endif 
-}
-
-#if defined(WL_ALL_PASSIVE)
-static void
-wl_dpc_rxwork(struct wl_task *task)
-{
-	wl_info_t *wl = (wl_info_t *)task->context;
-	WL_TRACE(("wl%d: %s\n", wl->pub->unit, __FUNCTION__));
-
-	wl_dpc((unsigned long)wl);
-	return;
-}
-#endif 
-
-static inline int32
-wl_ctf_forward(wl_info_t *wl, struct sk_buff *skb)
-{
-
-	return (BCME_ERROR);
 }
 
 void BCMFASTPATH
 wl_sendup(wl_info_t *wl, wl_if_t *wlif, void *p, int numpkt)
 {
 	struct sk_buff *skb;
+	bool brcm_specialpkt;
 
 	WL_TRACE(("wl%d: wl_sendup: %d bytes\n", wl->pub->unit, PKTLEN(wl->osh, p)));
 
+	brcm_specialpkt =
+		(ntoh16_ua(PKTDATA(wl->pub->osh, p) + ETHER_TYPE_OFFSET) == ETHER_TYPE_BRCM);
+
+	if (!brcm_specialpkt) {
+
+	}
+
 	if (wlif) {
 
-		if (!netif_device_present(wlif->dev)) {
+		if (!wlif->dev || !netif_device_present(wlif->dev)) {
 			WL_ERROR(("wl%d: wl_sendup: interface not ready\n", wl->pub->unit));
 			PKTFREE(wl->osh, p, FALSE);
 			return;
@@ -2015,10 +2004,12 @@ wl_sendup(wl_info_t *wl, wl_if_t *wlif, void *p, int numpkt)
 
 		skb = PKTTONATIVE(wl->osh, p);
 		skb->dev = wl->dev;
+
 	}
 
 	skb->protocol = eth_type_trans(skb, skb->dev);
-	if (!ISALIGNED((uintptr)skb->data, 4)) {
+
+	if (!brcm_specialpkt && !ISALIGNED(skb->data, 4)) {
 		WL_ERROR(("Unaligned assert. skb %p. skb->data %p.\n", skb, skb->data));
 		if (wlif) {
 			WL_ERROR(("wl_sendup: dev name is %s (wlif) \n", wlif->dev->name));
@@ -2027,17 +2018,20 @@ wl_sendup(wl_info_t *wl, wl_if_t *wlif, void *p, int numpkt)
 		}
 		WL_ERROR(("wl_sendup: dev name is %s (wl) \n", wl->dev->name));
 		WL_ERROR(("wl_sendup: hard header len %d (wl) \n", wl->dev->hard_header_len));
-		ASSERT(ISALIGNED((uintptr)skb->data, 4));
+		ASSERT(ISALIGNED(skb->data, 4));
 	}
 
 	WL_APSTA_RX(("wl%d: wl_sendup(): pkt %p summed %d on interface %p (%s)\n",
 		wl->pub->unit, p, skb->ip_summed, wlif, skb->dev->name));
 
-#ifdef NAPI_POLL
-	netif_receive_skb(skb);
-#else 
 	netif_rx(skb);
-#endif 
+
+}
+
+int
+wl_osl_pcie_rc(struct wl_info *wl, uint op, int param)
+{
+	return 0;
 }
 
 void
@@ -2057,8 +2051,8 @@ wl_dump(wl_info_t *wl, struct bcmstrbuf *b)
 	wl_dump_ver(wl, b);
 
 	bcm_bprintf(b, "name %s dev %p tbusy %d callbacks %d malloced %d\n",
-	       wl->dev->name, wl->dev, (uint)netif_queue_stopped(wl->dev),
-	       atomic_read(&wl->callbacks), MALLOCED(wl->osh));
+		wl->dev->name, wl->dev, (uint)netif_queue_stopped(wl->dev),
+		atomic_read(&wl->callbacks), MALLOCED(wl->osh));
 
 	p = wl->if_list;
 	if (p)
@@ -2074,9 +2068,12 @@ wl_dump(wl_info_t *wl, struct bcmstrbuf *b)
 	if (i)
 		bcm_bprintf(b, "\n");
 
+#ifdef BCMDBG_CTRACE
+	PKT_CTRACE_DUMP(wl->osh, b);
+#endif
 	return 0;
 }
-#endif	
+#endif 
 
 static void
 wl_link_up(wl_info_t *wl, char *ifname)
@@ -2100,7 +2097,6 @@ wl_event(wl_info_t *wl, char *ifname, wlc_event_t *e)
 #if defined(USE_CFG80211)
 	wl_cfg80211_event(wl->dev, &(e->event), e->data);
 #endif
-
 	switch (e->event.event_type) {
 	case WLC_E_LINK:
 	case WLC_E_NDIS_LINK:
@@ -2135,7 +2131,19 @@ wl_event_sync(wl_info_t *wl, char *ifname, wlc_event_t *e)
 {
 }
 
-#ifndef WL_THREAD
+static void BCMFASTPATH
+wl_sched_tx_tasklet(void *t)
+{
+	wl_info_t *wl = (wl_info_t *)t;
+	tasklet_schedule(&wl->tx_tasklet);
+}
+
+#ifdef CONFIG_SMP
+#define WL_CONFIG_SMP()	TRUE
+#else
+#define WL_CONFIG_SMP()	FALSE
+#endif 
+
 static int BCMFASTPATH
 wl_start(struct sk_buff *skb, struct net_device *dev)
 {
@@ -2148,48 +2156,59 @@ wl_start(struct sk_buff *skb, struct net_device *dev)
 	wlif = WL_DEV_IF(dev);
 	wl = WL_INFO(dev);
 
-	if (!WL_ALL_PASSIVE_ENAB(wl))
-		return wl_start_int(wl, wlif, skb);
-#ifdef WL_ALL_PASSIVE
-	else {
+	if (WL_ALL_PASSIVE_ENAB(wl) || (WL_RTR() && WL_CONFIG_SMP())) {
 		skb->prev = NULL;
 
 		TXQ_LOCK(wl);
+
+		if ((wl_txq_thresh > 0) && (wl->txq_cnt >= wl_txq_thresh)) {
+			PKTFRMNATIVE(wl->osh, skb);
+			PKTCFREE(wl->osh, skb, TRUE);
+			TXQ_UNLOCK(wl);
+			return 0;
+		}
+
 		if (wl->txq_head == NULL)
 			wl->txq_head = skb;
-		else {
+		else
 			wl->txq_tail->prev = skb;
-		}
 		wl->txq_tail = skb;
+		wl->txq_cnt++;
 
-		if (wl->txq_dispatched == FALSE) {
-			wl->txq_dispatched = TRUE;
+		if (!wl->txq_dispatched) {
+			int32 err = 0;
 
-			if (schedule_work(&wl->txq_task.work)) {
+			if (!WL_ALL_PASSIVE_ENAB(wl))
+				wl_sched_tx_tasklet(wl);
+
+			if (!err) {
 				atomic_inc(&wl->callbacks);
-			} else {
-				WL_ERROR(("wl%d: wl_start/schedule_work failed\n", wl->pub->unit));
-				wl->txq_dispatched = FALSE;
-			}
+				wl->txq_dispatched = TRUE;
+			} else
+				WL_ERROR(("wl%d: wl_start/schedule_work failed\n",
+				          wl->pub->unit));
 		}
 
 		TXQ_UNLOCK(wl);
-	}
-#endif 
+	} else
+		return wl_start_int(wl, wlif, skb);
 
 	return (0);
 }
-#endif 
 
-#ifdef WL_ALL_PASSIVE
-static void
-wl_start_txqwork(struct wl_task *task)
+static void BCMFASTPATH
+wl_start_txqwork(wl_task_t *task)
 {
 	wl_info_t *wl = (wl_info_t *)task->context;
 	struct sk_buff *skb;
-	uint count = 0;
 
-	WL_TRACE(("wl%d: wl_start_txqwork\n", wl->pub->unit));
+	WL_TRACE(("wl%d: %s txq_cnt %d\n", wl->pub->unit, __FUNCTION__, wl->txq_cnt));
+
+#ifdef BCMDBG
+	if (wl->txq_cnt >= 500)
+		WL_ERROR(("wl%d: WARNING dispatching over 500 packets in txqwork(%d)\n",
+			wl->pub->unit, wl->txq_cnt));
+#endif
 
 	TXQ_LOCK(wl);
 	while (wl->txq_head) {
@@ -2198,28 +2217,27 @@ wl_start_txqwork(struct wl_task *task)
 		skb->prev = NULL;
 		if (wl->txq_head == NULL)
 			wl->txq_tail = NULL;
+		wl->txq_cnt--;
 		TXQ_UNLOCK(wl);
 
 		wl_start_int(wl, WL_DEV_IF(skb->dev), skb);
 
-		if (++count >= 10)
-			break;
-
 		TXQ_LOCK(wl);
 	}
 
-	if (count >= 10) {
-		if (!schedule_work(&wl->txq_task.work)) {
-			WL_ERROR(("wl%d: wl_start/schedule_work failed\n", wl->pub->unit));
-			atomic_dec(&wl->callbacks);
-		}
-	} else {
-		wl->txq_dispatched = FALSE;
-		TXQ_UNLOCK(wl);
-		atomic_dec(&wl->callbacks);
-	}
+	wl->txq_dispatched = FALSE;
+	atomic_dec(&wl->callbacks);
+	TXQ_UNLOCK(wl);
 
 	return;
+}
+
+static void BCMFASTPATH
+wl_tx_tasklet(ulong data)
+{
+	wl_task_t task;
+	task.context = (void *)data;
+	wl_start_txqwork(&task);
 }
 
 static void
@@ -2235,39 +2253,13 @@ wl_txq_free(wl_info_t *wl)
 	while (wl->txq_head) {
 		skb = wl->txq_head;
 		wl->txq_head = skb->prev;
-		PKTFREE(wl->osh, skb, TRUE);
+		wl->txq_cnt--;
+		PKTFRMNATIVE(wl->osh, skb);
+		PKTCFREE(wl->osh, skb, TRUE);
 	}
 
 	wl->txq_tail = NULL;
 }
-#endif 
-
-#ifdef WL_ALL_PASSIVE
-static void
-wl_set_multicast_list_workitem(struct work_struct *work)
-{
-	wl_task_t *task = (wl_task_t *)work;
-	struct net_device *dev = (struct net_device*)task->context;
-	wl_info_t *wl;
-
-	wl = WL_INFO(dev);
-
-	atomic_dec(&wl->callbacks);
-
-	_wl_set_multicast_list(dev);
-}
-
-static void
-wl_timer_task(wl_task_t *task)
-{
-	wl_timer_t *t = (wl_timer_t *)task->context;
-
-	_wl_timer(t);
-	MFREE(t->wl->osh, task, sizeof(wl_task_t));
-
-	atomic_dec(&t->wl->callbacks);
-}
-#endif 
 
 static void
 wl_timer(ulong data)
@@ -2276,10 +2268,6 @@ wl_timer(ulong data)
 
 	if (!WL_ALL_PASSIVE_ENAB(t->wl))
 		_wl_timer(t);
-#ifdef WL_ALL_PASSIVE
-	else
-		wl_schedule_task(t->wl, wl_timer_task, t);
-#endif 	
 }
 
 static void
@@ -2312,7 +2300,7 @@ _wl_timer(wl_timer_t *t)
 }
 
 wl_timer_t *
-wl_init_timer(wl_info_t *wl, void (*fn)(void *arg), void *arg, const char *name)
+wl_init_timer(wl_info_t *wl, void (*fn)(void *arg), void *arg, const char *tname)
 {
 	wl_timer_t *t;
 
@@ -2320,7 +2308,7 @@ wl_init_timer(wl_info_t *wl, void (*fn)(void *arg), void *arg, const char *name)
 
 	if (t == NULL) {
 		WL_ERROR(("wl%d: wl_init_timer: out of memory, malloced %d bytes\n",
-		          wl->unit, MALLOCED(wl->osh)));
+			wl->unit, MALLOCED(wl->osh)));
 		return 0;
 	}
 
@@ -2336,8 +2324,8 @@ wl_init_timer(wl_info_t *wl, void (*fn)(void *arg), void *arg, const char *name)
 	wl->timers = t;
 
 #ifdef BCMDBG
-	if ((t->name = MALLOC(wl->osh, strlen(name) + 1)))
-		strcpy(t->name, name);
+	if ((t->name = MALLOC(wl->osh, strlen(tname) + 1)))
+		strcpy(t->name, tname);
 #endif
 
 	return t;
@@ -2433,7 +2421,7 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 	if (!wl->monitor_dev)
 		return;
 
-	if (wl->monitor_type == ARPHRD_IEEE80211_PRISM) {
+	if (wl->monitor_type == 1) {
 		p80211msg_t *phdr;
 
 		len = sizeof(p80211msg_t) + oskb->len - D11_PHY_HDR_LEN;
@@ -2502,18 +2490,19 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 		pdata = skb->data + sizeof(p80211msg_t);
 		bcopy(oskb->data + D11_PHY_HDR_LEN, pdata, oskb->len - D11_PHY_HDR_LEN);
 
-	} else if (wl->monitor_type == ARPHRD_IEEE80211_RADIOTAP) {
+	}
+	else if (wl->monitor_type == 2) {
 		int channel_frequency;
 		uint16 channel_flags;
 		uint8 flags;
 		uint16 rtap_len;
-		struct dot11_header * mac_header;
+		struct dot11_header *mac_header;
 		uint16 fc;
 
-		if (rxsts->datarate != 0)
-			rtap_len = sizeof(struct wl_radiotap_legacy);
+		if (rxsts->phytype != WL_RXS_PHY_N)
+			rtap_len = sizeof(wl_radiotap_legacy_t);
 		else
-			rtap_len = sizeof(struct wl_radiotap_ht);
+			rtap_len = sizeof(wl_radiotap_ht_brcm_2_t);
 
 		len = rtap_len + (oskb->len - D11_PHY_HDR_LEN);
 		if ((skb = dev_alloc_skb(len)) == NULL)
@@ -2522,34 +2511,34 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 		skb_put(skb, len);
 
 		if (CHSPEC_IS2G(rxsts->chanspec)) {
-			channel_flags = IEEE80211_CHAN_2GHZ;
-			channel_frequency = wf_channel2mhz(CHSPEC_CHANNEL(rxsts->chanspec),
+			channel_flags = IEEE80211_CHAN_2GHZ | IEEE80211_CHAN_DYN;
+			channel_frequency = wf_channel2mhz(wf_chspec_ctlchan(rxsts->chanspec),
 			                                   WF_CHAN_FACTOR_2_4_G);
 		} else {
-			channel_flags = IEEE80211_CHAN_5GHZ;
-			channel_frequency = wf_channel2mhz(CHSPEC_CHANNEL(rxsts->chanspec),
+			channel_flags = IEEE80211_CHAN_5GHZ | IEEE80211_CHAN_OFDM;
+			channel_frequency = wf_channel2mhz(wf_chspec_ctlchan(rxsts->chanspec),
 			                                   WF_CHAN_FACTOR_5_G);
 		}
 
 		mac_header = (struct dot11_header *)(oskb->data + D11_PHY_HDR_LEN);
-		fc = ntoh16(mac_header->fc);
+		fc = ltoh16(mac_header->fc);
 
 		flags = IEEE80211_RADIOTAP_F_FCS;
 
 		if (rxsts->preamble == WL_RXS_PREAMBLE_SHORT)
 			flags |= IEEE80211_RADIOTAP_F_SHORTPRE;
 
-		if (fc & (FC_WEP >> FC_WEP_SHIFT))
+		if (fc & FC_WEP)
 			flags |= IEEE80211_RADIOTAP_F_WEP;
 
-		if (fc & (FC_MOREFRAG >> FC_MOREFRAG_SHIFT))
+		if (fc & FC_MOREFRAG)
 			flags |= IEEE80211_RADIOTAP_F_FRAG;
 
 		if (rxsts->pkterror & WL_RXS_CRC_ERROR)
 			flags |= IEEE80211_RADIOTAP_F_BADFCS;
 
-		if (rxsts->datarate != 0) {
-			struct wl_radiotap_legacy *rtl = (struct wl_radiotap_legacy*)skb->data;
+		if (rxsts->phytype != WL_RXS_PHY_N) {
+			wl_radiotap_legacy_t *rtl = (wl_radiotap_legacy_t *)skb->data;
 
 			rtl->ieee_radiotap.it_version = 0;
 			rtl->ieee_radiotap.it_pad = 0;
@@ -2557,6 +2546,7 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 			rtl->ieee_radiotap.it_present = HTOL32(WL_RADIOTAP_PRESENT_LEGACY);
 
 			rtl->tsft_l = htol32(rxsts->mactime);
+			rtl->tsft_h = 0;
 			rtl->flags = flags;
 			rtl->rate = rxsts->datarate;
 			rtl->channel_freq = HTOL16(channel_frequency);
@@ -2564,17 +2554,25 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 			rtl->signal = (int8)rxsts->signal;
 			rtl->noise = (int8)rxsts->noise;
 			rtl->antenna = rxsts->antenna;
+
+			memcpy(rtl->vend_oui, brcm_oui, sizeof(brcm_oui));
+			rtl->vend_skip_len = WL_RADIOTAP_LEGACY_SKIP_LEN;
+			rtl->vend_sns = 0;
+
+			memset(&rtl->nonht_vht, 0, sizeof(rtl->nonht_vht));
+			rtl->nonht_vht.len = WL_RADIOTAP_NONHT_VHT_LEN;
 		} else {
-			struct wl_radiotap_ht *rtht = (struct wl_radiotap_ht*)skb->data;
+			wl_radiotap_ht_brcm_2_t *rtht = (wl_radiotap_ht_brcm_2_t *)skb->data;
 
 			rtht->ieee_radiotap.it_version = 0;
 			rtht->ieee_radiotap.it_pad = 0;
 			rtht->ieee_radiotap.it_len = HTOL16(rtap_len);
-			rtht->ieee_radiotap.it_present = HTOL32(WL_RADIOTAP_PRESENT_HT);
-			rtht->it_present_ext = HTOL32(WL_RADIOTAP_BRCM_MCS);
-
+			rtht->ieee_radiotap.it_present = HTOL32(WL_RADIOTAP_PRESENT_HT_BRCM2);
+			rtht->it_present_ext = HTOL32(WL_RADIOTAP_BRCM2_HT_MCS);
 			rtht->pad1 = 0;
+
 			rtht->tsft_l = htol32(rxsts->mactime);
+			rtht->tsft_h = 0;
 			rtht->flags = flags;
 			rtht->pad2 = 0;
 			rtht->channel_freq = HTOL16(channel_frequency);
@@ -2582,22 +2580,21 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 			rtht->signal = (int8)rxsts->signal;
 			rtht->noise = (int8)rxsts->noise;
 			rtht->antenna = rxsts->antenna;
-
 			rtht->pad3 = 0;
-			memcpy(rtht->vend_oui, "\x00\x10\x18", 3);
-			rtht->vend_sns = WL_RADIOTAP_BRCM_SNS;
-			rtht->vend_skip_len = 2;
 
+			memcpy(rtht->vend_oui, brcm_oui, sizeof(brcm_oui));
+			rtht->vend_sns = WL_RADIOTAP_BRCM2_HT_SNS;
+			rtht->vend_skip_len = WL_RADIOTAP_HT_BRCM2_SKIP_LEN;
 			rtht->mcs = rxsts->mcs;
 			rtht->htflags = 0;
 			if (rxsts->htflags & WL_RXS_HTF_40)
-				   rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_40;
+				rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_40;
 			if (rxsts->htflags & WL_RXS_HTF_SGI)
-				   rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_SGI;
+				rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_SGI;
 			if (rxsts->preamble & WL_RXS_PREAMBLE_HT_GF)
-				   rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_GF;
+				rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_GF;
 			if (rxsts->htflags & WL_RXS_HTF_LDPC)
-				   rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_LDPC;
+				rtht->htflags |= IEEE80211_RADIOTAP_HTMOD_LDPC;
 			rtht->htflags |=
 				(rxsts->htflags & WL_RXS_HTF_STBC_MASK) <<
 				IEEE80211_RADIOTAP_HTMOD_STBC_SHIFT;
@@ -2606,6 +2603,282 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 		pdata = skb->data + rtap_len;
 		bcopy(oskb->data + D11_PHY_HDR_LEN, pdata, oskb->len - D11_PHY_HDR_LEN);
 	}
+	else if (wl->monitor_type == 3) {
+		int channel_frequency;
+		uint16 channel_flags;
+		uint8 flags;
+		uint16 rtap_len;
+		struct dot11_header * mac_header;
+		uint16 fc;
+
+		if (rxsts->phytype == WL_RXS_PHY_N) {
+			if (rxsts->encoding == WL_RXS_ENCODING_HT)
+				rtap_len = sizeof(wl_radiotap_ht_t);
+#ifdef WL11AC
+			else if (rxsts->encoding == WL_RXS_ENCODING_VHT)
+				rtap_len = sizeof(wl_radiotap_vht_t);
+#endif 
+			else
+				rtap_len = sizeof(wl_radiotap_legacy_t);
+		} else {
+			rtap_len = sizeof(wl_radiotap_legacy_t);
+		}
+
+		len = rtap_len + (oskb->len - D11_PHY_HDR_LEN);
+
+		if (oskb->next) {
+			struct sk_buff *amsdu_p = oskb->next;
+			uint amsdu_len = 0;
+			while (amsdu_p) {
+				amsdu_len += amsdu_p->len;
+				amsdu_p = amsdu_p->next;
+			}
+			len += amsdu_len;
+		}
+
+		if ((skb = dev_alloc_skb(len)) == NULL)
+			return;
+
+		skb_put(skb, len);
+
+		if (CHSPEC_IS2G(rxsts->chanspec)) {
+			channel_flags = IEEE80211_CHAN_2GHZ | IEEE80211_CHAN_DYN;
+			channel_frequency = wf_channel2mhz(wf_chspec_ctlchan(rxsts->chanspec),
+			                                   WF_CHAN_FACTOR_2_4_G);
+		} else {
+			channel_flags = IEEE80211_CHAN_5GHZ | IEEE80211_CHAN_OFDM;
+			channel_frequency = wf_channel2mhz(wf_chspec_ctlchan(rxsts->chanspec),
+			                                   WF_CHAN_FACTOR_5_G);
+		}
+
+		mac_header = (struct dot11_header *)(oskb->data + D11_PHY_HDR_LEN);
+		fc = ltoh16(mac_header->fc);
+
+		flags = IEEE80211_RADIOTAP_F_FCS;
+
+		if (rxsts->preamble == WL_RXS_PREAMBLE_SHORT)
+			flags |= IEEE80211_RADIOTAP_F_SHORTPRE;
+
+		if (fc & FC_WEP)
+			flags |= IEEE80211_RADIOTAP_F_WEP;
+
+		if (fc & FC_MOREFRAG)
+			flags |= IEEE80211_RADIOTAP_F_FRAG;
+
+		if (rxsts->pkterror & WL_RXS_CRC_ERROR)
+			flags |= IEEE80211_RADIOTAP_F_BADFCS;
+
+#ifdef WL11AC
+		if ((rxsts->phytype != WL_RXS_PHY_N) ||
+			((rxsts->encoding != WL_RXS_ENCODING_HT) &&
+			(rxsts->encoding != WL_RXS_ENCODING_VHT))) {
+#else
+		if (rxsts->phytype != WL_RXS_PHY_N || rxsts->encoding != WL_RXS_ENCODING_HT) {
+#endif 
+			wl_radiotap_legacy_t *rtl = (wl_radiotap_legacy_t *)skb->data;
+
+			rtl->ieee_radiotap.it_version = 0;
+			rtl->ieee_radiotap.it_pad = 0;
+			rtl->ieee_radiotap.it_len = HTOL16(rtap_len);
+			rtl->ieee_radiotap.it_present = HTOL32(WL_RADIOTAP_PRESENT_LEGACY);
+
+			rtl->it_present_ext = HTOL32(WL_RADIOTAP_LEGACY_VHT);
+			rtl->tsft_l = htol32(rxsts->mactime);
+			rtl->tsft_h = 0;
+			rtl->flags = flags;
+			rtl->rate = rxsts->datarate;
+			rtl->channel_freq = HTOL16(channel_frequency);
+			rtl->channel_flags = HTOL16(channel_flags);
+			rtl->signal = (int8)rxsts->signal;
+			rtl->noise = (int8)rxsts->noise;
+			rtl->antenna = rxsts->antenna;
+
+			memcpy(rtl->vend_oui, brcm_oui, sizeof(brcm_oui));
+			rtl->vend_skip_len = WL_RADIOTAP_LEGACY_SKIP_LEN;
+			rtl->vend_sns = 0;
+
+			memset(&rtl->nonht_vht, 0, sizeof(rtl->nonht_vht));
+			rtl->nonht_vht.len = WL_RADIOTAP_NONHT_VHT_LEN;
+#ifdef WL11AC
+			if (((fc & FC_KIND_MASK) == FC_RTS) ||
+				((fc & FC_KIND_MASK) == FC_CTS)) {
+				rtl->nonht_vht.flags |= WL_RADIOTAP_F_NONHT_VHT_BW;
+				rtl->nonht_vht.bw = rxsts->bw_nonht;
+				rtl->vend_sns = WL_RADIOTAP_LEGACY_SNS;
+
+			}
+			if ((fc & FC_KIND_MASK) == FC_RTS) {
+				if (rxsts->vhtflags & WL_RXS_VHTF_DYN_BW_NONHT)
+					rtl->nonht_vht.flags
+						|= WL_RADIOTAP_F_NONHT_VHT_DYN_BW;
+			}
+#endif 
+		}
+#ifdef WL11AC
+		else if (rxsts->encoding == WL_RXS_ENCODING_VHT) {
+			wl_radiotap_vht_t *rtvht = (wl_radiotap_vht_t *)skb->data;
+
+			rtvht->ieee_radiotap.it_version = 0;
+			rtvht->ieee_radiotap.it_pad = 0;
+			rtvht->ieee_radiotap.it_len = HTOL16(rtap_len);
+			rtvht->ieee_radiotap.it_present =
+				HTOL32(WL_RADIOTAP_PRESENT_VHT);
+
+			rtvht->tsft_l = htol32(rxsts->mactime);
+			rtvht->tsft_h = 0;
+			rtvht->flags = flags;
+			rtvht->pad1 = 0;
+			rtvht->channel_freq = HTOL16(channel_frequency);
+			rtvht->channel_flags = HTOL16(channel_flags);
+			rtvht->signal = (int8)rxsts->signal;
+			rtvht->noise = (int8)rxsts->noise;
+			rtvht->antenna = rxsts->antenna;
+
+			rtvht->vht_known = (IEEE80211_RADIOTAP_VHT_HAVE_STBC |
+				IEEE80211_RADIOTAP_VHT_HAVE_TXOP_PS |
+				IEEE80211_RADIOTAP_VHT_HAVE_GI |
+				IEEE80211_RADIOTAP_VHT_HAVE_SGI_NSYM_DA |
+				IEEE80211_RADIOTAP_VHT_HAVE_LDPC_EXTRA |
+				IEEE80211_RADIOTAP_VHT_HAVE_BF |
+				IEEE80211_RADIOTAP_VHT_HAVE_BW |
+				IEEE80211_RADIOTAP_VHT_HAVE_GID |
+				IEEE80211_RADIOTAP_VHT_HAVE_PAID);
+
+			STATIC_ASSERT(WL_RXS_VHTF_STBC ==
+				IEEE80211_RADIOTAP_VHT_STBC);
+			STATIC_ASSERT(WL_RXS_VHTF_TXOP_PS ==
+				IEEE80211_RADIOTAP_VHT_TXOP_PS);
+			STATIC_ASSERT(WL_RXS_VHTF_SGI ==
+				IEEE80211_RADIOTAP_VHT_SGI);
+			STATIC_ASSERT(WL_RXS_VHTF_SGI_NSYM_DA ==
+				IEEE80211_RADIOTAP_VHT_SGI_NSYM_DA);
+			STATIC_ASSERT(WL_RXS_VHTF_LDPC_EXTRA ==
+				IEEE80211_RADIOTAP_VHT_LDPC_EXTRA);
+			STATIC_ASSERT(WL_RXS_VHTF_BF ==
+				IEEE80211_RADIOTAP_VHT_BF);
+
+			rtvht->vht_flags = HTOL16(rxsts->vhtflags);
+
+			STATIC_ASSERT(WL_RXS_VHT_BW_20 ==
+				IEEE80211_RADIOTAP_VHT_BW_20);
+			STATIC_ASSERT(WL_RXS_VHT_BW_40 ==
+				IEEE80211_RADIOTAP_VHT_BW_40);
+			STATIC_ASSERT(WL_RXS_VHT_BW_20L ==
+				IEEE80211_RADIOTAP_VHT_BW_20L);
+			STATIC_ASSERT(WL_RXS_VHT_BW_20U ==
+				IEEE80211_RADIOTAP_VHT_BW_20U);
+			STATIC_ASSERT(WL_RXS_VHT_BW_80 ==
+				IEEE80211_RADIOTAP_VHT_BW_80);
+			STATIC_ASSERT(WL_RXS_VHT_BW_40L ==
+				IEEE80211_RADIOTAP_VHT_BW_40L);
+			STATIC_ASSERT(WL_RXS_VHT_BW_40U ==
+				IEEE80211_RADIOTAP_VHT_BW_40U);
+			STATIC_ASSERT(WL_RXS_VHT_BW_20LL ==
+				IEEE80211_RADIOTAP_VHT_BW_20LL);
+			STATIC_ASSERT(WL_RXS_VHT_BW_20LU ==
+				IEEE80211_RADIOTAP_VHT_BW_20LU);
+			STATIC_ASSERT(WL_RXS_VHT_BW_20UL ==
+				IEEE80211_RADIOTAP_VHT_BW_20UL);
+			STATIC_ASSERT(WL_RXS_VHT_BW_20UU ==
+				IEEE80211_RADIOTAP_VHT_BW_20UU);
+
+			rtvht->vht_bw = rxsts->bw;
+
+			rtvht->vht_mcs_nss[0] = (rxsts->mcs << 4) |
+				(rxsts->nss & IEEE80211_RADIOTAP_VHT_NSS);
+			rtvht->vht_mcs_nss[1] = 0;
+			rtvht->vht_mcs_nss[2] = 0;
+			rtvht->vht_mcs_nss[3] = 0;
+
+			STATIC_ASSERT(WL_RXS_VHTF_CODING_LDCP ==
+				IEEE80211_RADIOTAP_VHT_CODING_LDPC);
+
+			rtvht->vht_coding = rxsts->coding;
+			rtvht->vht_group_id = rxsts->gid;
+			rtvht->vht_partial_aid = HTOL16(rxsts->aid);
+
+			rtvht->ampdu_flags = 0;
+			rtvht->ampdu_delim_crc = 0;
+
+			rtvht->ampdu_ref_num = rxsts->ampdu_counter;
+
+			if (!(rxsts->nfrmtype & WL_RXS_NFRM_AMPDU_FIRST) &&
+				!(rxsts->nfrmtype & WL_RXS_NFRM_AMPDU_SUB))
+				rtvht->ampdu_flags |= IEEE80211_RADIOTAP_AMPDU_IS_LAST;
+
+			if (rxsts->nfrmtype & WL_RXS_NFRM_AMPDU_NONE)
+				rtvht->ampdu_flags |= IEEE80211_RADIOTAP_AMPDU_MPDU_ONLY;
+		}
+#endif 
+		else if (rxsts->encoding == WL_RXS_ENCODING_HT) {
+			wl_radiotap_ht_t *rtht =
+				(wl_radiotap_ht_t *)skb->data;
+
+			rtht->ieee_radiotap.it_version = 0;
+			rtht->ieee_radiotap.it_pad = 0;
+			rtht->ieee_radiotap.it_len = HTOL16(rtap_len);
+			rtht->ieee_radiotap.it_present
+				= HTOL32(WL_RADIOTAP_PRESENT_HT);
+			rtht->pad1 = 0;
+
+			rtht->tsft_l = htol32(rxsts->mactime);
+			rtht->tsft_h = 0;
+			rtht->flags = flags;
+			rtht->channel_freq = HTOL16(channel_frequency);
+			rtht->channel_flags = HTOL16(channel_flags);
+			rtht->signal = (int8)rxsts->signal;
+			rtht->noise = (int8)rxsts->noise;
+			rtht->antenna = rxsts->antenna;
+
+			rtht->mcs_known = (IEEE80211_RADIOTAP_MCS_HAVE_BW |
+				IEEE80211_RADIOTAP_MCS_HAVE_MCS |
+				IEEE80211_RADIOTAP_MCS_HAVE_GI |
+				IEEE80211_RADIOTAP_MCS_HAVE_FEC |
+				IEEE80211_RADIOTAP_MCS_HAVE_FMT);
+
+			rtht->mcs_flags = 0;
+			switch (rxsts->htflags & WL_RXS_HTF_BW_MASK) {
+				case WL_RXS_HTF_20L:
+					rtht->mcs_flags |= IEEE80211_RADIOTAP_MCS_BW_20L;
+					break;
+				case WL_RXS_HTF_20U:
+					rtht->mcs_flags |= IEEE80211_RADIOTAP_MCS_BW_20U;
+					break;
+				case WL_RXS_HTF_40:
+					rtht->mcs_flags |= IEEE80211_RADIOTAP_MCS_BW_40;
+					break;
+				default:
+					rtht->mcs_flags |= IEEE80211_RADIOTAP_MCS_BW_20;
+			}
+
+			if (rxsts->htflags & WL_RXS_HTF_SGI) {
+				rtht->mcs_flags |= IEEE80211_RADIOTAP_MCS_SGI;
+			}
+			if (rxsts->preamble & WL_RXS_PREAMBLE_HT_GF) {
+				rtht->mcs_flags |= IEEE80211_RADIOTAP_MCS_FMT_GF;
+			}
+			if (rxsts->htflags & WL_RXS_HTF_LDPC) {
+				rtht->mcs_flags |= IEEE80211_RADIOTAP_MCS_FEC_LDPC;
+			}
+			rtht->mcs_index = rxsts->mcs;
+		}
+
+		pdata = skb->data + rtap_len;
+		bcopy(oskb->data + D11_PHY_HDR_LEN, pdata, oskb->len - D11_PHY_HDR_LEN);
+
+		if (oskb->next) {
+			struct sk_buff *amsdu_p = oskb->next;
+			amsdu_p = oskb->next;
+			pdata += (oskb->len - D11_PHY_HDR_LEN);
+			while (amsdu_p) {
+				bcopy(amsdu_p->data, pdata, amsdu_p->len);
+				pdata += amsdu_p->len;
+				amsdu_p = amsdu_p->next;
+			}
+		}
+	}
+
+	if (skb == NULL) return;
 
 	skb->dev = wl->monitor_dev;
 	skb->dev->last_rx = jiffies;
@@ -2618,11 +2891,7 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 	skb->pkt_type = PACKET_OTHERHOST;
 	skb->protocol = htons(ETH_P_80211_RAW);
 
-#ifdef NAPI_POLL
-	netif_receive_skb(skb);
-#else 
 	netif_rx(skb);
-#endif 
 }
 
 static int
@@ -2636,36 +2905,31 @@ wl_monitor_start(struct sk_buff *skb, struct net_device *dev)
 }
 
 static void
-wl_add_monitor(wl_task_t *task)
+_wl_add_monitor_if(wl_task_t *task)
 {
-	wl_info_t *wl = (wl_info_t *) task->context;
 	struct net_device *dev;
-	wl_if_t *wlif;
+	wl_if_t *wlif = (wl_if_t *) task->context;
+	wl_info_t *wl = wlif->wl;
 
+	WL_TRACE(("wl%d: %s\n", wl->pub->unit, __FUNCTION__));
 	ASSERT(wl);
-	WL_LOCK(wl);
-	WL_TRACE(("wl%d: wl_add_monitor\n", wl->pub->unit));
+	ASSERT(!wl->monitor_dev);
 
-	if (wl->monitor_dev)
-		goto done;
-
-	wlif = wl_alloc_if(wl, WL_IFTYPE_MON, wl->pub->unit, NULL);
-	if (!wlif) {
-		WL_ERROR(("wl%d: wl_add_monitor: alloc wlif failed\n", wl->pub->unit));
+	if ((dev = wl_alloc_linux_if(wlif)) == NULL) {
+		WL_ERROR(("wl%d: %s: wl_alloc_linux_if failed\n", wl->pub->unit, __FUNCTION__));
 		goto done;
 	}
 
-	dev = wlif->dev;
+	ASSERT(strlen(wlif->name) > 0);
+	strncpy(wlif->dev->name, wlif->name, strlen(wlif->name));
+
 	wl->monitor_dev = dev;
+	if (wl->monitor_type == 1)
+		dev->type = ARPHRD_IEEE80211_PRISM;
+	else
+		dev->type = ARPHRD_IEEE80211_RADIOTAP;
 
 	bcopy(wl->dev->dev_addr, dev->dev_addr, ETHER_ADDR_LEN);
-	dev->flags = wl->dev->flags;
-	dev->type = wl->monitor_type;
-	if (wl->monitor_type == ARPHRD_IEEE80211_PRISM) {
-		sprintf(dev->name, "prism%d", wl->pub->unit);
-	} else {
-		sprintf(dev->name, "radiotap%d", wl->pub->unit);
-	}
 
 #if defined(WL_USE_NETDEV_OPS)
 	dev->netdev_ops = &wl_netdev_monitor_ops;
@@ -2675,64 +2939,75 @@ wl_add_monitor(wl_task_t *task)
 	dev->get_stats = wl_get_stats;
 #endif 
 
-	WL_UNLOCK(wl);
 	if (register_netdev(dev)) {
-		WL_ERROR(("wl%d: wl_add_monitor, register_netdev failed for \"%s\"\n",
-			wl->pub->unit, wl->monitor_dev->name));
+		WL_ERROR(("wl%d: %s, register_netdev failed for %s\n",
+			wl->pub->unit, __FUNCTION__, wl->monitor_dev->name));
 		wl->monitor_dev = NULL;
-		wl_free_if(wl, wlif);
-	} else
-		wlif->dev_registed = TRUE;
-	WL_LOCK(wl);
+		goto done;
+	}
+	wlif->dev_registed = TRUE;
+
 done:
 	MFREE(wl->osh, task, sizeof(wl_task_t));
 	atomic_dec(&wl->callbacks);
-	WL_UNLOCK(wl);
 }
 
 static void
-wl_del_monitor(wl_task_t *task)
+_wl_del_monitor(wl_task_t *task)
 {
 	wl_info_t *wl = (wl_info_t *) task->context;
-	struct net_device *dev;
-	wl_if_t *wlif = NULL;
 
 	ASSERT(wl);
-	WL_LOCK(wl);
-	WL_TRACE(("wl%d: wl_del_monitor\n", wl->pub->unit));
-	dev = wl->monitor_dev;
-	if (!dev)
-		goto done;
-	wlif = WL_DEV_IF(dev);
-	ASSERT(wlif);
+	ASSERT(wl->monitor_dev);
+
+	WL_TRACE(("wl%d: _wl_del_monitor\n", wl->pub->unit));
+
+	wl_free_if(wl, WL_DEV_IF(wl->monitor_dev));
 	wl->monitor_dev = NULL;
-	WL_UNLOCK(wl);
-	wl_free_if(wl, wlif);
-	WL_LOCK(wl);
-done:
+
 	MFREE(wl->osh, task, sizeof(wl_task_t));
-	WL_UNLOCK(wl);
 	atomic_dec(&wl->callbacks);
 }
 
 void
 wl_set_monitor(wl_info_t *wl, int val)
 {
+	const char *devname;
+	wl_if_t *wlif;
+
 	WL_TRACE(("wl%d: wl_set_monitor: val %d\n", wl->pub->unit, val));
+	if ((val && wl->monitor_dev) || (!val && !wl->monitor_dev)) {
+		WL_ERROR(("%s: Mismatched params, return\n", __FUNCTION__));
+		return;
+	}
 
-	if (val && !wl->monitor_dev) {
-		if (val == 1)
-			wl->monitor_type = ARPHRD_IEEE80211_PRISM;
-		else if (val == 2)
-			wl->monitor_type = ARPHRD_IEEE80211_RADIOTAP;
-		else {
-			WL_ERROR(("monitor type %d not supported\n", val));
-			ASSERT(0);
-		}
+	if (!val) {
+		(void) wl_schedule_task(wl, _wl_del_monitor, wl);
+		return;
+	}
 
-		(void) wl_schedule_task(wl, wl_add_monitor, wl);
-	} else if (!val && wl->monitor_dev) {
-		(void) wl_schedule_task(wl, wl_del_monitor, wl);
+	if (val >= 1 && val <= 3) {
+		wl->monitor_type = val;
+	} else {
+		WL_ERROR(("monitor type %d not supported\n", val));
+		ASSERT(0);
+	}
+
+	wlif = wl_alloc_if(wl, WL_IFTYPE_MON, wl->pub->unit, NULL);
+	if (!wlif) {
+		WL_ERROR(("wl%d: %s: alloc wlif failed\n", wl->pub->unit, __FUNCTION__));
+		return;
+	}
+
+	if (wl->monitor_type == 1)
+		devname = "prism";
+	else
+		devname = "radiotap";
+	sprintf(wlif->name, "%s%d", devname, wl->pub->unit);
+
+	if (wl_schedule_task(wl, _wl_add_monitor_if, wlif)) {
+		MFREE(wl->osh, wlif, sizeof(wl_if_t));
+		return;
 	}
 }
 
@@ -2742,7 +3017,7 @@ print_tainted()
 {
 	return "";
 }
-#endif	
+#endif 
 
 struct net_device *
 wl_netdev_get(wl_info_t *wl)
@@ -2873,7 +3148,7 @@ wl_tkip_keyset(wl_info_t *wl, wsec_key_t *key)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
 	bool group_key = FALSE;
-	uchar	rxseq[IW_ENCODE_SEQ_MAX_SIZE];
+	uchar rxseq[IW_ENCODE_SEQ_MAX_SIZE];
 
 	if (key->len != 0) {
 		WL_WSEC(("%s: Key Length is Not zero\n", __FUNCTION__));
@@ -2979,13 +3254,15 @@ wl_tkip_printstats(wl_info_t *wl, bool group_key)
 #endif 
 }
 
-#if defined(WL_CONFIG_RFKILL)   
+#if defined(WL_CONFIG_RFKILL)     
 
 static int
 wl_set_radio_block(void *data, bool blocked)
 {
 	wl_info_t *wl = data;
 	uint32 radioval;
+
+	WL_TRACE(("%s: kernel set blocked = %d\n", __FUNCTION__, blocked));
 
 	radioval = WL_RADIO_SW_DISABLE << 16 | blocked;
 
@@ -3002,7 +3279,7 @@ wl_set_radio_block(void *data, bool blocked)
 }
 
 static const struct rfkill_ops bcmwl_rfkill_ops = {
-	.set_block = wl_set_radio_block,
+	.set_block = wl_set_radio_block
 };
 
 static int
@@ -3053,6 +3330,7 @@ wl_uninit_rfkill(wl_info_t *wl)
 static void
 wl_report_radio_state(wl_info_t *wl)
 {
+	WL_TRACE(("%s: report radio state %d\n", __FUNCTION__, wl->last_phyind));
 
 	rfkill_set_hw_state(wl->wl_rfkill.rfkill, wl->last_phyind != 0);
 }
@@ -3065,55 +3343,66 @@ wl_linux_watchdog(void *ctx)
 	wl_info_t *wl = (wl_info_t *) ctx;
 	struct net_device_stats *stats = NULL;
 	uint id;
+	wl_if_t *wlif;
+	wlc_if_stats_t wlcif_stats;
 #ifdef USE_IW
 	struct iw_statistics *wstats = NULL;
 	int phy_noise;
 #endif
+	if (wl == NULL)
+		return -1;
 
-	if (wl->pub->up) {
-		ASSERT(wl->stats_id < 2);
+	if (wl->if_list) {
+		for (wlif = wl->if_list; wlif != NULL; wlif = wlif->next) {
+			memset(&wlcif_stats, 0, sizeof(wlc_if_stats_t));
+			wlc_wlcif_stats_get(wl->wlc, wlif->wlcif, &wlcif_stats);
 
-		id = 1 - wl->stats_id;
+			if (wl->pub->up) {
+				ASSERT(wlif->stats_id < 2);
 
-		stats = &wl->stats_watchdog[id];
+				id = 1 - wlif->stats_id;
+				stats = &wlif->stats_watchdog[id];
+				if (stats) {
+					stats->rx_packets = WLCNTVAL(wlcif_stats.rxframe);
+					stats->tx_packets = WLCNTVAL(wlcif_stats.txframe);
+					stats->rx_bytes = WLCNTVAL(wlcif_stats.rxbyte);
+					stats->tx_bytes = WLCNTVAL(wlcif_stats.txbyte);
+					stats->rx_errors = WLCNTVAL(wlcif_stats.rxerror);
+					stats->tx_errors = WLCNTVAL(wlcif_stats.txerror);
+					stats->collisions = 0;
+					stats->rx_length_errors = 0;
+
+					stats->rx_over_errors = WLCNTVAL(wl->pub->_cnt->rxoflo);
+					stats->rx_crc_errors = WLCNTVAL(wl->pub->_cnt->rxcrc);
+					stats->rx_frame_errors = 0;
+					stats->rx_fifo_errors = WLCNTVAL(wl->pub->_cnt->rxoflo);
+					stats->rx_missed_errors = 0;
+					stats->tx_fifo_errors = 0;
+				}
+
 #ifdef USE_IW
-		wstats = &wl->wstats_watchdog[id];
-#endif
-		stats->rx_packets = WLCNTVAL(wl->pub->_cnt->rxframe);
-		stats->tx_packets = WLCNTVAL(wl->pub->_cnt->txframe);
-		stats->rx_bytes = WLCNTVAL(wl->pub->_cnt->rxbyte);
-		stats->tx_bytes = WLCNTVAL(wl->pub->_cnt->txbyte);
-		stats->rx_errors = WLCNTVAL(wl->pub->_cnt->rxerror);
-		stats->tx_errors = WLCNTVAL(wl->pub->_cnt->txerror);
-		stats->collisions = 0;
-
-		stats->rx_length_errors = 0;
-		stats->rx_over_errors = WLCNTVAL(wl->pub->_cnt->rxoflo);
-		stats->rx_crc_errors = WLCNTVAL(wl->pub->_cnt->rxcrc);
-		stats->rx_frame_errors = 0;
-		stats->rx_fifo_errors = WLCNTVAL(wl->pub->_cnt->rxoflo);
-		stats->rx_missed_errors = 0;
-
-		stats->tx_fifo_errors = WLCNTVAL(wl->pub->_cnt->txuflo);
-#ifdef USE_IW
+				wstats = &wlif->wstats_watchdog[id];
+				if (wstats) {
 #if WIRELESS_EXT > 11
-		wstats->discard.nwid = 0;
-		wstats->discard.code = WLCNTVAL(wl->pub->_cnt->rxundec);
-		wstats->discard.fragment = WLCNTVAL(wl->pub->_cnt->rxfragerr);
-		wstats->discard.retries = WLCNTVAL(wl->pub->_cnt->txfail);
-		wstats->discard.misc = WLCNTVAL(wl->pub->_cnt->rxrunt) +
-			WLCNTVAL(wl->pub->_cnt->rxgiant);
-
-		wstats->miss.beacon = 0;
+					wstats->discard.nwid = 0;
+					wstats->discard.code = WLCNTVAL(wl->pub->_cnt->rxundec);
+					wstats->discard.fragment = WLCNTVAL(wlcif_stats.rxfragerr);
+					wstats->discard.retries = WLCNTVAL(wlcif_stats.txfail);
+					wstats->discard.misc = WLCNTVAL(wl->pub->_cnt->rxrunt) +
+						WLCNTVAL(wl->pub->_cnt->rxgiant);
+					wstats->miss.beacon = 0;
 #endif 
+				}
 #endif 
 
-		wl->stats_id = id;
-
+				wlif->stats_id = id;
+			}
 #ifdef USE_IW
-		if (!wlc_get(wl->wlc, WLC_GET_PHY_NOISE, &phy_noise))
-			wl->phy_noise = phy_noise;
+			if (!wlc_get(wl->wlc, WLC_GET_PHY_NOISE, &phy_noise))
+				wlif->phy_noise = phy_noise;
 #endif 
+
+		}
 	}
 
 	return 0;
@@ -3143,7 +3432,7 @@ wl_proc_read(char *buffer, char **start, off_t offset, int length, int *eof, voi
 }
 
 static int
-wl_proc_write(struct file *filp, const char __user *buff, unsigned long length, void *data)
+wl_proc_write(struct file *filp, const char *buff, unsigned long length, void *data)
 {
 	wl_info_t * wl = (wl_info_t *)data;
 	int from_user = 0;
@@ -3188,3 +3477,10 @@ wl_reg_proc_entry(wl_info_t *wl)
 	wl->proc_entry->data = wl;
 	return 0;
 }
+#ifdef WLOFFLD
+uint32 wl_pcie_bar1(struct wl_info *wl, uchar** addr)
+{
+	*addr = wl->bar1_addr;
+	return (wl->bar1_size);
+}
+#endif

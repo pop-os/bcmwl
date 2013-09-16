@@ -1,17 +1,23 @@
 /*
  * Broadcom Event  protocol definitions
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Dependencies: proto/bcmeth.h
  *
- * $Id: bcmevent.h,v 9.68.4.3.18.3 2011-01-19 09:32:15 Exp $
+ * $Id: bcmevent.h 382794 2013-02-04 17:34:08Z $
  *
  */
 
@@ -21,6 +27,8 @@
 #ifndef _TYPEDEFS_H_
 #include <typedefs.h>
 #endif
+
+#include <proto/bcmeth.h>
 
 #include <packed_section_start.h>
 
@@ -122,9 +130,7 @@ typedef BWL_PRE_PACKED_STRUCT struct bcm_event {
 #define WLC_E_MULTICAST_DECODE_ERROR	51 
 #define WLC_E_TRACE		52
 #define WLC_E_IF		54	
-#ifdef WLP2P
 #define WLC_E_P2P_DISC_LISTEN_COMPLETE	55	
-#endif
 #define WLC_E_RSSI		56	
 #define WLC_E_PFN_SCAN_COMPLETE	57	
 #define WLC_E_EXTLOG_MSG	58
@@ -140,17 +146,56 @@ typedef BWL_PRE_PACKED_STRUCT struct bcm_event {
 #define WLC_E_WAI_MSG 		68	
 #define WLC_E_ESCAN_RESULT 	69	
 #define WLC_E_ACTION_FRAME_OFF_CHAN_COMPLETE 	70	
-#ifdef WLP2P
 #define WLC_E_PROBRESP_MSG	71	
 #define WLC_E_P2P_PROBREQ_MSG	72	
-#endif
 #define WLC_E_DCS_REQUEST	73
+
 #define WLC_E_FIFO_CREDIT_MAP	74	
+
 #define WLC_E_ACTION_FRAME_RX	75	
-#define WLC_E_ASSOC_IND_NDIS		76	
-#define WLC_E_REASSOC_IND_NDIS	77	
-#define WLC_E_CSA_COMPLETE_IND		78	
-#define WLC_E_LAST		79	
+#define WLC_E_WAKE_EVENT	76	
+#define WLC_E_RM_COMPLETE	77	
+#define WLC_E_HTSFSYNC		78	
+#define WLC_E_OVERLAY_REQ	79	
+#define WLC_E_CSA_COMPLETE_IND		80	
+#define WLC_E_EXCESS_PM_WAKE_EVENT	81	
+#define WLC_E_PFN_SCAN_NONE		82	
+#define WLC_E_PFN_SCAN_ALLGONE		83	
+#define WLC_E_GTK_PLUMBED 		84
+#define WLC_E_ASSOC_IND_NDIS		85	
+#define WLC_E_REASSOC_IND_NDIS		86	
+#define WLC_E_ASSOC_REQ_IE 		87
+#define WLC_E_ASSOC_RESP_IE 		88
+#define WLC_E_ASSOC_RECREATED	89	
+#define WLC_E_ACTION_FRAME_RX_NDIS	90	
+#define WLC_E_AUTH_REQ		91	
+#define WLC_E_TDLS_PEER_EVENT 	92	
+#define WLC_E_SPEEDY_RECREATE_FAIL	93	
+#define WLC_E_NATIVE			94	
+#define WLC_E_PKTDELAY_IND		95	
+#define WLC_E_IBSS_COALESCE		96	
+#define WLC_E_SERVICE_FOUND		102	
+#define WLC_E_GAS_FRAGMENT_RX	103	
+#define WLC_E_GAS_COMPLETE		104	
+#define WLC_E_P2PO_ADD_DEVICE			105
+#define WLC_E_P2PO_DEL_DEVICE			106
+#define WLC_E_WNM_STA_SLEEP		107	
+#define WLC_E_NONE			108	
+#define WLC_E_PROXD			109	
+#define WLC_E_AWDL_AW_EXT_END		111	
+#define WLC_E_AWDL_AW_EXT_START		112 
+#define WLC_E_AWDL_AW_START		113 
+#define WLC_E_AWDL_RADIO_OFF		114 
+#define WLC_E_AWDL_PEER_STATE		115 
+#define WLC_E_AWDL_SYNC_STATE_CHANGED   116 
+#define WLC_E_AWDL_CHIP_RESET		117 
+#define WLC_E_AWDL_INTERLEAVED_SCAN_START		118
+#define WLC_E_AWDL_INTERLEAVED_SCAN_STOP		119
+#define WLC_E_AWDL_PEER_CACHE_CONTROL			120
+#define WLC_E_CSA_START_IND		121
+#define WLC_E_CSA_DONE_IND		122
+#define WLC_E_CSA_FAILURE_IND		123
+#define WLC_E_LAST			124	
 
 typedef struct {
 	uint event;
@@ -190,6 +235,8 @@ extern const int		bcmevent_names_size;
 #define WLC_E_REASON_TSPEC_REJECTED	7	
 #define WLC_E_REASON_BETTER_AP		8	
 
+#define WLC_E_REASON_REQUESTED_ROAM 11	
+
 #define WLC_E_PRUNE_ENCR_MISMATCH	1	
 #define WLC_E_PRUNE_BCAST_BSSID		2	
 #define WLC_E_PRUNE_MAC_DENY		3	
@@ -221,7 +268,16 @@ extern const int		bcmevent_names_size;
 #define WLC_E_SUP_GTK_DECRYPT_FAIL	12	
 #define WLC_E_SUP_SEND_FAIL		13	
 #define WLC_E_SUP_DEAUTH		14	
+#define WLC_E_SUP_WPA_PSK_TMO		15	
 
+#ifdef WLAWDL
+#define WLC_E_AWDL_SCAN_START		1	
+#define WLC_E_AWDL_SCAN_DONE		0	
+
+#define WLC_E_AWDL_RX_ACT_FRAME					1
+#define WLC_E_AWDL_RX_PRB_RESP					2
+
+#endif
 typedef BWL_PRE_PACKED_STRUCT struct wl_event_rx_frame_data {
 	uint16	version;
 	uint16	channel;	
@@ -235,7 +291,7 @@ typedef BWL_PRE_PACKED_STRUCT struct wl_event_rx_frame_data {
 typedef struct wl_event_data_if {
 	uint8 ifidx;		
 	uint8 opcode;		
-	uint8 reserved;
+	uint8 reserved;		
 	uint8 bssidx;		
 	uint8 role;		
 } wl_event_data_if_t;
@@ -243,6 +299,8 @@ typedef struct wl_event_data_if {
 #define WLC_E_IF_ADD		1	
 #define WLC_E_IF_DEL		2	
 #define WLC_E_IF_CHANGE		3	
+
+#define WLC_E_IF_FLAGS_BSSCFG_NOIF	0x1	
 
 #define WLC_E_IF_ROLE_STA		0	
 #define WLC_E_IF_ROLE_AP		1	
@@ -254,6 +312,39 @@ typedef struct wl_event_data_if {
 #define WLC_E_LINK_DISASSOC	2	
 #define WLC_E_LINK_ASSOC_REC	3	
 #define WLC_E_LINK_BSSCFG_DIS	4	
+
+#define WLC_E_OVL_DOWNLOAD		0	
+#define WLC_E_OVL_UPDATE_IND	1	
+
+#define WLC_E_TDLS_PEER_DISCOVERED		0	
+#define WLC_E_TDLS_PEER_CONNECTED		1
+#define WLC_E_TDLS_PEER_DISCONNECTED	2
+
+typedef BWL_PRE_PACKED_STRUCT struct wl_event_gas {
+	uint16	channel;		
+	uint8	dialog_token;	
+	uint8	fragment_id;	
+	uint16	status_code;	
+	uint16 	data_len;		
+	uint8	data[1];		
+} BWL_POST_PACKED_STRUCT wl_event_gas_t;
+
+typedef BWL_PRE_PACKED_STRUCT struct wl_sd_tlv {
+	uint16	length;			
+	uint8	protocol;		
+	uint8	transaction_id;		
+	uint8	status_code;		
+	uint8	data[1];		
+} BWL_POST_PACKED_STRUCT wl_sd_tlv_t;
+
+typedef BWL_PRE_PACKED_STRUCT struct wl_event_sd {
+	uint16	channel;		
+	uint8	count;			
+	wl_sd_tlv_t	tlv[1];		
+} BWL_POST_PACKED_STRUCT wl_event_sd_t;
+
+#define WLC_E_PROXD_FOUND	1	
+#define WLC_E_PROXD_GONE	2	
 
 #include <packed_section_end.h>
 
