@@ -1,23 +1,30 @@
 /*
  * Misc useful os-independent macros and functions.
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: bcmutils.h,v 13.239.2.2.8.1 2011-01-31 11:12:24 Exp $
+ * $Id: bcmutils.h 410746 2013-07-02 23:56:47Z $
  */
 
 #ifndef	_bcmutils_h_
 #define	_bcmutils_h_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define bcm_strcpy_s(dst, noOfElements, src)            strcpy((dst), (src))
+#define bcm_strncpy_s(dst, noOfElements, src, count)    strncpy((dst), (src), (count))
+#define bcm_strcat_s(dst, noOfElements, src)            strcat((dst), (src))
+#define bcm_sprintf_s    snprintf
 
 #define _BCM_U	0x01	
 #define _BCM_L	0x02	
@@ -56,11 +63,13 @@ struct bcmstrbuf {
 
 #define GPIO_PIN_NOTDEFINED 	0x20	
 
+#define SPINWAIT_POLL_PERIOD	10
+
 #define SPINWAIT(exp, us) { \
-	uint countdown = (us) + 9; \
-	while ((exp) && (countdown >= 10)) {\
-		OSL_DELAY(10); \
-		countdown -= 10; \
+	uint countdown = (us) + (SPINWAIT_POLL_PERIOD - 1); \
+	while ((exp) && (countdown >= SPINWAIT_POLL_PERIOD)) {\
+		OSL_DELAY(SPINWAIT_POLL_PERIOD); \
+		countdown -= SPINWAIT_POLL_PERIOD; \
 	} \
 }
 
@@ -78,20 +87,20 @@ typedef struct pktq_prec {
 	uint16 max;     
 } pktq_prec_t;
 
-struct pktq {
-	uint16 num_prec;        
-	uint16 hi_prec;         
-	uint16 max;             
+#define PKTQ_COMMON	\
+	uint16 num_prec;        			\
+	uint16 hi_prec;         	\
+	uint16 max;             					\
 	uint16 len;             
+
+struct pktq {
+	PKTQ_COMMON
 
 	struct pktq_prec q[PKTQ_MAX_PREC];
 };
 
 struct spktq {
-	uint16 num_prec;        
-	uint16 hi_prec;         
-	uint16 max;             
-	uint16 len;             
+	PKTQ_COMMON
 
 	struct pktq_prec q[1];
 };
@@ -100,7 +109,9 @@ struct spktq {
 
 typedef bool (*ifpkt_cb_t)(void*, int);
 
-#define PKTPOOL_MIN_LEN     32  
+#define POOL_ENAB(bus)		0
+#define SHARED_POOL		((struct pktpool *)NULL)
+
 #ifndef PKTPOOL_LEN_MAX
 #define PKTPOOL_LEN_MAX		40
 #endif 
@@ -113,36 +124,8 @@ typedef struct {
 	void *arg;
 } pktpool_cbinfo_t;
 
-#ifdef BCMDBG_POOL
-
-#define POOL_IDLE	0
-#define POOL_RXFILL	1
-#define POOL_RXDH	2
-#define POOL_RXD11	3
-#define POOL_TXDH	4
-#define POOL_TXD11	5
-#define POOL_AMPDU	6
-#define POOL_TXENQ	7
-
-typedef struct {
-	void *p;
-	uint32 cycles;
-	uint32 dur;
-} pktpool_dbg_t;
-
-typedef struct {
-	uint8 txdh;	
-	uint8 txd11;	
-	uint8 enq;	
-	uint8 rxdh;	
-	uint8 rxd11;	
-	uint8 rxfill;	
-	uint8 idle;	
-} pktpool_stats_t;
-#endif 
-
 typedef struct pktpool {
-	bool	inited;
+	bool inited;
 	uint16 r;
 	uint16 w;
 	uint16 len;
@@ -153,17 +136,19 @@ typedef struct pktpool {
 	uint8 cbtoggle;
 	uint8 cbcnt;
 	uint8 ecbcnt;
+	bool emptycb_disable;
+	pktpool_cbinfo_t *availcb_excl;
 	pktpool_cbinfo_t cbs[PKTPOOL_CB_MAX];
 	pktpool_cbinfo_t ecbs[PKTPOOL_CB_MAX];
 	void *q[PKTPOOL_LEN_MAX + 1];
 
-#ifdef BCMDBG_POOL
-	uint8 dbg_cbcnt;
-	pktpool_cbinfo_t dbg_cbs[PKTPOOL_CB_MAX];
-	uint16 dbg_qlen;
-	pktpool_dbg_t dbg_q[PKTPOOL_LEN_MAX + 1];
-#endif
 } pktpool_t;
+
+#if defined(BCM4329C0)
+extern pktpool_t *pktpool_shared_ptr;
+#else
+extern pktpool_t *pktpool_shared;
+#endif 
 
 extern int pktpool_init(osl_t *osh, pktpool_t *pktp, int *pktplen, int plen, bool istx);
 extern int pktpool_deinit(osl_t *osh, pktpool_t *pktp);
@@ -172,40 +157,39 @@ extern void* pktpool_get(pktpool_t *pktp);
 extern void pktpool_free(pktpool_t *pktp, void *p);
 extern int pktpool_add(pktpool_t *pktp, void *p);
 extern uint16 pktpool_avail(pktpool_t *pktp);
+extern int pktpool_avail_notify_normal(osl_t *osh, pktpool_t *pktp);
+extern int pktpool_avail_notify_exclusive(osl_t *osh, pktpool_t *pktp, pktpool_cb_t cb);
 extern int pktpool_avail_register(pktpool_t *pktp, pktpool_cb_t cb, void *arg);
 extern int pktpool_empty_register(pktpool_t *pktp, pktpool_cb_t cb, void *arg);
 extern int pktpool_setmaxlen(pktpool_t *pktp, uint16 maxlen);
+extern int pktpool_setmaxlen_strict(osl_t *osh, pktpool_t *pktp, uint16 maxlen);
+extern void pktpool_emptycb_disable(pktpool_t *pktp, bool disable);
+extern bool pktpool_emptycb_disabled(pktpool_t *pktp);
 
 #define POOLPTR(pp)			((pktpool_t *)(pp))
 #define pktpool_len(pp)			(POOLPTR(pp)->len - 1)
 #define pktpool_plen(pp)		(POOLPTR(pp)->plen)
 #define pktpool_maxlen(pp)		(POOLPTR(pp)->maxlen)
 
-#ifdef BCMDBG_POOL
-extern int pktpool_dbg_register(pktpool_t *pktp, pktpool_cb_t cb, void *arg);
-extern int pktpool_start_trigger(pktpool_t *pktp, void *p);
-extern int pktpool_dbg_dump(pktpool_t *pktp);
-extern int pktpool_dbg_notify(pktpool_t *pktp);
-extern int pktpool_stats_dump(pktpool_t *pktp, pktpool_stats_t *stats);
-#endif 
-
 struct ether_addr;
 
 extern int ether_isbcast(const void *ea);
 extern int ether_isnulladdr(const void *ea);
 
-#define pktq_psetmax(pq, prec, _max)    ((pq)->q[prec].max = (_max))
-#define pktq_plen(pq, prec)             ((pq)->q[prec].len)
-#define pktq_pavail(pq, prec)           ((pq)->q[prec].max - (pq)->q[prec].len)
-#define pktq_pfull(pq, prec)            ((pq)->q[prec].len >= (pq)->q[prec].max)
-#define pktq_pempty(pq, prec)           ((pq)->q[prec].len == 0)
+#define pktq_psetmax(pq, prec, _max)	((pq)->q[prec].max = (_max))
+#define pktq_pmax(pq, prec)		((pq)->q[prec].max)
+#define pktq_plen(pq, prec)		((pq)->q[prec].len)
+#define pktq_pavail(pq, prec)		((pq)->q[prec].max - (pq)->q[prec].len)
+#define pktq_pfull(pq, prec)		((pq)->q[prec].len >= (pq)->q[prec].max)
+#define pktq_pempty(pq, prec)		((pq)->q[prec].len == 0)
 
-#define pktq_ppeek(pq, prec)            ((pq)->q[prec].head)
-#define pktq_ppeek_tail(pq, prec)       ((pq)->q[prec].tail)
+#define pktq_ppeek(pq, prec)		((pq)->q[prec].head)
+#define pktq_ppeek_tail(pq, prec)	((pq)->q[prec].tail)
 
 extern void *pktq_penq(struct pktq *pq, int prec, void *p);
 extern void *pktq_penq_head(struct pktq *pq, int prec, void *p);
 extern void *pktq_pdeq(struct pktq *pq, int prec);
+extern void *pktq_pdeq_prev(struct pktq *pq, int prec, void *prev_p);
 extern void *pktq_pdeq_tail(struct pktq *pq, int prec);
 
 extern void pktq_pflush(osl_t *osh, struct pktq *pq, int prec, bool dir,
@@ -217,19 +201,20 @@ extern int pktq_mlen(struct pktq *pq, uint prec_bmp);
 extern void *pktq_mdeq(struct pktq *pq, uint prec_bmp, int *prec_out);
 extern void *pktq_mpeek(struct pktq *pq, uint prec_bmp, int *prec_out);
 
-#define pktq_len(pq)                    ((int)(pq)->len)
-#define pktq_max(pq)                    ((int)(pq)->max)
-#define pktq_avail(pq)                  ((int)((pq)->max - (pq)->len))
-#define pktq_full(pq)                   ((pq)->len >= (pq)->max)
-#define pktq_empty(pq)                  ((pq)->len == 0)
+#define pktq_len(pq)		((int)(pq)->len)
+#define pktq_max(pq)		((int)(pq)->max)
+#define pktq_avail(pq)		((int)((pq)->max - (pq)->len))
+#define pktq_full(pq)		((pq)->len >= (pq)->max)
+#define pktq_empty(pq)		((pq)->len == 0)
 
-#define pktenq(pq, p)		pktq_penq(((struct pktq *)pq), 0, (p))
-#define pktenq_head(pq, p)	pktq_penq_head(((struct pktq *)pq), 0, (p))
-#define pktdeq(pq)		pktq_pdeq(((struct pktq *)pq), 0)
-#define pktdeq_tail(pq)		pktq_pdeq_tail(((struct pktq *)pq), 0)
-#define pktqinit(pq, len) pktq_init(((struct pktq *)pq), 1, len)
+#define pktenq(pq, p)		pktq_penq(((struct pktq *)(void *)pq), 0, (p))
+#define pktenq_head(pq, p)	pktq_penq_head(((struct pktq *)(void *)pq), 0, (p))
+#define pktdeq(pq)		pktq_pdeq(((struct pktq *)(void *)pq), 0)
+#define pktdeq_tail(pq)		pktq_pdeq_tail(((struct pktq *)(void *)pq), 0)
+#define pktqinit(pq, len)	pktq_init(((struct pktq *)(void *)pq), 1, len)
 
 extern void pktq_init(struct pktq *pq, int num_prec, int max_len);
+extern void pktq_set_max_plen(struct pktq *pq, int prec, int max_len);
 
 extern void *pktq_deq(struct pktq *pq, int *prec_out);
 extern void *pktq_deq_tail(struct pktq *pq, int *prec_out);
@@ -242,16 +227,20 @@ extern uint pktfrombuf(osl_t *osh, void *p, uint offset, int len, uchar *buf);
 extern uint pkttotlen(osl_t *osh, void *p);
 extern void *pktlast(osl_t *osh, void *p);
 extern uint pktsegcnt(osl_t *osh, void *p);
+extern uint pktsegcnt_war(osl_t *osh, void *p);
+extern uint8 *pktdataoffset(osl_t *osh, void *p,  uint offset);
+extern void *pktoffset(osl_t *osh, void *p,  uint offset);
 
-extern uint pktsetprio(void *pkt, bool update_vtag);
 #define	PKTPRIO_VDSCP	0x100		
 #define	PKTPRIO_VLAN	0x200		
 #define	PKTPRIO_UPD	0x400		
 #define	PKTPRIO_DSCP	0x800		
 
-extern int BCMROMFN(bcm_atoi)(char *s);
-extern ulong BCMROMFN(bcm_strtoul)(char *cp, char **endp, uint base);
-extern char *BCMROMFN(bcmstrstr)(char *haystack, char *needle);
+extern uint pktsetprio(void *pkt, bool update_vtag);
+
+extern int BCMROMFN(bcm_atoi)(const char *s);
+extern ulong BCMROMFN(bcm_strtoul)(const char *cp, char **endp, uint base);
+extern char *BCMROMFN(bcmstrstr)(const char *haystack, const char *needle);
 extern char *BCMROMFN(bcmstrcat)(char *dest, const char *src);
 extern char *BCMROMFN(bcmstrncat)(char *dest, const char *src, uint size);
 extern ulong wchar2ascii(char *abuf, ushort *wbuf, ushort wbuflen, ulong abuflen);
@@ -260,16 +249,20 @@ int bcmstricmp(const char *s1, const char *s2);
 int bcmstrnicmp(const char* s1, const char* s2, int cnt);
 
 extern char *bcm_ether_ntoa(const struct ether_addr *ea, char *buf);
-extern int BCMROMFN(bcm_ether_atoe)(char *p, struct ether_addr *ea);
+extern int BCMROMFN(bcm_ether_atoe)(const char *p, struct ether_addr *ea);
 
 struct ipv4_addr;
 extern char *bcm_ip_ntoa(struct ipv4_addr *ia, char *buf);
+extern char *bcm_ipv6_ntoa(void *ipv6, char *buf);
 
 extern void bcm_mdelay(uint ms);
 
+#define NVRAM_RECLAIM_CHECK(name)
+
 extern char *getvar(char *vars, const char *name);
 extern int getintvar(char *vars, const char *name);
-extern int getintvararray(char *vars, const char *name, uint8 index);
+extern int getintvararray(char *vars, const char *name, int index);
+extern int getintvararraysize(char *vars, const char *name);
 extern uint getgpiopin(char *vars, char *pin_name, uint def_pin);
 #ifdef BCMDBG
 extern void prpkt(const char *msg, osl_t *osh, void *p0);
@@ -280,9 +273,11 @@ extern void prpkt(const char *msg, osl_t *osh, void *p0);
 #define	bcmdumplog(buf, size)	*buf = '\0'
 #define	bcmdumplogent(buf, idx)	-1
 
+#define TSF_TICKS_PER_MS	1024
 #define bcmtslog(tstamp, fmt, a1, a2)
 #define bcmprinttslogs()
 #define bcmprinttstamp(us)
+#define bcmdumptslog(buf, size)
 
 extern char *bcm_nvram_vars(uint *length);
 extern int bcm_nvram_cache(void *sih);
@@ -298,8 +293,8 @@ typedef struct bcm_iovar {
 #define IOV_GET 0 
 #define IOV_SET 1 
 
-#define IOV_GVAL(id)		((id)*2)
-#define IOV_SVAL(id)		(((id)*2)+IOV_SET)
+#define IOV_GVAL(id)		((id) * 2)
+#define IOV_SVAL(id)		((id) * 2 + IOV_SET)
 #define IOV_ISSET(actionid)	((actionid & IOV_SET) == IOV_SET)
 #define IOV_ID(actionid)	(actionid >> 1)
 
@@ -387,7 +382,8 @@ extern int bcm_format_ssid(char* buf, const uchar ssid[], uint ssid_len);
 #define BCME_NODEVICE			-40 	
 #define BCME_NMODE_DISABLED		-41 	
 #define BCME_NONRESIDENT		-42 
-#define BCME_LAST			BCME_NONRESIDENT
+#define BCME_SCANREJECT			-43 	
+#define BCME_LAST			BCME_SCANREJECT
 
 #define BCMERRSTRINGTABLE {		\
 	"OK",				\
@@ -433,43 +429,77 @@ extern int bcm_format_ssid(char* buf, const uchar ssid[], uint ssid_len);
 	"Device Not Present",		\
 	"NMODE Disabled",		\
 	"Nonresident overlay access", \
+	"Scan Rejected",		\
 }
 
 #ifndef ABS
-#define	ABS(a)			(((a) < 0)?-(a):(a))
+#define	ABS(a)			(((a) < 0) ? -(a) : (a))
 #endif 
 
 #ifndef MIN
-#define	MIN(a, b)		(((a) < (b))?(a):(b))
+#define	MIN(a, b)		(((a) < (b)) ? (a) : (b))
 #endif 
 
 #ifndef MAX
-#define	MAX(a, b)		(((a) > (b))?(a):(b))
+#define	MAX(a, b)		(((a) > (b)) ? (a) : (b))
 #endif 
 
-#define CEIL(x, y)		(((x) + ((y)-1)) / (y))
-#define	ROUNDUP(x, y)		((((x)+((y)-1))/(y))*(y))
-#define	ISALIGNED(a, x)		(((a) & ((x)-1)) == 0)
+#ifndef LIMIT_TO_RANGE
+#define LIMIT_TO_RANGE(x, min, max) \
+	((x) < (min) ? (min) : ((x) > (max) ? (max) : (x)))
+#endif 
+
+#ifndef LIMIT_TO_MAX
+#define LIMIT_TO_MAX(x, max) \
+	(((x) > (max) ? (max) : (x)))
+#endif 
+
+#ifndef LIMIT_TO_MIN
+#define LIMIT_TO_MIN(x, min) \
+	(((x) < (min) ? (min) : (x)))
+#endif 
+
+#define CEIL(x, y)		(((x) + ((y) - 1)) / (y))
+#define	ROUNDUP(x, y)		((((x) + ((y) - 1)) / (y)) * (y))
+#define	ISALIGNED(a, x)		(((uintptr)(a) & ((x) - 1)) == 0)
 #define ALIGN_ADDR(addr, boundary) (void *)(((uintptr)(addr) + (boundary) - 1) \
 	                                         & ~((boundary) - 1))
-#define	ISPOWEROF2(x)		((((x)-1)&(x)) == 0)
+#define ALIGN_SIZE(size, boundary) (((size) + (boundary) - 1) \
+	                                         & ~((boundary) - 1))
+#define	ISPOWEROF2(x)		((((x) - 1) & (x)) == 0)
 #define VALID_MASK(mask)	!((mask) & ((mask) + 1))
+
 #ifndef OFFSETOF
+#ifdef __ARMCC_VERSION
+
+#include <stddef.h>
+#define	OFFSETOF(type, member)	offsetof(type, member)
+#elif __GNUC__ >= 4
+
+#define OFFSETOF(type, member)  __builtin_offsetof(type, member)
+#else
 #define	OFFSETOF(type, member)	((uint)(uintptr)&((type *)0)->member)
 #endif 
+#endif 
+
 #ifndef ARRAYSIZE
-#define ARRAYSIZE(a)		(sizeof(a)/sizeof(a[0]))
+#define ARRAYSIZE(a)		(sizeof(a) / sizeof(a[0]))
 #endif
+
+extern void *_bcmutils_dummy_fn;
+#define REFERENCE_FUNCTION(f)	(_bcmutils_dummy_fn = (void *)(f))
 
 #ifndef setbit
 #ifndef NBBY		  
 #define	NBBY	8	
 #endif 
-#define	setbit(a, i)	(((uint8 *)a)[(i)/NBBY] |= 1<<((i)%NBBY))
-#define	clrbit(a, i)	(((uint8 *)a)[(i)/NBBY] &= ~(1<<((i)%NBBY)))
-#define	isset(a, i)	(((const uint8 *)a)[(i)/NBBY] & (1<<((i)%NBBY)))
-#define	isclr(a, i)	((((const uint8 *)a)[(i)/NBBY] & (1<<((i)%NBBY))) == 0)
+#define	setbit(a, i)	(((uint8 *)a)[(i) / NBBY] |= 1 << ((i) % NBBY))
+#define	clrbit(a, i)	(((uint8 *)a)[(i) / NBBY] &= ~(1 << ((i) % NBBY)))
+#define	isset(a, i)	(((const uint8 *)a)[(i) / NBBY] & (1 << ((i) % NBBY)))
+#define	isclr(a, i)	((((const uint8 *)a)[(i) / NBBY] & (1 << ((i) % NBBY))) == 0)
 #endif 
+
+#define	isbitset(a, i)	(((a) & (1 << (i))) != 0)
 
 #define	NBITS(type)	(sizeof(type) * 8)
 #define NBITVAL(nbits)	(1 << (nbits))
@@ -500,10 +530,30 @@ extern int bcm_format_ssid(char* buf, const uchar ssid[], uint ssid_len);
 #define CRC32_INIT_VALUE 0xffffffff	
 #define CRC32_GOOD_VALUE 0xdebb20e3	
 
+#define MACF				"%02x:%02x:%02x:%02x:%02x:%02x"
+#define ETHERP_TO_MACF(ea)	((struct ether_addr *) (ea))->octet[0], \
+							((struct ether_addr *) (ea))->octet[1], \
+							((struct ether_addr *) (ea))->octet[2], \
+							((struct ether_addr *) (ea))->octet[3], \
+							((struct ether_addr *) (ea))->octet[4], \
+							((struct ether_addr *) (ea))->octet[5]
+
+#define ETHER_TO_MACF(ea) 	(ea).octet[0], \
+							(ea).octet[1], \
+							(ea).octet[2], \
+							(ea).octet[3], \
+							(ea).octet[4], \
+							(ea).octet[5]
+
 typedef struct bcm_bit_desc {
 	uint32	bit;
 	const char* name;
 } bcm_bit_desc_t;
+
+typedef struct bcm_bit_desc_ex {
+	uint32 mask;
+	const bcm_bit_desc_t *bitfield;
+} bcm_bit_desc_ex_t;
 
 typedef struct bcm_tlv {
 	uint8	id;
@@ -540,11 +590,18 @@ extern uint8 BCMROMFN(hndcrc8)(uint8 *p, uint nbytes, uint8 crc);
 extern uint16 BCMROMFN(hndcrc16)(uint8 *p, uint nbytes, uint16 crc);
 extern uint32 BCMROMFN(hndcrc32)(uint8 *p, uint nbytes, uint32 crc);
 
-#if defined(BCMDBG) || defined(DHD_DEBUG) || defined(BCMDBG_ERR) || \
-	defined(BCMDBG_DUMP)
+#if defined(BCMDBG) || defined(BCMDBG_ERR) || defined(BCMDBG_DUMP)
+
+extern int bcm_format_field(const bcm_bit_desc_ex_t *bd, uint32 field, char* buf, int len);
+
 extern int bcm_format_flags(const bcm_bit_desc_t *bd, uint32 flags, char* buf, int len);
+#endif
+
+#if defined(BCMDBG) || defined(BCMDBG_ERR) || defined(BCMDBG_DUMP) || \
+	defined(WLMEDIA_PEAKRATE)
 extern int bcm_format_hex(char *str, const void *bytes, int len);
 #endif
+
 #ifdef BCMDBG
 extern void deadbeef(void *p, uint len);
 #endif
@@ -559,15 +616,13 @@ extern bcm_tlv_t *BCMROMFN(bcm_parse_tlvs)(void *buf, int buflen, uint key);
 extern bcm_tlv_t *BCMROMFN(bcm_parse_ordered_tlvs)(void *buf, int buflen, uint key);
 
 extern const char *bcmerrorstr(int bcmerror);
+extern bcm_tlv_t *BCMROMFN(bcm_parse_tlvs)(void *buf, int buflen, uint key);
 
 typedef uint32 mbool;
 #define mboolset(mb, bit)		((mb) |= (bit))		
 #define mboolclr(mb, bit)		((mb) &= ~(bit))	
 #define mboolisset(mb, bit)		(((mb) & (bit)) != 0)	
 #define	mboolmaskset(mb, mask, val)	((mb) = (((mb) & ~(mask)) | (val)))
-
-extern uint16 BCMROMFN(bcm_qdbm_to_mw)(uint8 qdbm);
-extern uint8 BCMROMFN(bcm_mw_to_qdbm)(uint16 mw);
 
 struct fielddesc {
 	const char *nameandfmt;
@@ -576,20 +631,27 @@ struct fielddesc {
 };
 
 extern void bcm_binit(struct bcmstrbuf *b, char *buf, uint size);
-extern int bcm_bprintf(struct bcmstrbuf *b, const char *fmt, ...);
+extern void bcm_bprhex(struct bcmstrbuf *b, const char *msg, bool newline, uint8 *buf, int len);
+
 extern void bcm_inc_bytes(uchar *num, int num_bytes, uint8 amount);
-extern int bcm_cmp_bytes(uchar *arg1, uchar *arg2, uint8 nbytes);
-extern void bcm_print_bytes(char *name, const uchar *cdata, int len);
+extern int bcm_cmp_bytes(const uchar *arg1, const uchar *arg2, uint8 nbytes);
+extern void bcm_print_bytes(const char *name, const uchar *cdata, int len);
 
 typedef  uint32 (*bcmutl_rdreg_rtn)(void *arg0, uint arg1, uint32 offset);
 extern uint bcmdumpfields(bcmutl_rdreg_rtn func_ptr, void *arg0, uint arg1, struct fielddesc *str,
                           char *buf, uint32 bufsize);
-
-extern uint bcm_mkiovar(char *name, char *data, uint datalen, char *buf, uint len);
 extern uint BCMROMFN(bcm_bitcount)(uint8 *bitmap, uint bytelength);
 
-#ifdef __cplusplus
-	}
-#endif
+extern int bcm_bprintf(struct bcmstrbuf *b, const char *fmt, ...);
+
+extern uint16 BCMROMFN(bcm_qdbm_to_mw)(uint8 qdbm);
+extern uint8 BCMROMFN(bcm_mw_to_qdbm)(uint16 mw);
+extern uint bcm_mkiovar(char *name, char *data, uint datalen, char *buf, uint len);
+
+unsigned int process_nvram_vars(char *varbuf, unsigned int len);
+
+extern void bcm_uint64_multiple_add(uint32* r_high, uint32* r_low, uint32 a, uint32 b, uint32 c);
+
+extern void bcm_uint64_divide(uint32* r, uint32 a_high, uint32 a_low, uint32 b);
 
 #endif	

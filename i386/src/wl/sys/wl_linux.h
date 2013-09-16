@@ -1,15 +1,21 @@
 /*
  * wl_linux.c exported functions and definitions
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_linux.h,v 1.35.2.5.12.1 2010-12-08 23:33:16 Exp $
+ * $Id: wl_linux.h 369548 2012-11-19 09:01:01Z $
  */
 
 #ifndef _wl_linux_h_
@@ -52,6 +58,16 @@ struct wl_if {
 	uint subunit;			
 	bool dev_registed;		
 	int  if_type;			
+	char name[IFNAMSIZ];		
+	struct net_device_stats stats;  
+	uint    stats_id;               
+	struct net_device_stats stats_watchdog[2]; 
+
+#ifdef USE_IW
+	struct iw_statistics wstats_watchdog[2];
+	struct iw_statistics wstats;
+	int             phy_noise;
+#endif 
 };
 
 struct rfkill_stuff {
@@ -74,15 +90,13 @@ struct wl_info {
 	uint		bcm_bustype;	
 	bool		piomode;	
 	void *regsva;			
-	struct net_device_stats stats;	
 	wl_if_t *if_list;		
 	atomic_t callbacks;		
 	struct wl_timer *timers;	
-#ifndef NAPI_POLL
 	struct tasklet_struct tasklet;	
-#endif 
+	struct tasklet_struct tx_tasklet; 
 
-#if defined(NAPI_POLL) && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
+#if 0 && (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 30))
 	struct napi_struct napi;
 #endif 
 
@@ -101,65 +115,51 @@ struct wl_info {
 	struct ieee80211_tkip_data  *tkip_bcast_data[NUM_GROUP_KEYS];
 #endif 
 
-#ifdef WL_ALL_PASSIVE
-	bool	   txq_dispatched;	
-	spinlock_t txq_lock;		
-	struct sk_buff *txq_head;	
-	struct sk_buff *txq_tail;	
-	wl_task_t	txq_task;	
+	bool		txq_dispatched;	
+	spinlock_t	txq_lock;	
+	struct sk_buff	*txq_head;	
+	struct sk_buff	*txq_tail;	
+	int		txq_cnt;	
 
-	wl_task_t	multicast_task;	
-
-	wl_task_t	wl_dpc_task;	
-	bool		all_dispatch_mode;
-#endif 
-
-	uint	stats_id;		
-
-	struct net_device_stats stats_watchdog[2];
-#ifdef USE_IW
-	struct iw_statistics wstats_watchdog[2];
-	struct iw_statistics wstats;
-	int		phy_noise;
-#endif 
-#ifdef WL_THREAD
-    struct task_struct      *thread;
-    wait_queue_head_t       thread_wqh;
-    struct sk_buff_head     tx_queue;
-    struct sk_buff_head     rpc_queue;
-#endif 
 #if defined(WL_CONFIG_RFKILL)
 	struct rfkill_stuff wl_rfkill;
 	mbool last_phyind;
 #endif 
-	struct proc_dir_entry *proc_entry;
+
+	uint processed;		
+	struct proc_dir_entry *proc_entry;	
+#ifdef WLOFFLD
+	uchar* bar1_addr;
+	uint32 bar1_size;
+#endif
+#ifdef KEEP_ALIVE
+	wl_keep_alive_info_t *keep_alive_info;	
+#endif
 };
 
-#define HYBRID_PROC	"brcm_monitor"
+#define HYBRID_PROC   "brcm_monitor"
 
-#if (defined(NAPI_POLL) && defined(WL_ALL_PASSIVE))
-#error "WL_ALL_PASSIVE cannot co-exists w/ NAPI_POLL"
-#endif 
-
-#ifdef WL_ALL_PASSIVE
-#define WL_ALL_PASSIVE_ENAB(wl)	(!(wl)->all_dispatch_mode)
+#if defined(WL_ALL_PASSIVE_ON)
+#define WL_ALL_PASSIVE_ENAB(wl)	1
 #else
 #define WL_ALL_PASSIVE_ENAB(wl)	0
 #endif 
 
-#define WL_LOCK(wl)	do { \
-				if (WL_ALL_PASSIVE_ENAB(wl)) \
-					down(&(wl)->sem); \
-				else \
-					spin_lock_bh(&(wl)->lock); \
-			} while (0)
+#define WL_LOCK(wl) \
+do { \
+	if (WL_ALL_PASSIVE_ENAB(wl)) \
+		down(&(wl)->sem); \
+	else \
+		spin_lock_bh(&(wl)->lock); \
+} while (0)
 
-#define WL_UNLOCK(wl)	do { \
-				if (WL_ALL_PASSIVE_ENAB(wl)) \
-					up(&(wl)->sem); \
-				else \
-					spin_unlock_bh(&(wl)->lock); \
-			} while (0)
+#define WL_UNLOCK(wl) \
+do { \
+	if (WL_ALL_PASSIVE_ENAB(wl)) \
+		up(&(wl)->sem); \
+	else \
+		spin_unlock_bh(&(wl)->lock); \
+} while (0)
 
 #define WL_ISRLOCK(wl, flags) do {spin_lock(&(wl)->isr_lock); (void)(flags);} while (0)
 #define WL_ISRUNLOCK(wl, flags) do {spin_unlock(&(wl)->isr_lock); (void)(flags);} while (0)

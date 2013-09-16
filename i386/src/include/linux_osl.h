@@ -1,15 +1,21 @@
 /*
  * Linux OS Independent Layer
  *
- * Copyright (C) 2010, Broadcom Corporation
- * All Rights Reserved.
+ * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
  * 
- * THIS SOFTWARE IS OFFERED "AS IS", AND BROADCOM GRANTS NO WARRANTIES OF ANY
- * KIND, EXPRESS OR IMPLIED, BY STATUTE, COMMUNICATION OR OTHERWISE. BROADCOM
- * SPECIFICALLY DISCLAIMS ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A SPECIFIC PURPOSE OR NONINFRINGEMENT CONCERNING THIS SOFTWARE.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: linux_osl.h,v 13.160.2.6 2010-08-31 00:30:03 Exp $
+ * $Id: linux_osl.h 383331 2013-02-06 10:27:24Z $
  */
 
 #ifndef _linux_osl_h_
@@ -20,6 +26,7 @@
 extern void * osl_os_open_image(char * filename);
 extern int osl_os_get_image_block(char * buf, int len, void * image);
 extern void osl_os_close_image(void * image);
+extern int osl_os_image_size(void *image);
 
 extern osl_t *osl_attach(void *pdev, uint bustype, bool pkttag);
 extern void osl_detach(osl_t *osh);
@@ -29,7 +36,7 @@ extern uint32 g_assert_type;
 #if defined(BCMDBG_ASSERT)
 	#define ASSERT(exp) \
 	  do { if (!(exp)) osl_assert(#exp, __FILE__, __LINE__); } while (0)
-extern void osl_assert(char *exp, char *file, int line);
+extern void osl_assert(const char *exp, const char *file, int line);
 #else
 	#ifdef __GNUC__
 		#define GCC_VERSION \
@@ -64,10 +71,10 @@ extern void osl_pci_write_config(osl_t *osh, uint offset, uint size, uint val);
 #define OSL_PCI_SLOT(osh)	osl_pci_slot(osh)
 extern uint osl_pci_bus(osl_t *osh);
 extern uint osl_pci_slot(osl_t *osh);
+extern struct pci_dev *osl_pci_device(osl_t *osh);
 
 typedef struct {
 	bool pkttag;
-	uint pktalloced; 	
 	bool mmbus;		
 	pktfree_cb_fn_t tx_fn;  
 	void *tx_ctx;		
@@ -91,11 +98,6 @@ typedef struct {
 
 #define NATIVE_MALLOC(osh, size)		kmalloc(size, GFP_ATOMIC)
 #define NATIVE_MFREE(osh, addr, size)	kfree(addr)
-#ifdef USBAP
-#include <linux/vmalloc.h>
-#define VMALLOC(osh, size)	vmalloc(size)
-#define VFREE(osh, addr, size)	vfree(addr)
-#endif 
 
 #define	MALLOC_FAILED(osh)	osl_malloc_failed((osh))
 extern uint osl_malloc_failed(osl_t *osh);
@@ -105,6 +107,12 @@ extern uint osl_malloc_failed(osl_t *osh);
 	osl_dma_alloc_consistent((osh), (size), (align), (tot), (pap))
 #define	DMA_FREE_CONSISTENT(osh, va, size, pa, dmah) \
 	osl_dma_free_consistent((osh), (void*)(va), (size), (pa))
+
+#define	DMA_ALLOC_CONSISTENT_FORCE32(osh, size, align, tot, pap, dmah) \
+	osl_dma_alloc_consistent((osh), (size), (align), (tot), (pap))
+#define	DMA_FREE_CONSISTENT_FORCE32(osh, va, size, pa, dmah) \
+	osl_dma_free_consistent((osh), (void*)(va), (size), (pa))
+
 extern uint osl_dma_consistent_align(void);
 extern void *osl_dma_alloc_consistent(osl_t *osh, uint size, uint16 align, uint *tot, ulong *pap);
 extern void osl_dma_free_consistent(osl_t *osh, void *va, uint size, ulong pa);
@@ -112,11 +120,10 @@ extern void osl_dma_free_consistent(osl_t *osh, void *va, uint size, ulong pa);
 #define	DMA_TX	1	
 #define	DMA_RX	2	
 
-#define	DMA_MAP(osh, va, size, direction, p, dmah) \
-	osl_dma_map((osh), (va), (size), (direction))
 #define	DMA_UNMAP(osh, pa, size, direction, p, dmah) \
 	osl_dma_unmap((osh), (pa), (size), (direction))
-extern uint osl_dma_map(osl_t *osh, void *va, uint size, int direction);
+extern uint osl_dma_map(osl_t *osh, void *va, uint size, int direction, void *p,
+	hnddma_seg_map_t *txp_dmah);
 extern void osl_dma_unmap(osl_t *osh, uint pa, uint size, int direction);
 
 #define OSL_DMADDRWIDTH(osh, addrwidth) do {} while (0)
@@ -264,9 +271,15 @@ extern void osl_reg_unmap(void *va);
 #define	W_SM(r, v)		(*(r) = (v))
 #define	BZERO_SM(r, len)	bzero((r), (len))
 
+#ifdef BCMDBG_CTRACE
+#define	PKTGET(osh, len, send)		osl_pktget((osh), (len), __LINE__, __FILE__)
+#define	PKTDUP(osh, skb)		osl_pktdup((osh), (skb), __LINE__, __FILE__)
+#define PKTFRMNATIVE(osh, skb)		osl_pkt_frmnative((osh), (skb), __LINE__, __FILE__)
+#else
 #define	PKTGET(osh, len, send)		osl_pktget((osh), (len))
 #define	PKTDUP(osh, skb)		osl_pktdup((osh), (skb))
 #define PKTFRMNATIVE(osh, skb)		osl_pkt_frmnative((osh), (skb))
+#endif 
 #define PKTLIST_DUMP(osh, buf)
 #define PKTDBG_TRACE(osh, pkt, bit)
 #define	PKTFREE(osh, skb, send)		osl_pktfree((osh), (skb), (send))
@@ -286,7 +299,6 @@ extern void osl_reg_unmap(void *va);
 #define	PKTPRIO(skb)			osl_pktprio((skb))
 #define	PKTSETPRIO(skb, x)		osl_pktsetprio((skb), (x))
 #define PKTSHARED(skb)                  osl_pktshared((skb))
-#define PKTALLOCED(osh)			osl_pktalloced((osh))
 #define PKTSETPOOL(osh, skb, x, y)	do {} while (0)
 #define PKTPOOL(osh, skb)		FALSE
 
@@ -310,6 +322,11 @@ extern uint osl_pktprio(void *skb);
 extern void osl_pktsetprio(void *skb, uint x);
 extern struct sk_buff *osl_pkt_tonative(osl_t *osh, void *pkt);
 extern bool osl_pktshared(void *skb);
+
+#define PKTALLOCED(osh)		osl_pktalloced(osh)
 extern uint osl_pktalloced(osl_t *osh);
+
+#define	DMA_MAP(osh, va, size, direction, p, dmah) \
+	osl_dma_map((osh), (va), (size), (direction), (p), (dmah))
 
 #endif	
