@@ -6,7 +6,16 @@ broadcom-sta (6.30.223.141-1) unstable; urgency=low
     - 01-shipped-module.patch
     - 02-license.patch
     - 03-rename-to-wlan0.patch
-    - 05-user_ioctl.patch
+    - 05-user_ioctl.patch (-> 04-user_ioctl.patch)
+  * Dropped applied upstream patch files:
+    - 04-linux-semaphore-include.patch
+    - 06-2.6.39.patch
+    - 07-3.0.0.patch
+    - 08-3.2.0.patch
+    - 09-3.4.0.patch
+    - 10-3.6.0.patch
+    - 11-3.8.0.patch
+    - 12-3.9.0.patch
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 16 Sep 2013 10:19:56 +0400
 
