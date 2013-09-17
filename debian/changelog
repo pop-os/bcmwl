@@ -16,6 +16,7 @@ broadcom-sta (6.30.223.141-1) unstable; urgency=low
     - 10-3.6.0.patch
     - 11-3.8.0.patch
     - 12-3.9.0.patch
+  * Added 05-3.10.0.patch for kernel 3.10 compatibility (Closes: #716999).
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 16 Sep 2013 10:19:56 +0400
 
