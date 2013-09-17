@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.141-1) unstable; urgency=low
+
+  * New upstream release (Yeah!) (Closes: 688823).
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 16 Sep 2013 10:19:56 +0400
+
 broadcom-sta (5.100.82.112-11) unstable; urgency=low
 
   * Added 12-3.9.0.patch for kernel 3.9 compatibility (Closes: #711227).
