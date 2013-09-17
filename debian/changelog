@@ -1,6 +1,12 @@
 broadcom-sta (6.30.223.141-1) unstable; urgency=low
 
   * New upstream release (Yeah!) (Closes: 688823).
+  * Refreshed the following patch files:
+    - 00-changelog.patch
+    - 01-shipped-module.patch
+    - 02-license.patch
+    - 03-rename-to-wlan0.patch
+    - 05-user_ioctl.patch
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 16 Sep 2013 10:19:56 +0400
 
