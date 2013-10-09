@@ -18,7 +18,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlioctl.h 389108 2013-03-05 17:49:56Z $
+ * $Id: wlioctl.h 415531 2013-07-30 18:39:00Z $
  */
 
 #ifndef _wlioctl_h_
@@ -504,8 +504,10 @@ typedef struct wl_ioctl {
 #define PM_FORCE_OFF 3 		
 
 #define	NFIFO			6	
+#define NREINITREASONCOUNT	8
+#define REINITREASONIDX(_x)	(((_x) < NREINITREASONCOUNT) ? (_x) : 0)
 
-#define	WL_CNT_T_VERSION	8	
+#define	WL_CNT_T_VERSION	10	
 
 typedef struct {
 	uint16	version;	
@@ -718,6 +720,9 @@ typedef struct {
 	uint32	unchained;	
 	uint32	maxchainsz;	
 	uint32	currchainsz;	
+	uint32	pciereset;	
+	uint32	cfgrestore;	
+	uint32	reinitreason[NREINITREASONCOUNT]; 
 } wl_cnt_t;
 
 #define WL_WME_CNT_VERSION	1	

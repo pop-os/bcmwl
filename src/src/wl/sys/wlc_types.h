@@ -15,7 +15,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlc_types.h 389424 2013-03-06 17:49:22Z $
+ * $Id: wlc_types.h 402685 2013-05-16 17:47:20Z $
  */
 
 #ifndef _wlc_types_h_
@@ -89,6 +89,8 @@ typedef struct wlc_ol_info_t wlc_ol_info_t;
 #ifdef WLOLPC
 typedef struct wlc_olpc_eng_info_t wlc_olpc_eng_info_t;
 #endif
+typedef void(*wlc_stf_txchain_evt_notify)(wlc_info_t *wlc);
+
 typedef struct wlc_11d_info wlc_11d_info_t;
 typedef struct wlc_cntry_info wlc_cntry_info_t;
 
@@ -136,6 +138,7 @@ typedef struct wlc_dngl_ol_l2keepalive_info wlc_dngl_ol_l2keepalive_info_t;
 typedef struct wlc_dngl_ol_gtk_info wlc_dngl_ol_gtk_info_t;
 typedef struct wlc_dngl_ol_mdns_info wlc_dngl_ol_mdns_info_t;
 typedef struct wlc_dngl_ol_rssi_info wlc_dngl_ol_rssi_info_t;
+typedef struct wlc_dngl_ol_eventlog_info wlc_dngl_ol_eventlog_info_t;
 #endif
 
 typedef struct wlc_nar_info wlc_nar_info_t;

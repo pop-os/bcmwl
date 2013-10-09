@@ -15,7 +15,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: bcmutils.h 382794 2013-02-04 17:34:08Z $
+ * $Id: bcmutils.h 410746 2013-07-02 23:56:47Z $
  */
 
 #ifndef	_bcmutils_h_
@@ -24,6 +24,7 @@
 #define bcm_strcpy_s(dst, noOfElements, src)            strcpy((dst), (src))
 #define bcm_strncpy_s(dst, noOfElements, src, count)    strncpy((dst), (src), (count))
 #define bcm_strcat_s(dst, noOfElements, src)            strcat((dst), (src))
+#define bcm_sprintf_s    snprintf
 
 #define _BCM_U	0x01	
 #define _BCM_L	0x02	

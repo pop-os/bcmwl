@@ -15,7 +15,7 @@
  *
  * Fundamental types and constants relating to 802.11
  *
- * $Id: 802.11.h 384190 2013-02-09 04:34:23Z $
+ * $Id: 802.11.h 394280 2013-04-01 23:04:24Z $
  */
 
 #ifndef _802_11_H_
@@ -1235,6 +1235,7 @@ typedef struct dot11_oper_mode_notif_ie dot11_oper_mode_notif_ie_t;
 
 #define DOT11_PUB_ACTION_BSS_COEX_MNG	0	
 #define DOT11_PUB_ACTION_CHANNEL_SWITCH	4	
+#define DOT11_PUB_ACTION_GAS_CB_REQ	12	
 
 #define DOT11_BA_ACTION_ADDBA_REQ	0	
 #define DOT11_BA_ACTION_ADDBA_RESP	1	

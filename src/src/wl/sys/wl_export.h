@@ -16,7 +16,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_export.h 382794 2013-02-04 17:34:08Z $
+ * $Id: wl_export.h 395432 2013-04-08 00:59:35Z $
  */
 
 #ifndef _wl_export_h_
@@ -41,6 +41,8 @@ extern bool wl_alloc_dma_resources(struct wl_info *wl, uint dmaddrwidth);
 extern void wl_reclaim(void);
 extern void wl_nocard_timer(void *arg);
 extern void wl_recover_nocard(struct wl_info *wl);
+extern void wl_devicerecovery(struct wl_info *wl );
+
 #ifdef WLOFFLD
 extern uint32 wl_pcie_bar1(struct wl_info *wl, uchar** addr);
 #endif

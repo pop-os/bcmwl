@@ -1,7 +1,18 @@
-diff -ru build.3.9/src/wl/sys/wl_linux.c build/src/wl/sys/wl_linux.c
---- build.3.9/src/wl/sys/wl_linux.c	2013-06-18 13:48:04.109167642 +0000
-+++ build/src/wl/sys/wl_linux.c	2013-06-18 14:24:33.448198331 +0000
-@@ -3236,7 +3236,7 @@
+From 53c81dd6a3ad5919aef8c25f0589d8a538ddb532 Mon Sep 17 00:00:00 2001
+From: Alberto Milone <alberto.milone@canonical.com>
+Date: Wed, 9 Oct 2013 12:46:52 +0200
+Subject: [PATCH 1/1] Add support for Linux 3.10
+
+Thanks to Maarten Lankhorst for the patch.
+---
+ src/wl/sys/wl_linux.c |   82 ++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 77 insertions(+), 5 deletions(-)
+
+diff --git a/src/wl/sys/wl_linux.c b/src/wl/sys/wl_linux.c
+index 521f02e..3ead3c3 100644
+--- a/src/wl/sys/wl_linux.c
++++ b/src/wl/sys/wl_linux.c
+@@ -3235,7 +3235,7 @@ wl_tkip_keyset(wl_info_t *wl, wsec_key_t *key)
  void
  wl_tkip_printstats(wl_info_t *wl, bool group_key)
  {
@@ -10,7 +21,7 @@ diff -ru build.3.9/src/wl/sys/wl_linux.c build/src/wl/sys/wl_linux.c
  	char debug_buf[512];
  	int idx;
  	if (wl->tkipmodops) {
-@@ -3409,6 +3409,7 @@
+@@ -3408,6 +3408,7 @@ wl_linux_watchdog(void *ctx)
  	return 0;
  }
  
@@ -18,7 +29,7 @@ diff -ru build.3.9/src/wl/sys/wl_linux.c build/src/wl/sys/wl_linux.c
  static int
  wl_proc_read(char *buffer, char **start, off_t offset, int length, int *eof, void *data)
  {
-@@ -3463,19 +3464,90 @@
+@@ -3462,19 +3463,90 @@ wl_proc_write(struct file *filp, const char *buff, unsigned long length, void *d
  	return length;
  }
  
@@ -98,7 +109,7 @@ diff -ru build.3.9/src/wl/sys/wl_linux.c build/src/wl/sys/wl_linux.c
 +		wl->proc_entry->read_proc = wl_proc_read;
 +		wl->proc_entry->write_proc = wl_proc_write;
 +		wl->proc_entry->data = wl;
-+	} 
++	}
 +#else
 +	wl->proc_entry = proc_create_data(tmp, 0644, NULL, &wl_proc_fops, wl);
 +#endif
@@ -113,3 +124,6 @@ diff -ru build.3.9/src/wl/sys/wl_linux.c build/src/wl/sys/wl_linux.c
  	return 0;
  }
  #ifdef WLOFFLD
+-- 
+1.7.9.5
+

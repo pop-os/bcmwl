@@ -16,7 +16,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_dbg.h 382794 2013-02-04 17:34:08Z $
+ * $Id: wl_dbg.h 405851 2013-06-05 00:56:21Z $
  */
 
 #ifndef _wl_dbg_h_
@@ -36,8 +36,10 @@ extern char* wlc_dbg_get_hw_timestamp(void);
 #endif 
 
 #if 0 && (VERSION_MAJOR > 9)
+extern int osl_printf(const char *fmt, ...);
 #include <IOKit/apple80211/IO8Log.h>
-#define WL_PRINT(args)		do { printf args; IO8Log args; } while (0)
+#define WL_PRINT(args)		do { osl_printf args; } while (0)
+#define RELEASE_PRINT(args)	do { WL_PRINT(args); IO8Log args; } while (0)
 #else
 #define WL_PRINT(args)		do { WL_TIMESTAMP(); printf args; } while (0)
 #endif
@@ -63,7 +65,8 @@ extern char* wlc_dbg_get_hw_timestamp(void);
 #define WL_APSTA_RX(args)
 #define WL_WSEC(args)
 #define WL_WSEC_DUMP(args)
-
+#define WL_PCIE(args)		do {if (wl_msg_level2 & WL_PCIE_VAL) WL_PRINT(args);} while (0)
+#define WL_PCIE_ON()		(wl_msg_level2 & WL_PCIE_VAL)
 #endif 
 
 extern uint32 wl_msg_level;

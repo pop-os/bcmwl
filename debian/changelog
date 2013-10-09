@@ -1,3 +1,15 @@
+bcmwl (6.30.223.141+bdcom-0ubuntu1) saucy; urgency=low
+
+  * New upstream release:
+    - This is an official public release from Broadcom.
+  * debian/dkms.conf.in:
+    - Drop patches for kernels 3.4-3.9 (now upstream)
+      and keep only the one for 3.10.
+  * 0009-add-support-for-linux-3.10.0.patch:
+    - Refresh for the latest upstream release.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Wed, 09 Oct 2013 16:24:16 +0200
+
 bcmwl (6.30.223.30+bdcom-0ubuntu3) saucy; urgency=low
 
   * debian/dkms.conf.in:

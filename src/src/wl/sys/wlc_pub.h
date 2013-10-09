@@ -16,7 +16,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlc_pub.h 385085 2013-02-14 00:31:36Z $
+ * $Id: wlc_pub.h 413887 2013-07-22 20:36:17Z $
  */
 
 #ifndef _wlc_pub_h_
@@ -48,10 +48,11 @@
 #define WLC_80_MHZ	80	
 #define WLC_160_MHZ	160	
 
-#define CHSPEC_WLC_BW(chanspec)	(CHSPEC_IS80(chanspec) ? WLC_80_MHZ : \
-				 CHSPEC_IS40(chanspec) ? WLC_40_MHZ : \
-				 CHSPEC_IS20(chanspec) ? WLC_20_MHZ : \
-							 WLC_10_MHZ)
+#define CHSPEC_WLC_BW(chanspec)(CHSPEC_IS160(chanspec) ? WLC_160_MHZ : \
+				CHSPEC_IS80(chanspec) ? WLC_80_MHZ : \
+				CHSPEC_IS40(chanspec) ? WLC_40_MHZ : \
+				CHSPEC_IS20(chanspec) ? WLC_20_MHZ : \
+							WLC_10_MHZ)
 
 #define	WLC_RSSI_MINVAL		-200	
 #define	WLC_RSSI_NO_SIGNAL	-91	
@@ -473,6 +474,15 @@ typedef struct wlc_if_stats {
 	uint32	rxnobuf;		
 	uint32  rxrunt;			
 	uint32  rxfragerr;		
+
+	uint32	txretry;		
+	uint32	txretrie;		
+	uint32	txfrmsnt;		
+	uint32	txmulti;		
+	uint32	txfrag;			
+
+	uint32	rxmulti;		
+
 } wlc_if_stats_t;
 
 #define WL_RXS_CRC_ERROR		0x00000001 
@@ -690,6 +700,12 @@ extern int wlc_ioctl(struct wlc_info *wlc, int cmd, void *arg, int len, struct w
 extern void wlc_statsupd(struct wlc_info *wlc);
 
 extern wlc_pub_t *wlc_pub(void *wlc);
+
+#if defined(BCMPCIDEV) || defined(WLOFFLD)
+
+extern void tcm_sem_enter(wlc_info_t *wlc);
+extern void tcm_sem_exit(wlc_info_t *wlc);
+#endif
 
 extern int wlc_module_register(wlc_pub_t *pub, const bcm_iovar_t *iovars,
                                const char *name, void *hdl, iovar_fn_t iovar_fn,

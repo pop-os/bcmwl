@@ -16,7 +16,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_linux.c 383917 2013-02-08 03:35:28Z $
+ * $Id: wl_linux.c 397462 2013-04-18 22:02:26Z $
  */
 
 #define LINUX_PORT
@@ -1979,8 +1979,16 @@ void BCMFASTPATH
 wl_sendup(wl_info_t *wl, wl_if_t *wlif, void *p, int numpkt)
 {
 	struct sk_buff *skb;
+	bool brcm_specialpkt;
 
 	WL_TRACE(("wl%d: wl_sendup: %d bytes\n", wl->pub->unit, PKTLEN(wl->osh, p)));
+
+	brcm_specialpkt =
+		(ntoh16_ua(PKTDATA(wl->pub->osh, p) + ETHER_TYPE_OFFSET) == ETHER_TYPE_BRCM);
+
+	if (!brcm_specialpkt) {
+
+	}
 
 	if (wlif) {
 
@@ -2000,7 +2008,8 @@ wl_sendup(wl_info_t *wl, wl_if_t *wlif, void *p, int numpkt)
 	}
 
 	skb->protocol = eth_type_trans(skb, skb->dev);
-	if (!ISALIGNED(skb->data, 4)) {
+
+	if (!brcm_specialpkt && !ISALIGNED(skb->data, 4)) {
 		WL_ERROR(("Unaligned assert. skb %p. skb->data %p.\n", skb, skb->data));
 		if (wlif) {
 			WL_ERROR(("wl_sendup: dev name is %s (wlif) \n", wlif->dev->name));
