@@ -1,3 +1,17 @@
+bcmwl (6.30.223.141+bdcom-0ubuntu2) trusty; urgency=low
+
+  [ Shuduo Sang ]
+  * 0010-change-the-network-interface-name-from-eth-to-wlan.patch:
+    - Change the network interface name from eth to wlan
+      (LP: #1157136).
+
+  [ Krzysztof Kolasa ]
+  * 0011-do-not-define-__devinit-as-__init-in-linux-3.8-as-__.patch:
+    - Do not define __devinit as __init when dealing with
+      Linux >= 3.8.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Fri, 22 Nov 2013 11:24:36 +0100
+
 bcmwl (6.30.223.141+bdcom-0ubuntu1) saucy; urgency=low
 
   * New upstream release:
