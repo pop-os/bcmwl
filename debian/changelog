@@ -1,3 +1,12 @@
+bcmwl (6.30.223.248+bdcom-0ubuntu1) utopic; urgency=medium
+
+  * New upstream release: (LP: #1342645)
+    - This is an official public release from Broadcom.
+  * debian/dkms.conf.in:
+    - Drop patches for kernels 3.10 (now upstream)
+
+ -- Robert Ancell <robert.ancell@canonical.com>  Fri, 01 Aug 2014 11:09:43 +1200
+
 bcmwl (6.30.223.141+bdcom-0ubuntu4) utopic; urgency=medium
 
   * debian/patches/0013-gcc.patch:
