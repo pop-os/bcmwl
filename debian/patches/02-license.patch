@@ -1,8 +1,8 @@
-Index: broadcom-sta-5.100.82.112/amd64/src/wl/sys/wl_linux.c
+Index: broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c
 ===================================================================
---- broadcom-sta-5.100.82.112.orig/amd64/src/wl/sys/wl_linux.c	2013-09-16 09:44:06.526230910 +0400
-+++ broadcom-sta-5.100.82.112/amd64/src/wl/sys/wl_linux.c	2013-09-16 09:45:09.650231133 +0400
-@@ -179,6 +179,8 @@
+--- broadcom-sta-6.30.223.248.orig/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:35:26.583129163 +0400
++++ broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:35:26.583129163 +0400
+@@ -156,6 +156,8 @@
  static void wl_report_radio_state(wl_info_t *wl);
  #endif
  
