@@ -2,7 +2,7 @@
  * Linux-specific portion of
  * Broadcom 802.11abg Networking Device Driver
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,7 +16,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_linux.c 397462 2013-04-18 22:02:26Z $
+ * $Id: wl_linux.c 461277 2014-03-11 18:55:39Z $
  */
 
 #define LINUX_PORT
@@ -67,8 +67,7 @@
 #include <pcicfg.h>
 #include <wlioctl.h>
 #include <wlc_key.h>
-
-typedef const struct si_pub si_t;
+#include <siutils.h>
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2, 4, 5)
 #error "No support for Kernel Rev <= 2.4.5, As the older kernel revs doesn't support Tasklets"
@@ -92,6 +91,8 @@ struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
 #include <wl_cfg80211_hybrid.h>
 #endif 
 
+#include <wlc_wowl.h>
+
 static void wl_timer(ulong data);
 static void _wl_timer(wl_timer_t *t);
 static struct net_device *wl_alloc_linux_if(wl_if_t *wlif);
@@ -103,40 +104,16 @@ static void wl_txq_free(wl_info_t *wl);
 #define TXQ_LOCK(_wl) spin_lock_bh(&(_wl)->txq_lock)
 #define TXQ_UNLOCK(_wl) spin_unlock_bh(&(_wl)->txq_lock)
 
+static void wl_set_multicast_list_workitem(struct work_struct *work);
+
+static void wl_timer_task(wl_task_t *task);
+static void wl_dpc_rxwork(struct wl_task *task);
+
 static int wl_reg_proc_entry(wl_info_t *wl);
 
 static int wl_linux_watchdog(void *ctx);
 static
 int wl_found = 0;
-
-struct ieee80211_tkip_data {
-#define TKIP_KEY_LEN 32
-	u8 key[TKIP_KEY_LEN];
-	int key_set;
-
-	u32 tx_iv32;
-	u16 tx_iv16;
-	u16 tx_ttak[5];
-	int tx_phase1_done;
-
-	u32 rx_iv32;
-	u16 rx_iv16;
-	u16 rx_ttak[5];
-	int rx_phase1_done;
-	u32 rx_iv32_new;
-	u16 rx_iv16_new;
-
-	u32 dot11RSNAStatsTKIPReplays;
-	u32 dot11RSNAStatsTKIPICVErrors;
-	u32 dot11RSNAStatsTKIPLocalMICFailures;
-
-	int key_idx;
-
-	struct crypto_tfm *tfm_arc4;
-	struct crypto_tfm *tfm_michael;
-
-	u8 rx_hdr[16], tx_hdr[16];
-};
 
 typedef struct priv_link {
 	wl_if_t *wlif;
@@ -203,6 +180,9 @@ module_param(phymsglevel, int, 0);
 static int assert_type = 0xdeadbeef;
 module_param(assert_type, int, 0);
 #endif
+
+static int passivemode = 0;
+module_param(passivemode, int, 0);
 
 #define WL_TXQ_THRESH	0
 static int wl_txq_thresh = WL_TXQ_THRESH;
@@ -545,6 +525,18 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
 	wl->unit = unit;
 	atomic_set(&wl->callbacks, 0);
 
+	wl->all_dispatch_mode = (passivemode == 0) ? TRUE : FALSE;
+	if (WL_ALL_PASSIVE_ENAB(wl)) {
+
+		MY_INIT_WORK(&wl->txq_task.work, (work_func_t)wl_start_txqwork);
+		wl->txq_task.context = wl;
+
+		MY_INIT_WORK(&wl->multicast_task.work, (work_func_t)wl_set_multicast_list_workitem);
+
+		MY_INIT_WORK(&wl->wl_dpc_task.work, (work_func_t)wl_dpc_rxwork);
+		wl->wl_dpc_task.context = wl;
+	}
+
 	wl->txq_dispatched = FALSE;
 	wl->txq_head = wl->txq_tail = NULL;
 	wl->txq_cnt = 0;
@@ -593,10 +585,8 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
 		goto fail;
 	}
 
-#ifdef WLOFFLD
 	wl->bar1_addr = bar1_addr;
 	wl->bar1_size = bar1_size;
-#endif
 
 	spin_lock_init(&wl->lock);
 	spin_lock_init(&wl->isr_lock);
@@ -640,30 +630,13 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
 #endif 
 	bcopy(&wl->pub->cur_etheraddr, dev->dev_addr, ETHER_ADDR_LEN);
 
-#ifdef CONFIG_SMP
-
-	online_cpus = num_online_cpus();
-#if defined(BCM47XX_CA9)
-	if (online_cpus > 1 && wl_txq_thresh == 0)
-		wl_txq_thresh = 512;
-#endif
-#else
 	online_cpus = 1;
-#endif 
 
 	WL_ERROR(("wl%d: online cpus %d\n", unit, online_cpus));
 
 	tasklet_init(&wl->tasklet, wl_dpc, (ulong)wl);
 
 	tasklet_init(&wl->tx_tasklet, wl_tx_tasklet, (ulong)wl);
-
-#ifdef KEEP_ALIVE
-
-	if ((wl->keep_alive_info = wl_keep_alive_attach(wl->wlc)) == NULL) {
-		WL_ERROR(("wl%d: wl_keep_alive_attach failed\n", unit));
-		goto fail;
-	}
-#endif
 
 	{
 		if (request_irq(irq, wl_isr, IRQF_SHARED, dev->name, wl)) {
@@ -683,7 +656,7 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
 		parentdev = &((struct pci_dev *)btparam)->dev;
 	}
 	if (parentdev) {
-		if (wl_cfg80211_attach(dev, parentdev)) {
+		if (wl_cfg80211_attach(dev, parentdev, WL_ALL_PASSIVE_ENAB(wl))) {
 			goto fail;
 		}
 	}
@@ -707,20 +680,6 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
 	wlif->dev_registed = TRUE;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29)
-	wl->tkipmodops = lib80211_get_crypto_ops("TKIP");
-	if (wl->tkipmodops == NULL) {
-		request_module("lib80211_crypt_tkip");
-		wl->tkipmodops = lib80211_get_crypto_ops("TKIP");
-	}
-#else
-	wl->tkipmodops = ieee80211_get_crypto_ops("TKIP");
-	if (wl->tkipmodops == NULL) {
-		request_module("ieee80211_crypt_tkip");
-		wl->tkipmodops = ieee80211_get_crypto_ops("TKIP");
-	}
-#endif 
 #endif 
 #ifdef USE_IW
 	wlif->iw.wlinfo = (void *)wl;
@@ -758,8 +717,9 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
 
 	wl_reg_proc_entry(wl);
 
-	printf("%s: Broadcom BCM%04x 802.11 Hybrid Wireless Controller " EPI_VERSION_STR,
-		dev->name, device);
+	printf("%s: Broadcom BCM%04x 802.11 Hybrid Wireless Controller%s %s",
+		dev->name, device,
+		WL_ALL_PASSIVE_ENAB(wl) ?  ", Passive Mode" : "", EPI_VERSION_STR);
 
 #ifdef BCMDBG
 	printf(" (Compiled in " SRCBASE " at " __TIME__ " on " __DATE__ ")");
@@ -809,11 +769,9 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 	pci_read_config_dword(pdev, 0x40, &val);
 	if ((val & 0x0000ff00) != 0)
 		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
-#ifdef WLOFFLD
 		bar1_size = pci_resource_len(pdev, 2);
 		bar1_addr = (uchar *)ioremap_nocache(pci_resource_start(pdev, 2),
 			bar1_size);
-#endif
 	wl = wl_attach(pdev->vendor, pdev->device, pci_resource_start(pdev, 0), PCI_BUS, pdev,
 		pdev->irq, bar1_addr, bar1_size);
 
@@ -826,60 +784,66 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 }
 
 static int
+#if !defined(SIMPLE_DEV_PM_OPS)
 wl_suspend(struct pci_dev *pdev, DRV_SUSPEND_STATE_TYPE state)
 {
+#else
+wl_suspend(struct device *dev)
+{
+	struct pci_dev *pdev = to_pci_dev(dev);
+#endif
 	wl_info_t *wl = (wl_info_t *) pci_get_drvdata(pdev);
-
-	WL_TRACE(("wl: wl_suspend\n"));
-
-	wl = (wl_info_t *) pci_get_drvdata(pdev);
 	if (!wl) {
 		WL_ERROR(("wl: wl_suspend: pci_get_drvdata failed\n"));
 		return -ENODEV;
 	}
+	WL_ERROR(("%s: PCI Suspend handler\n", __FUNCTION__));
 
 	WL_LOCK(wl);
-	WL_APSTA_UPDN(("wl%d (%s): wl_suspend() -> wl_down()\n", wl->pub->unit, wl->dev->name));
-	wl_down(wl);
-	wl->pub->hw_up = FALSE;
+	if (WLOFFLD_ENAB(wl->pub) && wlc_iovar_setint(wl->wlc, "wowl_activate", 1) == 0) {
+		WL_TRACE(("%s: Enabled WOWL OFFLOAD\n", __FUNCTION__));
+	} else {
+		WL_ERROR(("%s: Not WOWL capable\n", __FUNCTION__));
+		wl_down(wl);
+		wl->pub->hw_up = FALSE;
+	}
 	WL_UNLOCK(wl);
-	PCI_SAVE_STATE(pdev, wl->pci_psstate);
-	pci_disable_device(pdev);
-	return pci_set_power_state(pdev, PCI_D3hot);
+
+	if (BUSTYPE(wl->pub->sih->bustype) == PCI_BUS)
+		si_pci_sleep(wl->pub->sih);
+
+	return 0;
 }
 
 static int
+#if !defined(SIMPLE_DEV_PM_OPS)
 wl_resume(struct pci_dev *pdev)
 {
-	wl_info_t *wl = (wl_info_t *) pci_get_drvdata(pdev);
+#else
+wl_resume(struct device *dev)
+{
+	struct pci_dev *pdev = to_pci_dev(dev);
+#endif
 	int err = 0;
-	uint32 val;
-
-	WL_TRACE(("wl: wl_resume\n"));
-
+	wl_info_t *wl = (wl_info_t *) pci_get_drvdata(pdev);
 	if (!wl) {
 		WL_ERROR(("wl: wl_resume: pci_get_drvdata failed\n"));
 		return -ENODEV;
 	}
 
-	err = pci_set_power_state(pdev, PCI_D0);
-	if (err)
-		return err;
+	WL_ERROR(("%s: PCI Resume handler\n", __FUNCTION__));
+	if (WLOFFLD_ENAB(wl->pub)) {
+		wlc_iovar_setint(wl->wlc, "wowl_activate", 0); 
+		wlc_wowl_wake_reason_process(wl->wlc);
 
-	PCI_RESTORE_STATE(pdev, wl->pci_psstate);
-
-	err = pci_enable_device(pdev);
-	if (err)
-		return err;
-
-	pci_set_master(pdev);
-
-	pci_read_config_dword(pdev, 0x40, &val);
-	if ((val & 0x0000ff00) != 0)
-		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
+		if (WOWL_ACTIVE(wl->pub)) {
+			if (BUSTYPE(wl->pub->sih->bustype) == PCI_BUS) {
+				si_pci_pmeclr(wl->pub->sih);
+			}
+		}
+	}
 
 	WL_LOCK(wl);
-	WL_APSTA_UPDN(("wl%d: (%s): wl_resume() -> wl_up()\n", wl->pub->unit, wl->dev->name));
 	err = wl_up(wl);
 	WL_UNLOCK(wl);
 
@@ -910,14 +874,22 @@ wl_remove(struct pci_dev *pdev)
 	pci_set_drvdata(pdev, NULL);
 }
 
+#if defined(SIMPLE_DEV_PM_OPS)
+static SIMPLE_DEV_PM_OPS(wl_pm_ops, wl_suspend, wl_resume);
+#endif
+
 static struct pci_driver wl_pci_driver = {
-	name:		"wl",
-	probe:		wl_pci_probe,
-	suspend:	wl_suspend,
-	resume:		wl_resume,
-	remove:		__devexit_p(wl_remove),
-	id_table:	wl_id_table,
-	};
+	.name =		"wl",
+	.probe =	wl_pci_probe,
+	.remove =	__devexit_p(wl_remove),
+	.id_table =	wl_id_table,
+#ifdef SIMPLE_DEV_PM_OPS
+	.driver.pm =	&wl_pm_ops,
+#else
+	.suspend =      wl_suspend,
+	.resume =       wl_resume,
+#endif 
+};
 
 static int __init
 wl_module_init(void)
@@ -955,13 +927,20 @@ wl_module_init(void)
 	}
 #endif 
 
+	{
+		const char *var = getvar(NULL, "wl_dispatch_mode");
+		if (var)
+			passivemode = bcm_strtoul(var, NULL, 0);
+		if (passivemode)
+			printf("%s: passivemode enabled\n", __FUNCTION__);
+	}
+
 #ifdef BCMDBG_ASSERT
 
 	if (assert_type != 0xdeadbeef)
 		g_assert_type = assert_type;
 #endif 
 
-#if defined(CONFIG_WL_ALL_PASSIVE_RUNTIME)
 	{
 		char *var = getvar(NULL, "wl_txq_thresh");
 		if (var)
@@ -971,7 +950,6 @@ wl_module_init(void)
 				__FUNCTION__, wl_txq_thresh));
 #endif
 	}
-#endif 
 
 	if (!(error = pci_module_init(&wl_pci_driver)))
 		return (0);
@@ -1010,10 +988,6 @@ wl_free(wl_info_t *wl)
 		wl_free_if(wl, WL_DEV_IF(wl->dev));
 		wl->dev = NULL;
 	}
-
-#ifdef KEEP_ALIVE
-	wl_keep_alive_detach(wl->keep_alive_info);
-#endif
 
 	tasklet_kill(&wl->tasklet);
 
@@ -1054,41 +1028,29 @@ wl_free(wl_info_t *wl)
 	}
 	wl->regsva = NULL;
 
-#ifdef WLOFFLD
 	if (wl->bar1_addr) {
 		iounmap(wl->bar1_addr);
 		wl->bar1_addr = NULL;
 	}
-#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-
-	if (wl->tkipmodops != NULL) {
-		int idx;
-		if (wl->tkip_ucast_data) {
-			wl->tkipmodops->deinit(wl->tkip_ucast_data);
-			wl->tkip_ucast_data = NULL;
-		}
-		for (idx = 0; idx < NUM_GROUP_KEYS; idx++) {
-			if (wl->tkip_bcast_data[idx]) {
-				wl->tkipmodops->deinit(wl->tkip_bcast_data[idx]);
-				wl->tkip_bcast_data[idx] = NULL;
-			}
-		}
-	}
 #endif 
 
 	wl_txq_free(wl);
 
 	MFREE(osh, wl, sizeof(wl_info_t));
 
-#ifdef BCMDBG_CTRACE
-	PKT_CTRACE_DUMP(osh, NULL);
-#endif
 	if (MALLOCED(osh)) {
 		printf("Memory leak of bytes %d\n", MALLOCED(osh));
+#ifndef BCMDBG_MEM
 		ASSERT(0);
+#endif
 	}
+
+#ifdef BCMDBG_MEM
+
+	MALLOC_DUMP(osh, NULL);
+#endif 
 
 	osl_detach(osh);
 }
@@ -1497,6 +1459,14 @@ wl_down(wl_info_t *wl)
 
 	WL_UNLOCK(wl);
 
+	if (WL_ALL_PASSIVE_ENAB(wl)) {
+		int i = 0;
+		for (i = 0; (atomic_read(&wl->callbacks) > callbacks) && i < 10000; i++) {
+			schedule();
+			flush_scheduled_work();
+		}
+	}
+	else
 	{
 
 		SPINWAIT((atomic_read(&wl->callbacks) > callbacks), 100 * 1000);
@@ -1838,6 +1808,15 @@ wl_set_multicast_list(struct net_device *dev)
 {
 	if (!WL_ALL_PASSIVE_ENAB((wl_info_t *)WL_INFO(dev)))
 		_wl_set_multicast_list(dev);
+	else {
+		wl_info_t *wl = WL_INFO(dev);
+		wl->multicast_task.context = dev;
+
+		if (schedule_work(&wl->multicast_task.work)) {
+
+			atomic_inc(&wl->callbacks);
+		}
+	}
 }
 
 static void
@@ -1851,7 +1830,7 @@ _wl_set_multicast_list(struct net_device *dev)
 	wl_info_t *wl;
 	int i, buflen;
 	struct maclist *maclist;
-	bool allmulti;
+	int allmulti;
 
 	if (!dev)
 		return;
@@ -1926,6 +1905,12 @@ wl_isr(int irq, void *dev_id, struct pt_regs *ptregs)
 		if (wantdpc) {
 
 			ASSERT(wl->resched == FALSE);
+			if (WL_ALL_PASSIVE_ENAB(wl)) {
+				if (schedule_work(&wl->wl_dpc_task.work))
+					atomic_inc(&wl->callbacks);
+				else
+					ASSERT(0);
+			} else
 			tasklet_schedule(&wl->tasklet);
 		}
 	}
@@ -1960,18 +1945,41 @@ wl_dpc(ulong data)
 	}
 
 	if (!wl->pub->up) {
+
+		if ((WL_ALL_PASSIVE_ENAB(wl))) {
+			atomic_dec(&wl->callbacks);
+		}
 		goto done;
 	}
 
-	if (wl->resched)
-		tasklet_schedule(&wl->tasklet);
+	if (wl->resched) {
+		if (!(WL_ALL_PASSIVE_ENAB(wl)))
+			tasklet_schedule(&wl->tasklet);
+		else
+			if (!schedule_work(&wl->wl_dpc_task.work)) {
+
+				ASSERT(0);
+			}
+	}
 	else {
 
+		if (WL_ALL_PASSIVE_ENAB(wl))
+			atomic_dec(&wl->callbacks);
 		wl_intrson(wl);
 	}
 
 done:
 	WL_UNLOCK(wl);
+	return;
+}
+
+static void BCMFASTPATH
+wl_dpc_rxwork(struct wl_task *task)
+{
+	wl_info_t *wl = (wl_info_t *)task->context;
+	WL_TRACE(("wl%d: %s\n", wl->pub->unit, __FUNCTION__));
+
+	wl_dpc((unsigned long)wl);
 	return;
 }
 
@@ -2068,9 +2076,6 @@ wl_dump(wl_info_t *wl, struct bcmstrbuf *b)
 	if (i)
 		bcm_bprintf(b, "\n");
 
-#ifdef BCMDBG_CTRACE
-	PKT_CTRACE_DUMP(wl->osh, b);
-#endif
 	return 0;
 }
 #endif 
@@ -2138,11 +2143,7 @@ wl_sched_tx_tasklet(void *t)
 	tasklet_schedule(&wl->tx_tasklet);
 }
 
-#ifdef CONFIG_SMP
-#define WL_CONFIG_SMP()	TRUE
-#else
 #define WL_CONFIG_SMP()	FALSE
-#endif 
 
 static int BCMFASTPATH
 wl_start(struct sk_buff *skb, struct net_device *dev)
@@ -2180,6 +2181,8 @@ wl_start(struct sk_buff *skb, struct net_device *dev)
 
 			if (!WL_ALL_PASSIVE_ENAB(wl))
 				wl_sched_tx_tasklet(wl);
+			else
+				err = (int32)(schedule_work(&wl->txq_task.work) == 0);
 
 			if (!err) {
 				atomic_inc(&wl->callbacks);
@@ -2262,12 +2265,39 @@ wl_txq_free(wl_info_t *wl)
 }
 
 static void
+wl_set_multicast_list_workitem(struct work_struct *work)
+{
+	wl_task_t *task = (wl_task_t *)work;
+	struct net_device *dev = (struct net_device*)task->context;
+	wl_info_t *wl;
+
+	wl = WL_INFO(dev);
+
+	atomic_dec(&wl->callbacks);
+
+	_wl_set_multicast_list(dev);
+}
+
+static void
+wl_timer_task(wl_task_t *task)
+{
+	wl_timer_t *t = (wl_timer_t *)task->context;
+
+	_wl_timer(t);
+	MFREE(t->wl->osh, task, sizeof(wl_task_t));
+
+	atomic_dec(&t->wl->callbacks);
+}
+
+static void
 wl_timer(ulong data)
 {
 	wl_timer_t *t = (wl_timer_t *)data;
 
 	if (!WL_ALL_PASSIVE_ENAB(t->wl))
 		_wl_timer(t);
+	else
+		wl_schedule_task(t->wl, wl_timer_task, t);
 }
 
 static void
@@ -2364,7 +2394,7 @@ wl_del_timer(wl_info_t *wl, wl_timer_t *t)
 #ifdef BCMDBG
 			WL_INFORM(("wl%d: Failed to delete timer %s\n", wl->unit, t->name));
 #endif
-			return FALSE;
+			return TRUE;
 		}
 		atomic_dec(&wl->callbacks);
 	}
@@ -2614,10 +2644,8 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 		if (rxsts->phytype == WL_RXS_PHY_N) {
 			if (rxsts->encoding == WL_RXS_ENCODING_HT)
 				rtap_len = sizeof(wl_radiotap_ht_t);
-#ifdef WL11AC
 			else if (rxsts->encoding == WL_RXS_ENCODING_VHT)
 				rtap_len = sizeof(wl_radiotap_vht_t);
-#endif 
 			else
 				rtap_len = sizeof(wl_radiotap_legacy_t);
 		} else {
@@ -2668,13 +2696,9 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 		if (rxsts->pkterror & WL_RXS_CRC_ERROR)
 			flags |= IEEE80211_RADIOTAP_F_BADFCS;
 
-#ifdef WL11AC
 		if ((rxsts->phytype != WL_RXS_PHY_N) ||
 			((rxsts->encoding != WL_RXS_ENCODING_HT) &&
 			(rxsts->encoding != WL_RXS_ENCODING_VHT))) {
-#else
-		if (rxsts->phytype != WL_RXS_PHY_N || rxsts->encoding != WL_RXS_ENCODING_HT) {
-#endif 
 			wl_radiotap_legacy_t *rtl = (wl_radiotap_legacy_t *)skb->data;
 
 			rtl->ieee_radiotap.it_version = 0;
@@ -2699,7 +2723,6 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 
 			memset(&rtl->nonht_vht, 0, sizeof(rtl->nonht_vht));
 			rtl->nonht_vht.len = WL_RADIOTAP_NONHT_VHT_LEN;
-#ifdef WL11AC
 			if (((fc & FC_KIND_MASK) == FC_RTS) ||
 				((fc & FC_KIND_MASK) == FC_CTS)) {
 				rtl->nonht_vht.flags |= WL_RADIOTAP_F_NONHT_VHT_BW;
@@ -2712,9 +2735,7 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 					rtl->nonht_vht.flags
 						|= WL_RADIOTAP_F_NONHT_VHT_DYN_BW;
 			}
-#endif 
 		}
-#ifdef WL11AC
 		else if (rxsts->encoding == WL_RXS_ENCODING_VHT) {
 			wl_radiotap_vht_t *rtvht = (wl_radiotap_vht_t *)skb->data;
 
@@ -2809,7 +2830,6 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
 			if (rxsts->nfrmtype & WL_RXS_NFRM_AMPDU_NONE)
 				rtvht->ampdu_flags |= IEEE80211_RADIOTAP_AMPDU_MPDU_ONLY;
 		}
-#endif 
 		else if (rxsts->encoding == WL_RXS_ENCODING_HT) {
 			wl_radiotap_ht_t *rtht =
 				(wl_radiotap_ht_t *)skb->data;
@@ -3047,213 +3067,6 @@ wl_buf_to_pktcopy(osl_t *osh, void *p, uchar *buf, int len, uint offset)
 	return len;
 }
 
-int
-wl_tkip_miccheck(wl_info_t *wl, void *p, int hdr_len, bool group_key, int key_index)
-{
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-	struct sk_buff *skb = (struct sk_buff *)p;
-	skb->dev = wl->dev;
-
-	if (wl->tkipmodops) {
-		if (group_key && wl->tkip_bcast_data[key_index])
-			return (wl->tkipmodops->decrypt_msdu(skb, key_index, hdr_len,
-				wl->tkip_bcast_data[key_index]));
-		else if (!group_key && wl->tkip_ucast_data)
-			return (wl->tkipmodops->decrypt_msdu(skb, key_index, hdr_len,
-				wl->tkip_ucast_data));
-	}
-#endif 
-	WL_ERROR(("%s: No tkip mod ops\n", __FUNCTION__));
-	return -1;
-
-}
-
-int
-wl_tkip_micadd(wl_info_t *wl, void *p, int hdr_len)
-{
-	int error = -1;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-	struct sk_buff *skb = (struct sk_buff *)p;
-	skb->dev = wl->dev;
-
-	if (wl->tkipmodops) {
-		if (wl->tkip_ucast_data)
-			error = wl->tkipmodops->encrypt_msdu(skb, hdr_len, wl->tkip_ucast_data);
-		if (error)
-			WL_ERROR(("Error encrypting MSDU %d\n", error));
-	}
-	else
-#endif 
-		WL_ERROR(("%s: No tkip mod ops\n", __FUNCTION__));
-	return error;
-}
-
-int
-wl_tkip_encrypt(wl_info_t *wl, void *p, int hdr_len)
-{
-	int error = -1;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-	struct sk_buff *skb = (struct sk_buff *)p;
-	skb->dev = wl->dev;
-
-	if (wl->tkipmodops) {
-		if (wl->tkip_ucast_data)
-			error = wl->tkipmodops->encrypt_mpdu(skb, hdr_len, wl->tkip_ucast_data);
-		if (error) {
-			WL_ERROR(("Error encrypting MPDU %d\n", error));
-		}
-	}
-	else
-#endif 
-		WL_ERROR(("%s: No tkip mod ops\n", __FUNCTION__));
-	return error;
-
-}
-
-int
-wl_tkip_decrypt(wl_info_t *wl, void *p, int hdr_len, bool group_key)
-{
-	int err = -1;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-	struct sk_buff *skb = (struct sk_buff *)p;
-	uint8 *pos;
-	uint8 key_idx = 0;
-
-	if (group_key) {
-		skb->dev = wl->dev;
-		pos = skb->data + hdr_len;
-		key_idx = pos[3];
-		key_idx >>= 6;
-		WL_ERROR(("%s: Invalid key_idx %d\n", __FUNCTION__, key_idx));
-		ASSERT(key_idx < NUM_GROUP_KEYS);
-	}
-
-	if (wl->tkipmodops) {
-		if (group_key && key_idx < NUM_GROUP_KEYS && wl->tkip_bcast_data[key_idx])
-			err = wl->tkipmodops->decrypt_mpdu(skb, hdr_len,
-				wl->tkip_bcast_data[key_idx]);
-		else if (!group_key && wl->tkip_ucast_data)
-			err = wl->tkipmodops->decrypt_mpdu(skb, hdr_len, wl->tkip_ucast_data);
-	}
-	else
-		WL_ERROR(("%s: No tkip mod ops\n", __FUNCTION__));
-
-#endif 
-
-	return err;
-}
-
-int
-wl_tkip_keyset(wl_info_t *wl, wsec_key_t *key)
-{
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-	bool group_key = FALSE;
-	uchar rxseq[IW_ENCODE_SEQ_MAX_SIZE];
-
-	if (key->len != 0) {
-		WL_WSEC(("%s: Key Length is Not zero\n", __FUNCTION__));
-		if (key->algo != CRYPTO_ALGO_TKIP) {
-			WL_WSEC(("%s: Algo is Not TKIP %d\n", __FUNCTION__, key->algo));
-			return 0;
-		}
-		WL_WSEC(("%s: Trying to set a key in TKIP Mod\n", __FUNCTION__));
-	}
-	else
-		WL_WSEC(("%s: Trying to Remove a Key from TKIP Mod\n", __FUNCTION__));
-
-	if (ETHER_ISNULLADDR(&key->ea) || ETHER_ISBCAST(&key->ea)) {
-		group_key = TRUE;
-		WL_WSEC(("Group Key index %d\n", key->id));
-	}
-	else
-		WL_WSEC(("Unicast Key index %d\n", key->id));
-
-	if (wl->tkipmodops) {
-		uint8 keybuf[8];
-		if (group_key) {
-			if (key->len) {
-				if (!wl->tkip_bcast_data[key->id]) {
-					WL_WSEC(("Init TKIP Bcast Module\n"));
-					WL_UNLOCK(wl);
-					wl->tkip_bcast_data[key->id] =
-						wl->tkipmodops->init(key->id);
-					WL_LOCK(wl);
-				}
-				if (wl->tkip_bcast_data[key->id]) {
-					WL_WSEC(("TKIP SET BROADCAST KEY******************\n"));
-					bzero(rxseq, IW_ENCODE_SEQ_MAX_SIZE);
-					bcopy(&key->rxiv, rxseq, 6);
-					bcopy(&key->data[24], keybuf, sizeof(keybuf));
-					bcopy(&key->data[16], &key->data[24], sizeof(keybuf));
-					bcopy(keybuf, &key->data[16], sizeof(keybuf));
-					wl->tkipmodops->set_key(&key->data, key->len,
-						(uint8 *)&key->rxiv, wl->tkip_bcast_data[key->id]);
-				}
-			}
-			else {
-				if (wl->tkip_bcast_data[key->id]) {
-					WL_WSEC(("Deinit TKIP Bcast Module\n"));
-					wl->tkipmodops->deinit(wl->tkip_bcast_data[key->id]);
-					wl->tkip_bcast_data[key->id] = NULL;
-				}
-			}
-		}
-		else {
-			if (key->len) {
-				if (!wl->tkip_ucast_data) {
-					WL_WSEC(("Init TKIP Ucast Module\n"));
-					WL_UNLOCK(wl);
-					wl->tkip_ucast_data = wl->tkipmodops->init(key->id);
-					WL_LOCK(wl);
-				}
-				if (wl->tkip_ucast_data) {
-					WL_WSEC(("TKIP SET UNICAST KEY******************\n"));
-					bzero(rxseq, IW_ENCODE_SEQ_MAX_SIZE);
-					bcopy(&key->rxiv, rxseq, 6);
-					bcopy(&key->data[24], keybuf, sizeof(keybuf));
-					bcopy(&key->data[16], &key->data[24], sizeof(keybuf));
-					bcopy(keybuf, &key->data[16], sizeof(keybuf));
-					wl->tkipmodops->set_key(&key->data, key->len,
-						(uint8 *)&key->rxiv, wl->tkip_ucast_data);
-				}
-			}
-			else {
-				if (wl->tkip_ucast_data) {
-					WL_WSEC(("Deinit TKIP Ucast Module\n"));
-					wl->tkipmodops->deinit(wl->tkip_ucast_data);
-					wl->tkip_ucast_data = NULL;
-				}
-			}
-		}
-	}
-	else
-#endif 
-		WL_WSEC(("%s: No tkip mod ops\n", __FUNCTION__));
-	return 0;
-}
-
-void
-wl_tkip_printstats(wl_info_t *wl, bool group_key)
-{
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 14)
-	char debug_buf[512];
-	int idx;
-	if (wl->tkipmodops) {
-		if (group_key) {
-			for (idx = 0; idx < NUM_GROUP_KEYS; idx++) {
-				if (wl->tkip_bcast_data[idx])
-					wl->tkipmodops->print_stats(debug_buf,
-						wl->tkip_bcast_data[idx]);
-			}
-		} else if (!group_key && wl->tkip_ucast_data)
-			wl->tkipmodops->print_stats(debug_buf, wl->tkip_ucast_data);
-		else
-			return;
-		printk("%s: TKIP stats from module: %s\n", debug_buf, group_key?"Bcast":"Ucast");
-	}
-#endif 
-}
-
 #if defined(WL_CONFIG_RFKILL)     
 
 static int
@@ -3408,31 +3221,43 @@ wl_linux_watchdog(void *ctx)
 	return 0;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
 static int
 wl_proc_read(char *buffer, char **start, off_t offset, int length, int *eof, void *data)
+#else
+static ssize_t
+wl_proc_read(struct file *filp, char __user *buffer, size_t length, loff_t *data)
+#endif
 {
 	wl_info_t * wl = (wl_info_t *)data;
-	int bcmerror, to_user;
+	int to_user;
 	int len;
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
 	if (offset > 0) {
 		*eof = 1;
 		return 0;
 	}
+#endif
 
 	if (!length) {
 		WL_ERROR(("%s: Not enough return buf space\n", __FUNCTION__));
 		return 0;
 	}
 	WL_LOCK(wl);
-	bcmerror = wlc_ioctl(wl->wlc, WLC_GET_MONITOR, &to_user, sizeof(int), NULL);
+	wlc_ioctl(wl->wlc, WLC_GET_MONITOR, &to_user, sizeof(int), NULL);
 	len = sprintf(buffer, "%d\n", to_user);
 	WL_UNLOCK(wl);
 	return len;
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
 static int
 wl_proc_write(struct file *filp, const char *buff, unsigned long length, void *data)
+#else
+static ssize_t
+wl_proc_write(struct file *filp, const char __user *buff, size_t length, loff_t *data)
+#endif
 {
 	wl_info_t * wl = (wl_info_t *)data;
 	int from_user = 0;
@@ -3462,25 +3287,38 @@ wl_proc_write(struct file *filp, const char *buff, unsigned long length, void *d
 	return length;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0)
+static const struct file_operations wl_fops = {
+	.owner	= THIS_MODULE,
+	.read	= wl_proc_read,
+	.write	= wl_proc_write,
+};
+#endif
+
 static int
 wl_reg_proc_entry(wl_info_t *wl)
 {
 	char tmp[32];
 	sprintf(tmp, "%s%d", HYBRID_PROC, wl->pub->unit);
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
 	if ((wl->proc_entry = create_proc_entry(tmp, 0644, NULL)) == NULL) {
 		WL_ERROR(("%s: create_proc_entry %s failed\n", __FUNCTION__, tmp));
+#else
+	if ((wl->proc_entry = proc_create(tmp, 0644, NULL, &wl_fops)) == NULL) {
+		WL_ERROR(("%s: proc_create %s failed\n", __FUNCTION__, tmp));
+#endif
 		ASSERT(0);
 		return -1;
 	}
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 10, 0)
 	wl->proc_entry->read_proc = wl_proc_read;
 	wl->proc_entry->write_proc = wl_proc_write;
 	wl->proc_entry->data = wl;
+#endif
 	return 0;
 }
-#ifdef WLOFFLD
 uint32 wl_pcie_bar1(struct wl_info *wl, uchar** addr)
 {
 	*addr = wl->bar1_addr;
 	return (wl->bar1_size);
 }
-#endif

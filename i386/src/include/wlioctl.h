@@ -4,7 +4,7 @@
  *
  * Definitions subject to change without notice.
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -18,7 +18,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlioctl.h 415531 2013-07-30 18:39:00Z $
+ * $Id: wlioctl.h 464835 2014-03-26 01:35:40Z $
  */
 
 #ifndef _wlioctl_h_
@@ -289,6 +289,32 @@ typedef struct wl_ioctl {
 	uint used;	
 	uint needed;	
 } wl_ioctl_t;
+
+#define ioctl_subtype	set		
+#define ioctl_pid	used		
+#define ioctl_status	needed		
+
+typedef struct wlc_rev_info {
+	uint		vendorid;	
+	uint		deviceid;	
+	uint		radiorev;	
+	uint		chiprev;	
+	uint		corerev;	
+	uint		boardid;	
+	uint		boardvendor;	
+	uint		boardrev;	
+	uint		driverrev;	
+	uint		ucoderev;	
+	uint		bus;		
+	uint		chipnum;	
+	uint		phytype;	
+	uint		phyrev;		
+	uint		anarev;		
+	uint		chippkg;	
+	uint		nvramrev;	
+} wlc_rev_info_t;
+
+#define WL_REV_INFO_LEGACY_LENGTH	48
 
 #define	WLC_IOCTL_MAXLEN		8192	
 #define	WLC_IOCTL_SMLEN			256	
@@ -725,6 +751,29 @@ typedef struct {
 	uint32	reinitreason[NREINITREASONCOUNT]; 
 } wl_cnt_t;
 
+typedef struct {
+	bool auto_en;
+	uint8 active_ant;
+	uint32 rxcount;
+	int16 avg_snr_per_ant0;
+	int16 avg_snr_per_ant1;
+	uint32 swap_ge_rxcount0;
+	uint32 swap_ge_rxcount1;
+	uint32 swap_ge_snrthresh0;
+	uint32 swap_ge_snrthresh1;
+	uint32 swap_txfail0;
+	uint32 swap_txfail1;
+	uint32 swap_timer0;
+	uint32 swap_timer1;
+	uint32 swap_alivecheck0;
+	uint32 swap_alivecheck1;
+	uint32 rxcount_per_ant0;
+	uint32 rxcount_per_ant1;
+	uint32 acc_rxcount;
+	uint32 acc_rxcount_per_ant0;
+	uint32 acc_rxcount_per_ant1;
+} wlc_swdiv_stats_t;
+
 #define WL_WME_CNT_VERSION	1	
 
 typedef struct {
@@ -747,55 +796,295 @@ typedef struct {
 
 } wl_wme_cnt_t;
 
-typedef struct {
-	uint8	protocol;	
-	uint16	query_len;	
-	uint16	response_len;	
-	uint8	qrbuf[1];
-} wl_p2po_qr_t;
+typedef struct wl_mkeep_alive_pkt {
+	uint16	version; 
+	uint16	length; 
+	uint32	period_msec;
+	uint16	len_bytes;
+	uint8	keep_alive_id; 
+	uint8	data[1];
+} wl_mkeep_alive_pkt_t;
 
-typedef struct {
-	uint16			period;			
-	uint16			interval;		
-} wl_p2po_listen_t;
+#define WL_MKEEP_ALIVE_VERSION		1
+#define WL_MKEEP_ALIVE_FIXED_LEN	OFFSETOF(wl_mkeep_alive_pkt_t, data)
+#define WL_MKEEP_ALIVE_PRECISION	500
 
-#define ANQPO_MAX_QUERY_SIZE		256
-typedef struct {
-	uint16 max_retransmit;		
-	uint16 response_timeout;	
-	uint16 max_comeback_delay;	
-	uint16 max_retries;			
-	uint16 query_len;			
-	uint8 query_data[1];		
-} wl_anqpo_set_t;
+typedef struct wl_mtcpkeep_alive_conn_pkt {
+	struct ether_addr saddr;		
+	struct ether_addr daddr;		
+	struct ipv4_addr sipaddr;		
+	struct ipv4_addr dipaddr;		
+	uint16 sport;				
+	uint16 dport;				
+	uint32 seq;				
+	uint32 ack;				
+	uint16 tcpwin;				
+} wl_mtcpkeep_alive_conn_pkt_t;
 
-typedef struct {
-	uint16 channel;				
-	struct ether_addr addr;		
-} wl_anqpo_peer_t;
+typedef struct wl_mtcpkeep_alive_timers_pkt {
+	uint16 interval;		
+	uint16 retry_interval;		
+	uint16 retry_count;		
+} wl_mtcpkeep_alive_timers_pkt_t;
 
-#define ANQPO_MAX_PEER_LIST			64
-typedef struct {
-	uint16 count;				
-	wl_anqpo_peer_t peer[1];	
-} wl_anqpo_peer_list_t;
+#ifndef ETHER_MAX_DATA
+#define ETHER_MAX_DATA	1500
+#endif 
 
-#define ANQPO_MAX_IGNORE_SSID		64
-typedef struct {
-	bool is_clear;				
-	uint16 count;				
-	wlc_ssid_t ssid[1];			
-} wl_anqpo_ignore_ssid_list_t;
+typedef struct wake_info {
+	uint32          wake_reason;
+	uint32          wake_info_len;		
+	uchar			packet[1];
+} wake_info_t;
 
-#define ANQPO_MAX_IGNORE_BSSID		64
-typedef struct {
-	bool is_clear;				
-	uint16 count;				
-	struct ether_addr bssid[1];	
-} wl_anqpo_ignore_bssid_list_t;
+typedef struct wake_pkt {
+	uint32          wake_pkt_len;		
+	uchar			packet[1];
+} wake_pkt_t;
+
+#define WL_MTCPKEEP_ALIVE_VERSION		1
+
+#ifdef WLBA
+
+#define WLC_BA_CNT_VERSION  1   
+
+typedef struct wlc_ba_cnt {
+	uint16  version;    
+	uint16  length;     
+
+	uint32 txpdu;       
+	uint32 txsdu;       
+	uint32 txfc;        
+	uint32 txfci;       
+	uint32 txretrans;   
+	uint32 txbatimer;   
+	uint32 txdrop;      
+	uint32 txaddbareq;  
+	uint32 txaddbaresp; 
+	uint32 txdelba;     
+	uint32 txba;        
+	uint32 txbar;       
+	uint32 txpad[4];    
+
+	uint32 rxpdu;       
+	uint32 rxqed;       
+	uint32 rxdup;       
+	uint32 rxnobuf;     
+	uint32 rxaddbareq;  
+	uint32 rxaddbaresp; 
+	uint32 rxdelba;     
+	uint32 rxba;        
+	uint32 rxbar;       
+	uint32 rxinvba;     
+	uint32 rxbaholes;   
+	uint32 rxunexp;     
+	uint32 rxpad[4];    
+} wlc_ba_cnt_t;
+#endif 
+
+struct ampdu_tid_control {
+	uint8 tid;			
+	uint8 enable;			
+};
+
+struct ampdu_ea_tid {
+	struct ether_addr ea;		
+	uint8 tid;			
+};
+
+struct ampdu_retry_tid {
+	uint8 tid;	
+	uint8 retry;	
+};
 
 #define TOE_TX_CSUM_OL		0x00000001
 #define TOE_RX_CSUM_OL		0x00000002
+
+#define TOE_ERRTEST_TX_CSUM	0x00000001
+#define TOE_ERRTEST_RX_CSUM	0x00000002
+#define TOE_ERRTEST_RX_CSUM2	0x00000004
+
+struct toe_ol_stats_t {
+
+	uint32 tx_summed;
+
+	uint32 tx_iph_fill;
+	uint32 tx_tcp_fill;
+	uint32 tx_udp_fill;
+	uint32 tx_icmp_fill;
+
+	uint32 rx_iph_good;
+	uint32 rx_iph_bad;
+	uint32 rx_tcp_good;
+	uint32 rx_tcp_bad;
+	uint32 rx_udp_good;
+	uint32 rx_udp_bad;
+	uint32 rx_icmp_good;
+	uint32 rx_icmp_bad;
+
+	uint32 tx_tcp_errinj;
+	uint32 tx_udp_errinj;
+	uint32 tx_icmp_errinj;
+
+	uint32 rx_tcp_errinj;
+	uint32 rx_udp_errinj;
+	uint32 rx_icmp_errinj;
+};
+
+#define ARP_OL_AGENT		0x00000001
+#define ARP_OL_SNOOP		0x00000002
+#define ARP_OL_HOST_AUTO_REPLY	0x00000004
+#define ARP_OL_PEER_AUTO_REPLY	0x00000008
+
+#define ARP_ERRTEST_REPLY_PEER	0x1
+#define ARP_ERRTEST_REPLY_HOST	0x2
+
+#define ARP_MULTIHOMING_MAX	8	
+#define ND_MULTIHOMING_MAX 10	
+
+struct arp_ol_stats_t {
+	uint32  host_ip_entries;	
+	uint32  host_ip_overflow;	
+
+	uint32  arp_table_entries;	
+	uint32  arp_table_overflow;	
+
+	uint32  host_request;		
+	uint32  host_reply;		
+	uint32  host_service;		
+
+	uint32  peer_request;		
+	uint32  peer_request_drop;	
+	uint32  peer_reply;		
+	uint32  peer_reply_drop;	
+	uint32  peer_service;		
+};
+
+struct nd_ol_stats_t {
+	uint32  host_ip_entries;    
+	uint32  host_ip_overflow;   
+	uint32  peer_request;       
+	uint32  peer_request_drop;  
+	uint32  peer_reply_drop;    
+	uint32  peer_service;       
+};
+
+typedef struct wl_keep_alive_pkt {
+	uint32	period_msec;	
+	uint16	len_bytes;	
+	uint8	data[1];	
+} wl_keep_alive_pkt_t;
+
+#define WL_KEEP_ALIVE_FIXED_LEN		OFFSETOF(wl_keep_alive_pkt_t, data)
+
+typedef enum wl_pkt_filter_type {
+	WL_PKT_FILTER_TYPE_PATTERN_MATCH	
+} wl_pkt_filter_type_t;
+
+#define WL_PKT_FILTER_TYPE wl_pkt_filter_type_t
+
+typedef struct wl_pkt_filter_pattern {
+	uint32	offset;		
+	uint32	size_bytes;	
+	uint8   mask_and_pattern[1]; 
+
+} wl_pkt_filter_pattern_t;
+
+typedef struct wl_pkt_filter {
+	uint32	id;		
+	uint32	type;		
+	uint32	negate_match;	
+	union {			
+		wl_pkt_filter_pattern_t pattern;	
+	} u;
+} wl_pkt_filter_t;
+
+typedef struct wl_tcp_keep_set {
+	uint32	val1;
+	uint32	val2;
+} wl_tcp_keep_set_t;
+
+#define WL_PKT_FILTER_FIXED_LEN		  OFFSETOF(wl_pkt_filter_t, u)
+#define WL_PKT_FILTER_PATTERN_FIXED_LEN	  OFFSETOF(wl_pkt_filter_pattern_t, mask_and_pattern)
+
+typedef struct wl_pkt_filter_enable {
+	uint32	id;		
+	uint32	enable;		
+} wl_pkt_filter_enable_t;
+
+typedef struct wl_pkt_filter_list {
+	uint32	num;		
+	wl_pkt_filter_t	filter[1];	
+} wl_pkt_filter_list_t;
+
+#define WL_PKT_FILTER_LIST_FIXED_LEN	  OFFSETOF(wl_pkt_filter_list_t, filter)
+
+typedef struct wl_pkt_filter_stats {
+	uint32	num_pkts_matched;	
+	uint32	num_pkts_forwarded;	
+	uint32	num_pkts_discarded;	
+} wl_pkt_filter_stats_t;
+
+#define WL_WOWL_MAGIC           (1 << 0)    
+#define WL_WOWL_NET             (1 << 1)    
+#define WL_WOWL_DIS             (1 << 2)    
+#define WL_WOWL_RETR            (1 << 3)    
+#define WL_WOWL_BCN             (1 << 4)    
+#define WL_WOWL_TST             (1 << 5)    
+#define WL_WOWL_M1              (1 << 6)    
+#define WL_WOWL_EAPID           (1 << 7)    
+#define WL_WOWL_PME_GPIO        (1 << 8)    
+#define WL_WOWL_NEEDTKIP1       (1 << 9)    
+#define WL_WOWL_GTK_FAILURE     (1 << 10)   
+#define WL_WOWL_EXTMAGPAT       (1 << 11)   
+#define WL_WOWL_ARPOFFLOAD      (1 << 12)   
+#define WL_WOWL_WPA2            (1 << 13)   
+#define WL_WOWL_KEYROT          (1 << 14)   
+#define WL_WOWL_BCAST           (1 << 15)   
+#define WL_WOWL_SCANOL          (1 << 16)   
+#define WL_WOWL_TCPKEEP_TIME    (1 << 17)   
+#define WL_WOWL_MDNS_CONFLICT   (1 << 18)   
+#define WL_WOWL_MDNS_SERVICE    (1 << 19)   
+#define WL_WOWL_TCPKEEP_DATA    (1 << 20)   
+#define WL_WOWL_FW_HALT         (1 << 21)   
+#define WL_WOWL_ENAB_HWRADIO    (1 << 22)   
+#define WL_WOWL_MIC_FAIL        (1 << 23)   
+#define WL_WOWL_LINKDOWN        (1 << 31)   
+
+#define MAGIC_PKT_MINLEN	102    
+#define MAGIC_PKT_NUM_MAC_ADDRS	16
+
+typedef enum {
+	wowl_pattern_type_bitmap = 0,
+	wowl_pattern_type_arp,
+	wowl_pattern_type_na
+} wowl_pattern_type_t;
+
+typedef struct wl_wowl_pattern {
+	uint32		    masksize;		
+	uint32		    offset;		
+	uint32		    patternoffset;	
+	uint32		    patternsize;	
+	uint32		    id;			
+	uint32		    reasonsize;		
+	wowl_pattern_type_t type;		
+
+} wl_wowl_pattern_t;
+
+typedef struct wl_wowl_pattern_list {
+	uint			count;
+	wl_wowl_pattern_t	pattern[1];
+} wl_wowl_pattern_list_t;
+
+typedef struct wl_wowl_wakeind {
+	uint8	pci_wakeind;	
+	uint32	ucode_wakeind;	
+} wl_wowl_wakeind_t;
+
+typedef struct {
+	uint32		pktlen;		    
+	void		*sdu;
+} tcp_keepalive_wake_pkt_infop_t;
 
 typedef BWL_PRE_PACKED_STRUCT struct nbr_element {
 	uint8 id;
@@ -861,5 +1150,16 @@ typedef struct wlc_dwds_config {
 	uint32		mode;
 	struct ether_addr ea;
 } wlc_dwds_config_t;
+
+#define WLC_KCK_LEN		16
+#define WLC_KEK_LEN		16
+#define WLC_REPLAY_CTR_LEN	8
+
+typedef struct wlc_rekey_info {
+	uint32	offload_id;
+	uint8	kek[WLC_KEK_LEN];
+	uint8	kck[WLC_KCK_LEN];
+	uint8	replay_counter[WLC_REPLAY_CTR_LEN];
+} wlc_rekey_info_t;
 
 #endif 

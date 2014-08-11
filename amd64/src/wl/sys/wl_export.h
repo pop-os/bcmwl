@@ -2,7 +2,7 @@
  * Required functions exported by the port-specific (os-dependent) driver
  * to common (os-independent) driver code.
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,7 +16,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wl_export.h 395432 2013-04-08 00:59:35Z $
+ * $Id: wl_export.h 419219 2013-08-20 07:39:11Z $
  */
 
 #ifndef _wl_export_h_
@@ -43,17 +43,7 @@ extern void wl_nocard_timer(void *arg);
 extern void wl_recover_nocard(struct wl_info *wl);
 extern void wl_devicerecovery(struct wl_info *wl );
 
-#ifdef WLOFFLD
 extern uint32 wl_pcie_bar1(struct wl_info *wl, uchar** addr);
-#endif
-#ifdef WLRXOE
-extern void wl_watchdog(struct wl_info *wl);
-extern void wl_msgup(struct wl_info *wl, osl_t *osh, void* resp);
-extern void * wl_get_arpi(struct wl_info *wl, struct wl_if *wlif);
-extern void * wl_get_icmpi(struct wl_info *wl, struct wl_if *wlif);
-extern void * wl_get_tcpkeepi(struct wl_info *wl, struct wl_if *wlif);
-extern void * wl_get_ndi(struct wl_info *wl, struct wl_if *wlif);
-#endif
 
 struct wl_timer;
 extern struct wl_timer *wl_init_timer(struct wl_info *wl, void (*fn)(void* arg), void *arg,
@@ -87,11 +77,5 @@ extern void *wl_get_ifctx(struct wl_info *wl, int ctx_id, wl_if_t *wlif);
 
 #define wl_sort_bsslist(a, b) FALSE
 
-extern int wl_tkip_miccheck(struct wl_info *wl, void *p, int hdr_len, bool group_key, int id);
-extern int wl_tkip_micadd(struct wl_info *wl, void *p, int hdr_len);
-extern int wl_tkip_encrypt(struct wl_info *wl, void *p, int hdr_len);
-extern int wl_tkip_decrypt(struct wl_info *wl, void *p, int hdr_len, bool group_key);
-extern void wl_tkip_printstats(struct wl_info *wl, bool group_key);
-extern int wl_tkip_keyset(struct wl_info *wl, wsec_key_t *key);
 #define wl_outputpacket_complete(a, b, c)	do { } while (0)
 #endif	

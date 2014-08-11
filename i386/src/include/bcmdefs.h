@@ -1,7 +1,7 @@
 /*
  * Misc system wide definitions
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,7 +15,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: bcmdefs.h 381895 2013-01-30 07:06:40Z $
+ * $Id: bcmdefs.h 432150 2013-10-25 20:57:18Z $
  */
 
 #ifndef	_bcmdefs_h_
@@ -23,11 +23,17 @@
 
 #define BCM_REFERENCE(data)	((void)(data))
 
+#ifdef __GNUC__
+#define UNUSED_VAR     __attribute__ ((unused))
+#else
+#define UNUSED_VAR
+#endif
+
 #define STATIC_ASSERT(expr) { \
 	 \
-	typedef enum { _STATIC_ASSERT_NOT_CONSTANT = (expr) } _static_assert_e; \
+	typedef enum { _STATIC_ASSERT_NOT_CONSTANT = (expr) } _static_assert_e UNUSED_VAR; \
 	 \
-	typedef char STATIC_ASSERT_FAIL[(expr) ? 1 : -1]; \
+	typedef char STATIC_ASSERT_FAIL[(expr) ? 1 : -1] UNUSED_VAR; \
 }
 
 #define bcmreclaimed 		0

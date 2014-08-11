@@ -3,11 +3,11 @@ Author: Cyril Lacoux <clacoux@easter-eggs.com>
 Bug-Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=672677
 Last-Update: 2012-11-19
 
-Index: broadcom-sta-5.100.82.112/amd64/src/wl/sys/wl_linux.c
+Index: broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c
 ===================================================================
---- broadcom-sta-5.100.82.112.orig/amd64/src/wl/sys/wl_linux.c	2013-09-16 09:58:05.770233866 +0400
-+++ broadcom-sta-5.100.82.112/amd64/src/wl/sys/wl_linux.c	2013-09-16 09:58:05.762233866 +0400
-@@ -1683,11 +1683,7 @@
+--- broadcom-sta-6.30.223.248.orig/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:40:11.563128462 +0400
++++ broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:40:11.563128462 +0400
+@@ -1653,11 +1653,7 @@
  	}
  
  	WL_LOCK(wl);

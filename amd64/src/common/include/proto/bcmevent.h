@@ -1,7 +1,7 @@
 /*
  * Broadcom Event  protocol definitions
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -270,14 +270,6 @@ extern const int		bcmevent_names_size;
 #define WLC_E_SUP_DEAUTH		14	
 #define WLC_E_SUP_WPA_PSK_TMO		15	
 
-#ifdef WLAWDL
-#define WLC_E_AWDL_SCAN_START		1	
-#define WLC_E_AWDL_SCAN_DONE		0	
-
-#define WLC_E_AWDL_RX_ACT_FRAME					1
-#define WLC_E_AWDL_RX_PRB_RESP					2
-
-#endif
 typedef BWL_PRE_PACKED_STRUCT struct wl_event_rx_frame_data {
 	uint16	version;
 	uint16	channel;	

@@ -1,8 +1,8 @@
-Index: broadcom-sta-5.100.82.112/amd64/src/wl/sys/wl_linux.c
+Index: broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c
 ===================================================================
---- broadcom-sta-5.100.82.112.orig/amd64/src/wl/sys/wl_linux.c	2013-09-16 09:47:48.938231694 +0400
-+++ broadcom-sta-5.100.82.112/amd64/src/wl/sys/wl_linux.c	2013-09-16 09:48:19.286231801 +0400
-@@ -237,7 +237,7 @@
+--- broadcom-sta-6.30.223.248.orig/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:37:08.683128912 +0400
++++ broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:37:08.679128912 +0400
+@@ -217,7 +217,7 @@
  #define to_str(s) #s
  #define quote_str(s) to_str(s)
  
@@ -11,11 +11,11 @@ Index: broadcom-sta-5.100.82.112/amd64/src/wl/sys/wl_linux.c
  
  static char intf_name[IFNAMSIZ] = quote_str(BRCM_WLAN_IFNAME);
  
-Index: broadcom-sta-5.100.82.112/README.txt
+Index: broadcom-sta-6.30.223.248/README.txt
 ===================================================================
---- broadcom-sta-5.100.82.112.orig/README.txt	2013-09-16 09:47:48.938231694 +0400
-+++ broadcom-sta-5.100.82.112/README.txt	2013-09-16 09:49:49.514232118 +0400
-@@ -277,7 +277,7 @@
+--- broadcom-sta-6.30.223.248.orig/README.txt	2014-08-11 08:37:08.683128912 +0400
++++ broadcom-sta-6.30.223.248/README.txt	2014-08-11 08:37:08.679128912 +0400
+@@ -279,7 +279,7 @@
  
  TX POWER EXPLAINED
  ------------------
@@ -24,7 +24,7 @@ Index: broadcom-sta-5.100.82.112/README.txt
  user-requested transmit power level. This can go up to 32 dbm and allows
  the user to lower the tx power to levels below the regulatory limit.
  Internally, the actual tx power is always kept within regulatory limits
-@@ -346,7 +346,7 @@
+@@ -353,7 +353,7 @@
  + Supports up to linux kernel 2.6.32
  + Supports hidden networks
  + Supports rfkill in kernels < 2.6.31
@@ -33,7 +33,7 @@ Index: broadcom-sta-5.100.82.112/README.txt
  + Support for bcm4313
  + Additional channels in both 2.4 and 5 Ghz bands
  + Fixed issue with tkip group keys that caused this message to repeat often:
-@@ -385,14 +385,14 @@
+@@ -392,14 +392,14 @@
  
  wpa_supplicant 0.6.3 + nl80211 + WEP - (Note: This would only affect you if 
  you are using wpa_supplicant directly from the command line and specify 

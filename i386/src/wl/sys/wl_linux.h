@@ -1,7 +1,7 @@
 /*
  * wl_linux.c exported functions and definitions
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -121,6 +121,12 @@ struct wl_info {
 	struct sk_buff	*txq_tail;	
 	int		txq_cnt;	
 
+	wl_task_t	txq_task;	
+	wl_task_t	multicast_task;	
+
+	wl_task_t	wl_dpc_task;	
+	bool		all_dispatch_mode;
+
 #if defined(WL_CONFIG_RFKILL)
 	struct rfkill_stuff wl_rfkill;
 	mbool last_phyind;
@@ -128,13 +134,8 @@ struct wl_info {
 
 	uint processed;		
 	struct proc_dir_entry *proc_entry;	
-#ifdef WLOFFLD
 	uchar* bar1_addr;
 	uint32 bar1_size;
-#endif
-#ifdef KEEP_ALIVE
-	wl_keep_alive_info_t *keep_alive_info;	
-#endif
 };
 
 #define HYBRID_PROC   "brcm_monitor"
@@ -142,7 +143,7 @@ struct wl_info {
 #if defined(WL_ALL_PASSIVE_ON)
 #define WL_ALL_PASSIVE_ENAB(wl)	1
 #else
-#define WL_ALL_PASSIVE_ENAB(wl)	0
+#define WL_ALL_PASSIVE_ENAB(wl)	(!(wl)->all_dispatch_mode)
 #endif 
 
 #define WL_LOCK(wl) \

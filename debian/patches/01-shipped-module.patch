@@ -1,22 +1,13 @@
-Index: broadcom-sta-5.100.82.112/amd64/Makefile
+Index: broadcom-sta-6.30.223.248/amd64/Makefile
 ===================================================================
---- broadcom-sta-5.100.82.112.orig/amd64/Makefile	2013-09-16 09:40:32.626230157 +0400
-+++ broadcom-sta-5.100.82.112/amd64/Makefile	2013-09-16 09:42:51.862230647 +0400
-@@ -126,17 +126,38 @@
+--- broadcom-sta-6.30.223.248.orig/amd64/Makefile	2014-08-11 08:22:15.575131107 +0400
++++ broadcom-sta-6.30.223.248/amd64/Makefile	2014-08-11 08:32:17.555129627 +0400
+@@ -126,9 +126,27 @@
  EXTRA_CFLAGS       += -I$(src)/src/shared/bcmwifi/include
- #EXTRA_CFLAGS       += -DBCMDBG_ASSERT
+ #EXTRA_CFLAGS       += -DBCMDBG_ASSERT -DBCMDBG_ERR
  
 -EXTRA_LDFLAGS      := $(src)/lib/wlc_hybrid.o_shipped
-+ifeq ($(KVER),)
-+	KVER = $(shell uname -r)
-+endif
- 
--KBASE              ?= /lib/modules/`uname -r`
-+KBASE              ?= /lib/modules/$(KVER)
- KBUILD_DIR         ?= $(KBASE)/build
- MDEST_DIR          ?= $(KBASE)/kernel/drivers/net/wireless
-+PWD                ?= $(shell pwd)
- 
++# Look for kernel architecture.
 +# Check for a config symbol that should always be defined, so we don't
 +# fail on 'make clean' which doesn't include .config
 +ifeq ($(CONFIG_NET),y)
@@ -32,16 +23,12 @@ Index: broadcom-sta-5.100.82.112/amd64/Makefile
 +        endif
 +    endif
 +endif
-+
+ 
+-KBASE              ?= /lib/modules/`uname -r`
 +EXTRA_LDFLAGS      := $(src)/lib/$(SHIPPED)
-+ 
- all:
--	KBUILD_NOPEDANTIC=1 make -C $(KBUILD_DIR) M=`pwd`
-+	KBUILD_NOPEDANTIC=1 make -C $(KBUILD_DIR) M=$(PWD)
++
++KVER               ?= $(shell uname -r)
++KBASE              ?= /lib/modules/$(KVER)
+ KBUILD_DIR         ?= $(KBASE)/build
+ MDEST_DIR          ?= $(KBASE)/kernel/drivers/net/wireless
  
- clean:
--	KBUILD_NOPEDANTIC=1 make -C $(KBUILD_DIR) M=`pwd` clean
-+	KBUILD_NOPEDANTIC=1 make -C $(KBUILD_DIR) M=$(PWD) clean
- 
- install:
- 	install -D -m 755 wl.ko $(MDEST_DIR)
