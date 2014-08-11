@@ -1,7 +1,7 @@
 /*
  * Linux OS Independent Layer
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -89,12 +89,24 @@ typedef struct {
 
 #define BUS_SWAP32(v)		(v)
 
+#ifdef BCMDBG_MEM
+	#define MALLOC(osh, size)	osl_debug_malloc((osh), (size), __LINE__, __FILE__)
+	#define MFREE(osh, addr, size)	osl_debug_mfree((osh), (addr), (size), __LINE__, __FILE__)
+	#define MALLOCED(osh)		osl_malloced((osh))
+	#define MALLOC_DUMP(osh, b) 	osl_debug_memdump((osh), (b))
+	extern void *osl_debug_malloc(osl_t *osh, uint size, int line, const char* file);
+	extern void osl_debug_mfree(osl_t *osh, void *addr, uint size, int line, const char* file);
+	extern uint osl_malloced(osl_t *osh);
+	struct bcmstrbuf;
+	extern int osl_debug_memdump(osl_t *osh, struct bcmstrbuf *b);
+#else
 	#define MALLOC(osh, size)	osl_malloc((osh), (size))
 	#define MFREE(osh, addr, size)	osl_mfree((osh), (addr), (size))
 	#define MALLOCED(osh)		osl_malloced((osh))
 	extern void *osl_malloc(osl_t *osh, uint size);
 	extern void osl_mfree(osl_t *osh, void *addr, uint size);
 	extern uint osl_malloced(osl_t *osh);
+#endif 
 
 #define NATIVE_MALLOC(osh, size)		kmalloc(size, GFP_ATOMIC)
 #define NATIVE_MFREE(osh, addr, size)	kfree(addr)
@@ -271,15 +283,9 @@ extern void osl_reg_unmap(void *va);
 #define	W_SM(r, v)		(*(r) = (v))
 #define	BZERO_SM(r, len)	bzero((r), (len))
 
-#ifdef BCMDBG_CTRACE
-#define	PKTGET(osh, len, send)		osl_pktget((osh), (len), __LINE__, __FILE__)
-#define	PKTDUP(osh, skb)		osl_pktdup((osh), (skb), __LINE__, __FILE__)
-#define PKTFRMNATIVE(osh, skb)		osl_pkt_frmnative((osh), (skb), __LINE__, __FILE__)
-#else
 #define	PKTGET(osh, len, send)		osl_pktget((osh), (len))
 #define	PKTDUP(osh, skb)		osl_pktdup((osh), (skb))
 #define PKTFRMNATIVE(osh, skb)		osl_pkt_frmnative((osh), (skb))
-#endif 
 #define PKTLIST_DUMP(osh, buf)
 #define PKTDBG_TRACE(osh, pkt, bit)
 #define	PKTFREE(osh, skb, send)		osl_pktfree((osh), (skb), (send))

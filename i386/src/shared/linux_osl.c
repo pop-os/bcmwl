@@ -1,7 +1,7 @@
 /*
  * Linux OS Independent Layer
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -55,11 +55,6 @@ struct osl_info {
 	uint bustype;
 	bcm_mem_link_t *dbgmem_list;
 	spinlock_t dbgmem_lock;
-#ifdef BCMDBG_CTRACE
-	spinlock_t ctrace_lock;
-	struct list_head ctrace_list;
-	int ctrace_num;
-#endif 
 	spinlock_t pktalloc_lock;
 };
 
@@ -179,12 +174,6 @@ osl_attach(void *pdev, uint bustype, bool pkttag)
 			break;
 	}
 
-#ifdef BCMDBG_CTRACE
-	spin_lock_init(&osh->ctrace_lock);
-	INIT_LIST_HEAD(&osh->ctrace_list);
-	osh->ctrace_num = 0;
-#endif 
-
 	spin_lock_init(&(osh->pktalloc_lock));
 
 #ifdef BCMDBG
@@ -224,9 +213,6 @@ struct sk_buff * BCMFASTPATH
 osl_pkt_tonative(osl_t *osh, void *pkt)
 {
 	struct sk_buff *nskb;
-#ifdef BCMDBG_CTRACE
-	struct sk_buff *nskb1, *nskb2;
-#endif
 
 	if (osh->pub.pkttag)
 		OSL_PKTTAG_CLEAR(pkt);
@@ -234,33 +220,14 @@ osl_pkt_tonative(osl_t *osh, void *pkt)
 	for (nskb = (struct sk_buff *)pkt; nskb; nskb = nskb->next) {
 		atomic_sub(PKTISCHAINED(nskb) ? PKTCCNT(nskb) : 1, &osh->pktalloced);
 
-#ifdef BCMDBG_CTRACE
-		for (nskb1 = nskb; nskb1 != NULL; nskb1 = nskb2) {
-			if (PKTISCHAINED(nskb1)) {
-				nskb2 = PKTCLINK(nskb1);
-			}
-			else
-				nskb2 = NULL;
-
-			DEL_CTRACE(osh, nskb1);
-		}
-#endif 
 	}
 	return (struct sk_buff *)pkt;
 }
 
-#ifdef BCMDBG_CTRACE
-void * BCMFASTPATH
-osl_pkt_frmnative(osl_t *osh, void *pkt, int line, char *file)
-#else
 void * BCMFASTPATH
 osl_pkt_frmnative(osl_t *osh, void *pkt)
-#endif 
 {
 	struct sk_buff *nskb;
-#ifdef BCMDBG_CTRACE
-	struct sk_buff *nskb1, *nskb2;
-#endif
 
 	if (osh->pub.pkttag)
 		OSL_PKTTAG_CLEAR(pkt);
@@ -268,28 +235,12 @@ osl_pkt_frmnative(osl_t *osh, void *pkt)
 	for (nskb = (struct sk_buff *)pkt; nskb; nskb = nskb->next) {
 		atomic_add(PKTISCHAINED(nskb) ? PKTCCNT(nskb) : 1, &osh->pktalloced);
 
-#ifdef BCMDBG_CTRACE
-		for (nskb1 = nskb; nskb1 != NULL; nskb1 = nskb2) {
-			if (PKTISCHAINED(nskb1)) {
-				nskb2 = PKTCLINK(nskb1);
-			}
-			else
-				nskb2 = NULL;
-
-			ADD_CTRACE(osh, nskb1, file, line);
-		}
-#endif 
 	}
 	return (void *)pkt;
 }
 
-#ifdef BCMDBG_CTRACE
-void * BCMFASTPATH
-osl_pktget(osl_t *osh, uint len, int line, char *file)
-#else
 void * BCMFASTPATH
 osl_pktget(osl_t *osh, uint len)
-#endif 
 {
 	struct sk_buff *skb;
 
@@ -302,9 +253,6 @@ osl_pktget(osl_t *osh, uint len)
 #endif
 		skb->priority = 0;
 
-#ifdef BCMDBG_CTRACE
-		ADD_CTRACE(osh, skb, file, line);
-#endif
 		atomic_inc(&osh->pktalloced);
 	}
 
@@ -326,10 +274,6 @@ osl_pktfree(osl_t *osh, void *p, bool send)
 	while (skb) {
 		nskb = skb->next;
 		skb->next = NULL;
-
-#ifdef BCMDBG_CTRACE
-		DEL_CTRACE(osh, skb);
-#endif
 
 		{
 			if (skb->destructor)
@@ -438,6 +382,10 @@ osl_pcmcia_write_attr(osl_t *osh, uint offset, void *buf, int size)
 	osl_pcmcia_attr(osh, offset, (char *) buf, size, TRUE);
 }
 
+#ifdef BCMDBG_MEM
+
+static
+#endif
 void *
 osl_malloc(osl_t *osh, uint size)
 {
@@ -457,6 +405,10 @@ osl_malloc(osl_t *osh, uint size)
 	return (addr);
 }
 
+#ifdef BCMDBG_MEM
+
+static
+#endif
 void
 osl_mfree(osl_t *osh, void *addr, uint size)
 {
@@ -480,6 +432,151 @@ osl_malloc_failed(osl_t *osh)
 	ASSERT((osh && (osh->magic == OS_HANDLE_MAGIC)));
 	return (osh->failed);
 }
+
+#ifdef BCMDBG_MEM
+#define MEMLIST_LOCK(osh, flags)	spin_lock_irqsave(&(osh)->dbgmem_lock, flags)
+#define MEMLIST_UNLOCK(osh, flags)	spin_unlock_irqrestore(&(osh)->dbgmem_lock, flags)
+
+void *
+osl_debug_malloc(osl_t *osh, uint size, int line, const char* file)
+{
+	bcm_mem_link_t *p;
+	const char* basename;
+	unsigned long flags = 0;
+
+	if (!size) {
+		printk("%s: allocating zero sized mem at %s line %d\n", __FUNCTION__, file, line);
+		ASSERT(0);
+	}
+
+	if (osh) {
+		MEMLIST_LOCK(osh, flags);
+	}
+	if ((p = (bcm_mem_link_t*)osl_malloc(osh, sizeof(bcm_mem_link_t) + size)) == NULL) {
+		if (osh) {
+			MEMLIST_UNLOCK(osh, flags);
+		}
+		return (NULL);
+	}
+
+	p->size = size;
+	p->line = line;
+	p->osh = (void *)osh;
+
+	basename = strrchr(file, '/');
+
+	if (basename)
+		basename++;
+
+	if (!basename)
+		basename = file;
+
+	strncpy(p->file, basename, BCM_MEM_FILENAME_LEN);
+	p->file[BCM_MEM_FILENAME_LEN - 1] = '\0';
+
+	if (osh) {
+		p->prev = NULL;
+		p->next = osh->dbgmem_list;
+		if (p->next)
+			p->next->prev = p;
+		osh->dbgmem_list = p;
+		MEMLIST_UNLOCK(osh, flags);
+	}
+
+	return p + 1;
+}
+
+void
+osl_debug_mfree(osl_t *osh, void *addr, uint size, int line, const char* file)
+{
+	bcm_mem_link_t *p = (bcm_mem_link_t *)((int8*)addr - sizeof(bcm_mem_link_t));
+	unsigned long flags = 0;
+
+	ASSERT(osh == NULL || osh->magic == OS_HANDLE_MAGIC);
+
+	if (p->size == 0) {
+		printk("osl_debug_mfree: double free on addr %p size %d at line %d file %s\n",
+			addr, size, line, file);
+		ASSERT(p->size);
+		return;
+	}
+
+	if (p->size != size) {
+		printk("%s: dealloca size does not match alloc size\n", __FUNCTION__);
+		printk("Dealloc addr %p size %d at line %d file %s\n", addr, size, line, file);
+		printk("Alloc size %d line %d file %s\n", p->size, p->line, p->file);
+		ASSERT(p->size == size);
+		return;
+	}
+
+	if (p->osh != (void *)osh) {
+		printk("osl_debug_mfree: alloc osh %p does not match dealloc osh %p\n",
+			p->osh, osh);
+		printk("Dealloc addr %p size %d at line %d file %s\n", addr, size, line, file);
+		printk("Alloc size %d line %d file %s\n", p->size, p->line, p->file);
+		ASSERT(p->osh == (void *)osh);
+		return;
+	}
+
+	if (osh) {
+		MEMLIST_LOCK(osh, flags);
+		if (p->prev)
+			p->prev->next = p->next;
+		if (p->next)
+			p->next->prev = p->prev;
+		if (osh->dbgmem_list == p)
+			osh->dbgmem_list = p->next;
+		p->next = p->prev = NULL;
+	}
+	p->size = 0;
+
+	osl_mfree(osh, p, size + sizeof(bcm_mem_link_t));
+	if (osh) {
+		MEMLIST_UNLOCK(osh, flags);
+	}
+}
+
+int
+osl_debug_memdump(osl_t *osh, struct bcmstrbuf *b)
+{
+	bcm_mem_link_t *p;
+	unsigned long flags = 0;
+
+	ASSERT((osh && (osh->magic == OS_HANDLE_MAGIC)));
+
+	MEMLIST_LOCK(osh, flags);
+	if (osh->dbgmem_list) {
+		if (b != NULL)
+			bcm_bprintf(b, "   Address   Size File:line\n");
+		else
+			printf("   Address   Size File:line\n");
+
+		for (p = osh->dbgmem_list; p; p = p->next) {
+			if (b != NULL)
+				bcm_bprintf(b, "%p %6d %s:%d\n", (char*)p + sizeof(bcm_mem_link_t),
+					p->size, p->file, p->line);
+			else
+				printf("%p %6d %s:%d\n", (char*)p + sizeof(bcm_mem_link_t),
+					p->size, p->file, p->line);
+
+			if (p == p->next) {
+				if (b != NULL)
+					bcm_bprintf(b, "WARNING: loop-to-self "
+						"p %p p->next %p\n", p, p->next);
+				else
+					printf("WARNING: loop-to-self "
+						"p %p p->next %p\n", p, p->next);
+
+				break;
+			}
+		}
+	}
+	MEMLIST_UNLOCK(osh, flags);
+
+	return 0;
+}
+
+#endif	
 
 uint
 osl_dma_consistent_align(void)
@@ -630,13 +727,8 @@ osl_delay(uint usec)
 	}
 }
 
-#ifdef BCMDBG_CTRACE
-void *
-osl_pktdup(osl_t *osh, void *skb, int line, char *file)
-#else
 void *
 osl_pktdup(osl_t *osh, void *skb)
-#endif 
 {
 	void * p;
 
@@ -656,70 +748,8 @@ osl_pktdup(osl_t *osh, void *skb)
 		OSL_PKTTAG_CLEAR(p);
 
 	atomic_inc(&osh->pktalloced);
-#ifdef BCMDBG_CTRACE
-	ADD_CTRACE(osh, (struct sk_buff *)p, file, line);
-#endif
 	return (p);
 }
-
-#ifdef BCMDBG_CTRACE
-int osl_pkt_is_frmnative(osl_t *osh, struct sk_buff *pkt)
-{
-	unsigned long flags;
-	struct sk_buff *skb;
-	int ck = FALSE;
-
-	spin_lock_irqsave(&osh->ctrace_lock, flags);
-
-	list_for_each_entry(skb, &osh->ctrace_list, ctrace_list) {
-		if (pkt == skb) {
-			ck = TRUE;
-			break;
-		}
-	}
-
-	spin_unlock_irqrestore(&osh->ctrace_lock, flags);
-	return ck;
-}
-
-void osl_ctrace_dump(osl_t *osh, struct bcmstrbuf *b)
-{
-	unsigned long flags;
-	struct sk_buff *skb;
-	int idx = 0;
-	int i, j;
-
-	spin_lock_irqsave(&osh->ctrace_lock, flags);
-
-	if (b != NULL)
-		bcm_bprintf(b, " Total %d sbk not free\n", osh->ctrace_num);
-	else
-		printk(" Total %d sbk not free\n", osh->ctrace_num);
-
-	list_for_each_entry(skb, &osh->ctrace_list, ctrace_list) {
-		if (b != NULL)
-			bcm_bprintf(b, "[%d] skb %p:\n", ++idx, skb);
-		else
-			printk("[%d] skb %p:\n", ++idx, skb);
-
-		for (i = 0; i < skb->ctrace_count; i++) {
-			j = (skb->ctrace_start + i) % CTRACE_NUM;
-			if (b != NULL)
-				bcm_bprintf(b, "    [%s(%d)]\n", skb->func[j], skb->line[j]);
-			else
-				printk("    [%s(%d)]\n", skb->func[j], skb->line[j]);
-		}
-		if (b != NULL)
-			bcm_bprintf(b, "\n");
-		else
-			printk("\n");
-	}
-
-	spin_unlock_irqrestore(&osh->ctrace_lock, flags);
-
-	return;
-}
-#endif 
 
 uint32
 osl_sysuptime(void)

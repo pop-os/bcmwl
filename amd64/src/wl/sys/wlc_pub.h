@@ -2,7 +2,7 @@
  * Common (OS-independent) definitions for
  * Broadcom 802.11abg Networking Device Driver
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -16,7 +16,7 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $Id: wlc_pub.h 413887 2013-07-22 20:36:17Z $
+ * $Id: wlc_pub.h 458427 2014-02-26 23:12:38Z $
  */
 
 #ifndef _wlc_pub_h_
@@ -279,31 +279,18 @@ typedef struct wlc_pub {
 
 	bool		promisc;		
 	bool		delayed_down;		
-#ifdef TRAFFIC_MGMT
-	bool		_traffic_mgmt;	        
-#endif
-#ifdef NET_DETECT
-	bool		_net_detect;	        
-#endif
-#ifdef PLC
-	bool		_plc;			
-#ifdef PLC_WET
-	bool 		plc_path;
-#endif 
-#endif 
 	bool		_ap;			
 	bool		_apsta;			
 	bool		_assoc_recreate;	
 	int		_wme;			
 	uint8		_mbss;			
-#ifdef WLAWDL
-	bool		_awdl;			
-#endif
 	bool		associated;		
 
 	bool            phytest_on;             
 	bool		bf_preempt_4306;	
 
+	bool		_wowl;			
+	bool		_wowl_active;		
 	bool		_ampdu_tx;		
 	bool		_ampdu_rx;		
 	bool		_amsdu_tx;		
@@ -349,6 +336,7 @@ typedef struct wlc_pub {
 	pktpool_t	*pktpool;		
 	uint8		_ampdumac;	
 	bool		_wleind;
+	bool		_sup_enab;
 	uint		driverrev;		
 
 	bool		_11h;
@@ -429,7 +417,6 @@ typedef struct	wl_rxsts {
 	uint	encoding;		
 	uint	nfrmtype;		
 	struct wl_if *wlif;		
-#ifdef WL11AC
 	uint8	nss;			
 	uint8   coding;
 	uint16	aid;			
@@ -438,7 +425,6 @@ typedef struct	wl_rxsts {
 	uint16	vhtflags;		
 	uint8	bw_nonht;		
 	uint32	ampdu_counter;		
-#endif 
 } wl_rxsts_t;
 
 typedef struct	wl_txsts {
@@ -584,6 +570,152 @@ typedef struct wlc_if_stats {
 
 	#define PROP_TXSTATUS_ENAB(pub)		0
 
+#define WLOFFLD_CAP(wlc)	((wlc)->ol != NULL)
+#define WLOFFLD_ENAB(pub)	((pub)->_ol)
+#define WLOFFLD_BCN_ENAB(pub)	((pub)->_ol & OL_BCN_ENAB)
+#define WLOFFLD_ARP_ENAB(pub)	((pub)->_ol & OL_ARP_ENAB)
+#define WLOFFLD_ND_ENAB(pub)	((pub)->_ol & OL_ND_ENAB)
+#define WLOFFLD_ARM_TX(pub)	((pub)->_ol & OL_ARM_TX_ENAB)
+
+#define WOWL_ENAB(pub) ((pub)->_wowl)
+#define WOWL_ACTIVE(pub) ((pub)->_wowl_active)
+
+	#define DPT_ENAB(pub) 0
+
+	#define TDLS_SUPPORT(pub)		(0)
+	#define TDLS_ENAB(pub)			(0)
+
+#define WLDLS_ENAB(pub) 0
+
+#ifdef WL_OKC
+	#if defined(WL_ENAB_RUNTIME_CHECK)
+#define OKC_ENAB(pub) ((pub)->_okc)
+	#elif defined(WL_OKC_DISABLED)
+		#define OKC_ENAB(pub)		(0)
+#else
+		#define OKC_ENAB(pub)		((pub)->_okc)
+#endif
+#else
+	#define OKC_ENAB(pub)			(0)
+#endif 
+
+#define WLBSSLOAD_ENAB(pub)	(0)
+
+	#define MCNX_ENAB(pub) 0
+
+	#define P2P_ENAB(pub) 0
+
+	#define MCHAN_ENAB(pub) (0)
+	#define MCHAN_ACTIVE(pub) (0)
+
+	#define MQUEUE_ENAB(pub) (0)
+
+	#define BTA_ENAB(pub) (0)
+
+#define PIO_ENAB(pub) 0
+
+#define CAC_ENAB(pub) ((pub)->_cac)
+
+#define COEX_ACTIVE(wlc) 0
+#define COEX_ENAB(pub) 0
+
+#define	RXIQEST_ENAB(pub)	(0)
+
+#define EDCF_ENAB(pub) (WME_ENAB(pub))
+#define QOS_ENAB(pub) (WME_ENAB(pub) || N_ENAB(pub))
+
+#define PRIOFC_ENAB(pub) ((pub)->_priofc)
+
+#define MONITOR_ENAB(wlc)	((wlc)->monitor != 0)
+
+#define PROMISC_ENAB(wlc_pub)	(wlc_pub)->promisc
+
+#define WLC_SENDUP_MGMT_ENAB(cfg)	0
+
+	#define TOE_ENAB(pub)			(0)
+
+	#define ARPOE_SUPPORT(pub)		(0)
+	#define ARPOE_ENAB(pub)			(0)
+#define ICMPOE_ENAB(pub) 0
+
+	#define NWOE_ENAB(pub)			(0)
+
+#define TRAFFIC_MGMT_ENAB(pub) 0
+
+	#define L2_FILTER_ENAB(pub)		(0)
+
+#define NET_DETECT_ENAB(pub) 0
+
+#ifdef PACKET_FILTER
+#define PKT_FILTER_ENAB(pub) 	((pub)->_pkt_filter)
+#else
+#define PKT_FILTER_ENAB(pub)	0
+#endif
+
+#ifdef P2PO
+	#if defined(WL_ENAB_RUNTIME_CHECK) || !defined(DONGLEBUILD)
+		#define P2PO_ENAB(pub) ((pub)->_p2po)
+	#elif defined(P2PO_DISABLED)
+		#define P2PO_ENAB(pub)	(0)
+	#else
+		#define P2PO_ENAB(pub)	(1)
+	#endif
+#else
+	#define P2PO_ENAB(pub) 0
+#endif 
+
+#ifdef ANQPO
+	#if defined(WL_ENAB_RUNTIME_CHECK) || !defined(DONGLEBUILD)
+		#define ANQPO_ENAB(pub) ((pub)->_anqpo)
+	#elif defined(ANQPO_DISABLED)
+		#define ANQPO_ENAB(pub)	(0)
+	#else
+		#define ANQPO_ENAB(pub)	(1)
+	#endif
+#else
+	#define ANQPO_ENAB(pub) 0
+#endif 
+
+#define ASSOC_RECREATE_ENAB(pub) 0
+
+#define WLFBT_ENAB(pub)		(0)
+
+#if 0 && (NDISVER >= 0x0620)
+#define WIN7_AND_UP_OS(pub)	((pub)->_ndis_cap)
+#else
+#define WIN7_AND_UP_OS(pub)	0
+#endif
+
+	#define NDOE_ENAB(pub) (0)
+
+	#define WLEXTSTA_ENAB(pub)	0
+
+	#define IBSS_PEER_GROUP_KEY_ENAB(pub) (0)
+
+	#define IBSS_PEER_DISCOVERY_EVENT_ENAB(pub) (0)
+
+	#define IBSS_PEER_MGMT_ENAB(pub) (0)
+
+	#if defined(WL_ENAB_RUNTIME_CHECK) || !defined(DONGLEBUILD)
+		#define WLEIND_ENAB(pub) ((pub)->_wleind)
+	#elif defined(WLEIND_DISABLED)
+		#define WLEIND_ENAB(pub) (0)
+	#else
+		#define WLEIND_ENAB(pub) (1)
+	#endif
+
+	#define CCX_ENAB(pub) 0
+
+	#define BCMAUTH_PSK_ENAB(pub) 0
+
+	#if defined(WL_ENAB_RUNTIME_CHECK) || !defined(DONGLEBUILD)
+		#define SUP_ENAB(pub)	((pub)->_sup_enab)
+	#elif defined(BCMSUP_PSK_DISABLED)
+		#define SUP_ENAB(pub)	(0)
+	#else
+		#define SUP_ENAB(pub)	(1)
+	#endif
+
 #define WLC_PREC_BMP_ALL		MAXBITVAL(WLC_PREC_COUNT)
 
 #define WLC_PREC_BMP_AC_BE	(NBITVAL(WLC_PRIO_TO_PREC(PRIO_8021D_BE)) |	\
@@ -622,7 +754,7 @@ typedef struct wlc_if_stats {
 
 #define LPC_ENAB(wlc)	(FALSE)
 
-#if defined(WLOLPC) && defined(WL11AC)
+#if defined(WLOLPC)
 #define OLPC_ENAB(wlc)	((wlc)->pub->_olpc)
 #else
 #define OLPC_ENAB(wlc)	(FALSE)
@@ -701,11 +833,9 @@ extern void wlc_statsupd(struct wlc_info *wlc);
 
 extern wlc_pub_t *wlc_pub(void *wlc);
 
-#if defined(BCMPCIDEV) || defined(WLOFFLD)
-
 extern void tcm_sem_enter(wlc_info_t *wlc);
 extern void tcm_sem_exit(wlc_info_t *wlc);
-#endif
+extern void tcm_sem_cleanup(wlc_info_t *wlc);
 
 extern int wlc_module_register(wlc_pub_t *pub, const bcm_iovar_t *iovars,
                                const char *name, void *hdl, iovar_fn_t iovar_fn,
@@ -735,7 +865,7 @@ void wlc_update_perf_stats(wlc_info_t *wlc, uint32 mask);
 void wlc_update_isr_stats(wlc_info_t *wlc, uint32 macintstatus);
 #endif 
 
-#define WLC_REPLAY_CNTRS_VALUE	WPA_CAP_16_REPLAY_CNTRS
+#define WLC_REPLAY_CNTRS_VALUE	WPA_CAP_4_REPLAY_CNTRS
 
 #if WLC_REPLAY_CNTRS_VALUE == WPA_CAP_16_REPLAY_CNTRS
 #define PRIO2IVIDX(prio)	(prio)
