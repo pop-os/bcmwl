@@ -1,7 +1,7 @@
 
 Broadcom Linux hybrid wireless driver
-Release Version: 6.30.223.141
-Release Date: Wed 31 Jul 2013 11:47:12 PM PDT
+Release Version: 6.30.223.248
+Release Date: Thu 26 Jun 2014 03:30:34 AM PDT
 
 DISCLAIMER
 ----------
@@ -73,9 +73,8 @@ To find the Device ID's of Broadcom cards on your machines do:
 
 NOTABLE CHANGES
 ---------------
-	Upgraded to support 3.8.x.
-	Added 4352 support.
-	Dropped WEXT support.
+	Upgraded to support 3.11.x.
+	Added wowlan support.
 
 REQUIREMENTS
 ------------
@@ -97,9 +96,12 @@ make: *** /lib/modules/"release"/build: No such file or directory. Stop.
 Then you do not have the proper packages installed, since installing the
 proper packages will create /lib/modules/"release"/build on your system.
 
-On Fedora install 'kernel-devel' (Development Package for building kernel
-modules to match the kernel) from the Package Manager (System->
-Administration-> Add/Remove Software).
+On Fedora install 'kernel-devel' from 
+Package Manager (System-> Administration-> Add/Remove Software)
+or 
+yum install kernel-devel 
+or
+yum install kernel-PAE-devel
 
 On Ubuntu, you will need headers and tools.  Try these commands:
 # apt-get install build-essential linux-headers-generic
@@ -283,6 +285,11 @@ the user to lower the tx power to levels below the regulatory limit.
 Internally, the actual tx power is always kept within regulatory limits
 no matter what the user request is set to.
 
+WHAT'S NEW IN RELEASE 6.30.223.23X
+---------------------------------
++ Upgraded to Support 3.11 kernels
++ Added cfg80211 wowlan support for Magic Packets and Disconnect
+
 WHAT'S NEW IN RELEASE 6.30.223.126
 ----------------------------------
 + Upgraded to Support 3.8.x
@@ -401,13 +408,17 @@ nl80211. Upgrade to 2.6.35-25 or later should solve this problem.
 HOW TO USE MONITOR MODE
 -----------------------
 To enable monitor mode:
-$ echo 1 > /proc/brcm_monitor0
-
-Enabling monitor mode will create a 'prism0' network interface. Wireshark and
-other netwokk tools can use this new prism0 interface.
+$ echo 1 > /proc/brcm_monitor0 => Creates a 'prism0' network interface for use by Wireshark and others.
+$ ifconfig prism0 up           => Enable the interface
 
 To disable monitor mode:
 $ echo 0 > /proc/brcm_monitor0
+
+HOW TO ENABLE WOWL
+-----------------
+$ iw phyX wowlan enable magic-packet disconnect
+$ iw phyX wowlan show
+
 
 HOW TO INSTALL A PRE-COMPILED DRIVER
 -----------------------------------

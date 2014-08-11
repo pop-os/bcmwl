@@ -2,7 +2,7 @@
  * Linux-specific portion of Broadcom 802.11abg Networking Device Driver
  * cfg80211 interface
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -194,6 +194,8 @@ struct wl_cfg80211_priv {
 	struct task_struct *event_tsk;	
 	unsigned long status;		
 	bool active_scan;	
+	bool passive;	
+	bool offloads;	
 	u8 *ioctl_buf;	
 	u8 *extra_buf;	
 	u8 ci[0] __attribute__ ((__aligned__(NETDEV_ALIGN)));
@@ -219,7 +221,7 @@ static inline struct wl_bss_info *next_bss(struct wl_scan_results *list, struct 
 #define for_each_bss(list, bss, __i)	\
 	for (__i = 0; __i < list->count && __i < WL_AP_MAX; __i++, bss = next_bss(list, bss))
 
-extern s32 wl_cfg80211_attach(struct net_device *ndev, struct device *dev);
+extern s32 wl_cfg80211_attach(struct net_device *ndev, struct device *dev, int flags);
 extern void wl_cfg80211_detach(struct net_device *ndev);
 
 extern void wl_cfg80211_event(struct net_device *ndev, const wl_event_msg_t *e, void *data);

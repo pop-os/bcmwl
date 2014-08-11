@@ -1,7 +1,7 @@
 /*
  * From FreeBSD 2.2.7: Fundamental constants relating to ethernet.
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -50,11 +50,6 @@
 #define	ETHER_TYPE_IPV6		0x86dd		
 #define	ETHER_TYPE_BRCM		0x886c		
 #define	ETHER_TYPE_802_1X	0x888e		
-#ifdef PLC
-#define	ETHER_TYPE_88E1		0x88e1		
-#define	ETHER_TYPE_8912		0x8912		
-#define ETHER_TYPE_GIGLED	0xffff		
-#endif 
 #define	ETHER_TYPE_802_1X_PREAUTH 0x88c7	
 #define ETHER_TYPE_WAI		0x88b4		
 #define ETHER_TYPE_89_0D	0x890d		

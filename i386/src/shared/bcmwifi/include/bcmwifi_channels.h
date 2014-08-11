@@ -3,7 +3,7 @@
  * This header file housing the define and function prototype use by
  * both the wl driver, tools & Apps.
  *
- * Copyright (C) 2013, Broadcom Corporation. All Rights Reserved.
+ * Copyright (C) 2014, Broadcom Corporation. All Rights Reserved.
  * 
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -283,6 +283,8 @@ extern chanspec_t wf_chspec_primary40_chspec(chanspec_t chspec);
 extern int wf_mhz2channel(uint freq, uint start_factor);
 
 extern int wf_channel2mhz(uint channel, uint start_factor);
+
+extern chanspec_t wf_chspec_80(uint8 ctrl_channel, uint8 primary_channel);
 
 extern uint16 wf_channel2chspec(uint ctl_ch, uint bw);
 
