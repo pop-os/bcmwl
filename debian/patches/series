@@ -3,4 +3,3 @@
 02-license.patch
 03-rename-to-wlan0.patch
 04-user_ioctl.patch
-05-kernel-3.10.0.patch
