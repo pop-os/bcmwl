@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.248-1) UNRELEASED; urgency=medium
+
+  * New upstream release (Closes: #756443).
+
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 11 Aug 2014 08:17:25 +0400
+
 broadcom-sta (6.30.223.141-1) unstable; urgency=low
 
   * New upstream release (Yeah!) (Closes: #688823).

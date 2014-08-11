@@ -29,11 +29,16 @@ Forwarded: <no|not-needed|url proving that it has been forwarded>
 Reviewed-By: <name and email of someone who approved the patch>
 Last-Update: <YYYY-MM-DD>
 
-Index: broadcom-sta-5.100.82.112/CHANGELOG
+Index: broadcom-sta-6.30.223.248/CHANGELOG
 ===================================================================
 --- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ broadcom-sta-5.100.82.112/CHANGELOG	2013-09-16 09:32:17.358228413 +0400
-@@ -0,0 +1,88 @@
++++ broadcom-sta-6.30.223.248/CHANGELOG	2014-08-11 08:16:11.943132001 +0400
+@@ -0,0 +1,93 @@
++WHAT'S NEW IN RELEASE 6.30.223.23X
++---------------------------------
+++ Upgraded to Support 3.11 kernels
+++ Added cfg80211 wowlan support for Magic Packets and Disconnect
++
 +WHAT'S NEW IN RELEASE 6.30.223.126
 +----------------------------------
 ++ Upgraded to Support 3.8.x
