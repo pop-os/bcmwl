@@ -12,6 +12,8 @@ source_debdir   := debian/$(source_package)/$(source_target)/debian
 dkms_package    := $(source_name)-dkms
 dkms_target     := usr/src/$(source_name)-$(version)
 
+# Live config
+ids_dir         := usr/share/broadcom-sta
 
 %:
 	dh $@ --with dkms
@@ -29,6 +31,7 @@ install-tmp:
 install-dkms: install-tmp
 	dh_installdirs -p $(dkms_package) $(dkms_target)
 	dh_install -p $(dkms_package) debian/tmp/* $(dkms_target)/
+	dh_install -p $(dkms_package) debian/broadcom-sta.ids $(ids_dir)/
 
 install-source: install-tmp
 	dh_installdirs -p $(source_package) $(source_target)
