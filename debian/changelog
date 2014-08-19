@@ -1,6 +1,20 @@
-broadcom-sta (6.30.223.248-1) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.248-1) unstable; urgency=medium
 
   * New upstream release (Closes: #756443).
+  * Refreshed the following patch files:
+    - 00-changelog.patch
+    - 01-shipped-module.patch
+    - 02-license.patch
+    - 03-rename-to-wlan0.patch
+    - 04-user_ioctl.patch
+  * Dropped applied upstream patch for kernel 3.10 compatibility.
+  * Added 05-3.15.0.patch for kernel 3.15 compatibility
+    (Closes: #752864, #754434, #757984).
+  * Added PCI-ID list file for live-config in broadcom-sta-dkms package
+    (Closes: #748679).
+  * Added BCM4314- as supported chipset in package's description
+    (Closes: #756430).
+  * Bumped standards version to 3.9.5 (No changes).
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 11 Aug 2014 08:17:25 +0400
 
