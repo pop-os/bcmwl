@@ -37,7 +37,7 @@ Description: dkms source for the Broadcom STA Wireless driver
 
 Package: broadcom-sta-source
 Architecture: all
-Depends: ${misc:Depends}, debhelper (>= 8), bzip2, make
+Depends: ${misc:Depends}, debhelper (>= 8), make, xz-utils
 Recommends: module-assistant
 Description: Source for the Broadcom STA Wireless driver
  Broadcom STA is a binary-only device driver to support the following IEEE

@@ -44,7 +44,7 @@ install-source: install-tmp
 	done
 	
 	# Make suitable tarball for module-assisant and kernel-package
-	cd debian/$(source_package)/usr/src && tar cfj $(source_name).tar.bz2 modules && rm -rf modules
+	cd debian/$(source_package)/usr/src && tar cfJ $(source_name).tar.xz modules && rm -rf modules
 
 override_dh_install: install-dkms install-source
 
