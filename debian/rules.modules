@@ -8,7 +8,7 @@ MA_DIR ?= /usr/share/modass
 
 kdist_clean: prep-deb-files
 	dh_clean
-	$(MAKE) clean KBUILD=$(KSRC) KVERS=$(KVERS)
+	$(MAKE) clean KBUILD=$(KSRC) KVER=$(KVERS)
 
 kdist_config: prep-deb-files
 
