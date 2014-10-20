@@ -1,8 +1,9 @@
-broadcom-sta (6.30.223.248-2) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.248-2) unstable; urgency=medium
 
   * Switched compression method from bz2 to xz.
+  * Added 06-3.17.0.patch for kernel 3.17 compatibility (Closes: #762711).
 
- -- Cyril Lacoux <clacoux@easter-eggs.com>  Thu, 21 Aug 2014 10:32:00 +0400
+ -- Cyril Lacoux <clacoux@easter-eggs.com>  Mon, 20 Oct 2014 11:26:01 +0400
 
 broadcom-sta (6.30.223.248-1) unstable; urgency=medium
 
