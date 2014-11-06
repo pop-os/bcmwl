@@ -1,3 +1,15 @@
+bcmwl (6.30.223.248+bdcom-0ubuntu2) vivid; urgency=medium
+
+  * debian/dkms.conf.in,
+    debian/patches/0014-add-support-for-Linux-3.17.patch,
+    debian/patches/0015-add-support-for-Linux-3.18.patch:
+    - Add support for Linux 3.17 (LP: #1358966).
+      Credit for the patch goes to Brian Norris.
+    - Add support for Linux 3.18 (LP: #1358966).
+      Credit for the patch goes to Krzysztof Kolasa.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Thu, 06 Nov 2014 18:43:27 +0100
+
 bcmwl (6.30.223.248+bdcom-0ubuntu1) utopic; urgency=medium
 
   * New upstream release: (LP: #1342645)
