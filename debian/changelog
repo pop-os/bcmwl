@@ -2,7 +2,7 @@ broadcom-sta (6.30.223.248-3) unstable; urgency=medium
 
   * Synced supported chipsets list with README.txt file (Closes: #762954).
   * Bumped standards version to 3.9.6 (No changes).
-  * Added serie of patches from Mickael MASSON <mmasson.dev@gmail.com> to
+  * Added series of patches from Mickael MASSON <mmasson.dev@gmail.com> to
     fix system hang when activating monitor mode (Closes: #770327).
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Sun, 07 Dec 2014 17:49:06 +0400
