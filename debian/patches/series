@@ -5,3 +5,6 @@
 04-user_ioctl.patch
 05-kernel-3.15.0.patch
 06-kernel-3.17.0.patch
+07-fix_procfs_handling.patch
+08-enable_error_traces.patch
+09-fix_system_hang_when_deleting_monitor.patch
