@@ -8,7 +8,7 @@ MA_DIR ?= /usr/share/modass
 
 kdist_clean: prep-deb-files
 	dh_clean
-	$(MAKE) clean KBUILD=$(KSRC) KVER=$(KVERS)
+	$(MAKE) clean "KBUILD_DIR=$(KSRC)" "KVER=$(KVERS)"
 
 kdist_config: prep-deb-files
 
@@ -17,7 +17,7 @@ binary-modules: kdist_config
 	dh_testroot
 	dh_prep
 	# Build and install the module
-	make -C $(KSRC) M=$(CURDIR)
+	$(MAKE) "KBUILD_DIR=$(KSRC)" "KVER=$(KVERS)"
 	install -D -m 0644 wl.ko debian/$(PACKAGE)-$(KVERS)/lib/modules/$(KVERS)/kernel/drivers/net/wireless/wl.ko
 	dh_installdocs
 	dh_installchangelogs
