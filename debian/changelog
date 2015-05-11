@@ -1,3 +1,16 @@
+bcmwl (6.30.223.248+bdcom-0ubuntu3) wily; urgency=medium
+
+  [ Simon Eisenmann ]
+  * debian/dkms.conf.in
+    debian/patches/0016-repair-make-warnings.patch
+    debian/patches/0017-add-support-for-Linux-4.0.patch
+    - Fixed make warnings
+      Credit for the patch goes to Krzysztof Kolasa.
+    - Add support for Linux 4.0 (LP: #1424676)
+      Credit for the patch goes to Krzysztof Kolasa.
+
+ -- Mario Limonciello <Mario_Limonciello@Dell.com>  Mon, 11 May 2015 18:22:09 -0500
+
 bcmwl (6.30.223.248+bdcom-0ubuntu2) vivid; urgency=medium
 
   * debian/dkms.conf.in,
