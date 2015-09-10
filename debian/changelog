@@ -1,3 +1,11 @@
+bcmwl (6.30.223.248+bdcom-0ubuntu4.1) wily; urgency=medium
+
+  * Added needed patches for lts kernels (LP: #1415880)
+  * Fixed null pointer reference (LP: #1415880)
+    d/p/0019-broadcom-sta-6.30.223.248-3.18-null-pointer-fix.patch
+
+ -- Rafael David Tinoco <rafael.tinoco@canonical.com>  Thu, 10 Sep 2015 10:42:38 -0500
+
 bcmwl (6.30.223.248+bdcom-0ubuntu4) wily; urgency=medium
 
   * Add support for Linux 4.2
