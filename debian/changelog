@@ -1,3 +1,13 @@
+broadcom-sta (6.30.223.248-3.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Added Canonical patches to support Linux kernel versions up to 4.0.0
+    (closes: #773713)
+  * Set some variables right for kernel-package/module-assistant usage, 
+    to build correctly against headers without having to boot that kernel
+
+ -- Eduard Bloch <blade@debian.org>  Wed, 29 Apr 2015 11:50:17 +0200
+
 broadcom-sta (6.30.223.248-3) unstable; urgency=medium
 
   * Synced supported chipsets list with README.txt file (Closes: #762954).

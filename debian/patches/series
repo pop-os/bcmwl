@@ -8,3 +8,6 @@
 07-fix_procfs_handling.patch
 08-enable_error_traces.patch
 09-fix_system_hang_when_deleting_monitor.patch
+10-0015-add-support-for-Linux-3.18.patch
+11-0016-repair-make-warnings.patch
+12-0017-add-support-for-Linux-4.0.patch
