@@ -1,3 +1,10 @@
+broadcom-sta (6.30.223.248-3.3) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Rebuild to include arch-indep packages
+
+ -- Eduard Bloch <blade@debian.org>  Sun, 10 May 2015 22:56:43 +0200
+
 broadcom-sta (6.30.223.248-3.2) unstable; urgency=low
 
   * Non-maintainer upload.
