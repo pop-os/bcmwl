@@ -1,3 +1,11 @@
+broadcom-sta (6.30.223.248-3.2) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Added broadcom-sta-6.30.223.248-linux-3.18-null-pointer-crash.patch to
+    prevent potential problems with recent kernels (closes: #773713)
+
+ -- Eduard Bloch <blade@debian.org>  Wed, 06 May 2015 21:22:40 +0200
+
 broadcom-sta (6.30.223.248-3.1) unstable; urgency=low
 
   * Non-maintainer upload.
