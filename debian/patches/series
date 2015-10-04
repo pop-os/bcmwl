@@ -4,7 +4,6 @@
 03-rename-to-wlan0.patch
 04-user_ioctl.patch
 05-remove-time-and-date-macros.patch
-07-fix_procfs_handling.patch
 08-enable_error_traces.patch
 09-fix_system_hang_when_deleting_monitor.patch
 10-0015-add-support-for-Linux-3.18.patch
