@@ -1,8 +1,20 @@
 broadcom-sta (6.30.223.271-1) unstable; urgency=low
 
   * New upstream release (Closes: #800880).
+  * Dropped applied upstream patches (also thanks to Rafael Cunha de Almeida):
+    - 09-fix_system_hang_when_deleting_monitor.patch
+    - 06-kernel-3.17.0.patch
+    - 08-enable_error_traces.patch (stop deviating from upstream)
+    - 10-0015-add-support-for-Linux-3.18.patch
+    - 11-0016-repair-make-warnings.patch
+    - 12-0017-add-support-for-Linux-4.0.patch
+    - 14-0018-cfg80211_disconnected.patch
+  * Adopted (Raphael):
+    - 05-kernel-3.15.0.patch
+    - 07-fix_procfs_handling.patch
+  * Refreshed: all other except for 00-changelog.patch
 
- -- Eduard Bloch <blade@debian.org>  Mon, 05 Oct 2015 18:45:14 +0200
+ -- Eduard Bloch <blade@debian.org>  Mon, 05 Oct 2015 20:20:36 +0200
 
 broadcom-sta (6.30.223.248-4) unstable; urgency=medium
 
