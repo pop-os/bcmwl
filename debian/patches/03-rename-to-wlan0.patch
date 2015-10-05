@@ -1,8 +1,8 @@
-Index: broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c
+Index: broadcom-sta/amd64/src/wl/sys/wl_linux.c
 ===================================================================
---- broadcom-sta-6.30.223.248.orig/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:37:08.683128912 +0400
-+++ broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:37:08.679128912 +0400
-@@ -217,7 +217,7 @@
+--- broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c
++++ broadcom-sta/amd64/src/wl/sys/wl_linux.c
+@@ -219,7 +219,7 @@ module_param(nompc, int, 0);
  #define to_str(s) #s
  #define quote_str(s) to_str(s)
  
@@ -11,11 +11,11 @@ Index: broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c
  
  static char intf_name[IFNAMSIZ] = quote_str(BRCM_WLAN_IFNAME);
  
-Index: broadcom-sta-6.30.223.248/README.txt
+Index: broadcom-sta/README.txt
 ===================================================================
---- broadcom-sta-6.30.223.248.orig/README.txt	2014-08-11 08:37:08.683128912 +0400
-+++ broadcom-sta-6.30.223.248/README.txt	2014-08-11 08:37:08.679128912 +0400
-@@ -279,7 +279,7 @@
+--- broadcom-sta.orig/README.txt
++++ broadcom-sta/README.txt
+@@ -278,7 +278,7 @@ like this:
  
  TX POWER EXPLAINED
  ------------------
@@ -24,7 +24,7 @@ Index: broadcom-sta-6.30.223.248/README.txt
  user-requested transmit power level. This can go up to 32 dbm and allows
  the user to lower the tx power to levels below the regulatory limit.
  Internally, the actual tx power is always kept within regulatory limits
-@@ -353,7 +353,7 @@
+@@ -352,7 +352,7 @@ WHAT'S NEW IN RELEASE 5.60.48.36
  + Supports up to linux kernel 2.6.32
  + Supports hidden networks
  + Supports rfkill in kernels < 2.6.31
@@ -33,7 +33,7 @@ Index: broadcom-sta-6.30.223.248/README.txt
  + Support for bcm4313
  + Additional channels in both 2.4 and 5 Ghz bands
  + Fixed issue with tkip group keys that caused this message to repeat often:
-@@ -392,14 +392,14 @@
+@@ -391,14 +391,14 @@ KNOWN ISSUES AND LIMITATIONS IN EXTERNAL
  
  wpa_supplicant 0.6.3 + nl80211 + WEP - (Note: This would only affect you if 
  you are using wpa_supplicant directly from the command line and specify 

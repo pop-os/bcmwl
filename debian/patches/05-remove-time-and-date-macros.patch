@@ -4,11 +4,11 @@ Bug-Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=752864
 Bug-Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=754434
 Last-Update: 2014-08-13
 
-Index: broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c
+Index: broadcom-sta/amd64/src/wl/sys/wl_linux.c
 ===================================================================
---- broadcom-sta-6.30.223.248.orig/amd64/src/wl/sys/wl_linux.c	2014-08-13 08:04:37.213841222 +0400
-+++ broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c	2014-08-13 08:04:37.209841222 +0400
-@@ -724,7 +724,7 @@
+--- broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c
++++ broadcom-sta/amd64/src/wl/sys/wl_linux.c
+@@ -726,7 +726,7 @@ wl_attach(uint16 vendor, uint16 device,
  		WL_ALL_PASSIVE_ENAB(wl) ?  ", Passive Mode" : "", EPI_VERSION_STR);
  
  #ifdef BCMDBG
@@ -17,7 +17,7 @@ Index: broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c
  #endif 
  	printf("\n");
  
-@@ -2043,8 +2043,7 @@
+@@ -2051,8 +2051,7 @@ wl_osl_pcie_rc(struct wl_info *wl, uint
  void
  wl_dump_ver(wl_info_t *wl, struct bcmstrbuf *b)
  {

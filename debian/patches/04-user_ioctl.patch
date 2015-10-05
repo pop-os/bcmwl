@@ -3,11 +3,11 @@ Author: Cyril Lacoux <clacoux@easter-eggs.com>
 Bug-Debian: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=672677
 Last-Update: 2012-11-19
 
-Index: broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c
+Index: broadcom-sta/amd64/src/wl/sys/wl_linux.c
 ===================================================================
---- broadcom-sta-6.30.223.248.orig/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:40:11.563128462 +0400
-+++ broadcom-sta-6.30.223.248/amd64/src/wl/sys/wl_linux.c	2014-08-11 08:40:11.563128462 +0400
-@@ -1653,11 +1653,7 @@
+--- broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c
++++ broadcom-sta/amd64/src/wl/sys/wl_linux.c
+@@ -1661,11 +1661,7 @@ wl_ioctl(struct net_device *dev, struct
  	}
  
  	WL_LOCK(wl);
