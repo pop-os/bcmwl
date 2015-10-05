@@ -12,3 +12,4 @@
 11-0016-repair-make-warnings.patch
 12-0017-add-support-for-Linux-4.0.patch
 13-broadcom-sta-6.30.223.248-linux-3.18-null-pointer-crash.patch
+14-0018-cfg80211_disconnected.patch
