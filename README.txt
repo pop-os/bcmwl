@@ -1,7 +1,7 @@
 
 Broadcom Linux hybrid wireless driver
-Release Version: 6.30.223.248
-Release Date: Thu 26 Jun 2014 03:30:34 AM PDT
+Release Version: 6.30.223.271
+Release Date: Fri Sep 18 15:41:45 2015
 
 DISCLAIMER
 ----------
@@ -73,8 +73,7 @@ To find the Device ID's of Broadcom cards on your machines do:
 
 NOTABLE CHANGES
 ---------------
-	Upgraded to support 3.11.x.
-	Added wowlan support.
+	Upgraded to support 3.19 kernel APIs.
 
 REQUIREMENTS
 ------------

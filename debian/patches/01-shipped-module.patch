@@ -1,10 +1,10 @@
-Index: broadcom-sta-6.30.223.248/amd64/Makefile
+Index: broadcom-sta/amd64/Makefile
 ===================================================================
---- broadcom-sta-6.30.223.248.orig/amd64/Makefile	2014-08-11 08:22:15.575131107 +0400
-+++ broadcom-sta-6.30.223.248/amd64/Makefile	2014-08-11 08:32:17.555129627 +0400
-@@ -126,9 +126,27 @@
- EXTRA_CFLAGS       += -I$(src)/src/shared/bcmwifi/include
- #EXTRA_CFLAGS       += -DBCMDBG_ASSERT -DBCMDBG_ERR
+--- broadcom-sta.orig/amd64/Makefile
++++ broadcom-sta/amd64/Makefile
+@@ -145,9 +145,27 @@ ifeq "$(GE_49)" "1"
+ EXTRA_CFLAGS       += -Wno-date-time
+ endif
  
 -EXTRA_LDFLAGS      := $(src)/lib/wlc_hybrid.o_shipped
 +# Look for kernel architecture.
@@ -23,10 +23,10 @@ Index: broadcom-sta-6.30.223.248/amd64/Makefile
 +        endif
 +    endif
 +endif
++
++EXTRA_LDFLAGS      := $(src)/lib/$(SHIPPED)
  
 -KBASE              ?= /lib/modules/`uname -r`
-+EXTRA_LDFLAGS      := $(src)/lib/$(SHIPPED)
-+
 +KVER               ?= $(shell uname -r)
 +KBASE              ?= /lib/modules/$(KVER)
  KBUILD_DIR         ?= $(KBASE)/build
