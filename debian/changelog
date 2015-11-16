@@ -1,3 +1,11 @@
+bcmwl (6.30.223.248+bdcom-0ubuntu8) xenial; urgency=medium
+
+  * debian/dkms.conf.in,
+    debian/patches/0020-add-support-for-linux-4.3.patch:
+    - Add support for Linux 4.3.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 16 Nov 2015 18:03:52 +0100
+
 bcmwl (6.30.223.248+bdcom-0ubuntu7) wily; urgency=medium
 
   * debian/bcmwl-kernel-source.modaliases: really fix matching for model 43b1,
