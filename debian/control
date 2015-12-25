@@ -18,14 +18,14 @@ Description: Common files for the Broadcom STA Wireless driver
  BCM4321-, BCM4322-, BCM43142-, BCM43224-, BCM43225-, BCM43227-, BCM43228-,
  BCM4331-, BCM4360-, and BCM4352-based hardware.
  .
- This package contains the common files.
+ This package contains the common files and it should not be installed manually
+ (it will be installed automatically as needed).
 
 Package: broadcom-sta-dkms
 Architecture: all
 Depends: ${misc:Depends}
 Recommends: wireless-tools
-Breaks: broadcom-sta-common, broadcom-sta-modules (<< 5.100.82.112-6~), broadcom-sta-source
-Replaces: broadcom-sta-common, broadcom-sta-modules (<< 5.100.82.112-6~), broadcom-sta-source
+Conflicts: broadcom-sta-modules
 Provides: broadcom-sta-modules
 Description: dkms source for the Broadcom STA Wireless driver
  Broadcom STA is a binary-only device driver to support the following IEEE
@@ -33,9 +33,13 @@ Description: dkms source for the Broadcom STA Wireless driver
  BCM4321-, BCM4322-, BCM43142-, BCM43224-, BCM43225-, BCM43227-, BCM43228-,
  BCM4331-, BCM4360-, and BCM4352-based hardware.
  .
- This package provides the source code for the wl kernel modules. The
- wireless-tools package is also required in order to make use of these modules.
- Kernel source or headers are required to compile these modules.
+ This package provides the source code for the wl kernel modules and makes use
+ of the DKMS build utility to install them for the running kernel. The
+ alternative package broadcom-sta-source can be used instead in case of build
+ problems.
+ .
+ The wireless-tools package is also required in order to make use of these
+ modules. Kernel source or headers are required to compile these modules.
 
 Package: broadcom-sta-source
 Architecture: all
@@ -47,7 +51,11 @@ Description: Source for the Broadcom STA Wireless driver
  BCM4321-, BCM4322-, BCM43142-, BCM43224-, BCM43225-, BCM43227-, BCM43228-,
  BCM4331-, BCM4360-, and BCM4352-based hardware.
  .
- This package provides the source code for the wl kernel modules. The
- wireless-tools package is also required in order to make use of these modules.
- Kernel source or headers are required to compile these modules.
+ This package provides the source code for the wl kernel modules. It makes use
+ of kernel-package or module-assistant build systems. The alternative
+ broadcom-sta-dkms package can be installed instead and might be easier to use
+ with simple system configurations.
+ .
+ The wireless-tools package is also required in order to make use of these
+ modules.  Kernel source or headers are required to compile these modules.
 
