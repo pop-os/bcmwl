@@ -3,8 +3,12 @@ broadcom-sta (6.30.223.271-2) unstable; urgency=low
   * Added 14-rdtscl.patch (closes: #808954), originally 002-rdtscl.patch from
     https://aur.archlinux.org/cgit/aur.git/snapshot/broadcom-wl-dkms.tar.gz
   * Added device id for Lenovo Yoga 3 (closes: 791672)
+  * More explanation about mutually exclusive build systems in the package
+    description (closes: #787091)
+  * changed the relation between -dkms and others to simple conflict with the
+    local binary packages
 
- -- Eduard Bloch <blade@debian.org>  Fri, 25 Dec 2015 18:23:01 +0100
+ -- Eduard Bloch <blade@debian.org>  Fri, 25 Dec 2015 19:15:22 +0100
 
 broadcom-sta (6.30.223.271-1) unstable; urgency=low
 
