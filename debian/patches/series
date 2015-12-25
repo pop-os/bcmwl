@@ -5,3 +5,4 @@
 04-user_ioctl.patch
 05-remove-time-and-date-macros.patch
 13-broadcom-sta-6.30.223.248-linux-3.18-null-pointer-crash.patch
+14-rdtscl.patch
