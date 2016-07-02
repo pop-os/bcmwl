@@ -1,3 +1,11 @@
+broadcom-sta (6.30.223.271-3) unstable; urgency=low
+
+  * Added patch to support kernel 4.7 changes, based on
+    https://github.com/archlinuxcn/repo/blob/f4d6cff1cacf8dad13006fade5f96bc2cf020a9b/broadcom-wl-dkms/003-linux47.patch
+    with minor modifications (closes: #829363)
+
+ -- Eduard Bloch <blade@debian.org>  Sun, 03 Jul 2016 00:42:10 +0200
+
 broadcom-sta (6.30.223.271-2) unstable; urgency=low
 
   * Added 14-rdtscl.patch (closes: #808954), originally 002-rdtscl.patch from
