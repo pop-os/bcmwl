@@ -1,3 +1,11 @@
+bcmwl (6.30.223.248+bdcom-0ubuntu10) yakkety; urgency=medium
+
+  * debian/dkms.conf.in,
+    debian/patches/0020-add-support-for-linux-4.8.patch:
+    - Add support for Linux 4.8. Thanks to Krzysztof Kolasa.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 22 Aug 2016 16:17:41 +0200
+
 bcmwl (6.30.223.248+bdcom-0ubuntu9) yakkety; urgency=medium
 
   * debian/dkms.conf.in,
