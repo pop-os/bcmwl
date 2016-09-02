@@ -1,3 +1,10 @@
+bcmwl (6.30.223.248+bdcom-0ubuntu11) yakkety; urgency=medium
+
+  * debian/patches/0020-add-support-for-linux-4.8.patch:
+    - Fix whitespace issue that prevented DKMS from applying the patch.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Fri, 02 Sep 2016 17:41:43 +0200
+
 bcmwl (6.30.223.248+bdcom-0ubuntu10) yakkety; urgency=medium
 
   * debian/dkms.conf.in,

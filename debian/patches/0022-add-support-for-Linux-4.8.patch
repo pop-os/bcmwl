@@ -1,5 +1,15 @@
+From d3f93542326a06d920c6eb89b703384290d37b8b Mon Sep 17 00:00:00 2001
+From: Alberto Milone <alberto.milone@canonical.com>
+Date: Fri, 2 Sep 2016 17:35:34 +0200
+Subject: [PATCH 1/1] Add support for Linux 4.8
+
+Orginal author: Krzysztof Kolasa
+---
+ src/wl/sys/wl_cfg80211_hybrid.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
 diff --git a/src/wl/sys/wl_cfg80211_hybrid.c b/src/wl/sys/wl_cfg80211_hybrid.c
-index 7d0d44a..dd73388 100644
+index 2fc71fe..ec5e472 100644
 --- a/src/wl/sys/wl_cfg80211_hybrid.c
 +++ b/src/wl/sys/wl_cfg80211_hybrid.c
 @@ -2388,8 +2388,16 @@ wl_bss_connect_done(struct wl_cfg80211_priv *wl, struct net_device *ndev,
@@ -14,7 +24,7 @@ index 7d0d44a..dd73388 100644
 +		cfg80211_scan_done(wl->scan_request, &info);
 +#else
  		WL_DBG(("%s: Aborting scan\n", __FUNCTION__));
- 		cfg80211_scan_done(wl->scan_request, true);
+ 		cfg80211_scan_done(wl->scan_request, true);     
 +#endif
  		wl->scan_request = NULL;
  	}
@@ -44,8 +54,11 @@ index 7d0d44a..dd73388 100644
 +		};
 +		cfg80211_scan_done(wl->scan_request, &info);
 +#else
- 		cfg80211_scan_done(wl->scan_request, true);
+ 		cfg80211_scan_done(wl->scan_request, true);	
 +#endif
  		wl->scan_request = NULL;
  	}
  
+-- 
+2.7.4
+
