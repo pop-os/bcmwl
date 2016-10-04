@@ -15,6 +15,9 @@ dkms_target     := usr/src/$(source_name)-$(version)
 # Live config
 ids_dir         := usr/share/broadcom-sta
 
+# AppStream data
+metadata_dir    := usr/share/appdata
+
 %:
 	dh $@ --with dkms
 
@@ -32,6 +35,7 @@ install-dkms: install-tmp
 	dh_installdirs -p $(dkms_package) $(dkms_target)
 	dh_install -p $(dkms_package) debian/tmp/* $(dkms_target)/
 	dh_install -p $(dkms_package) debian/broadcom-sta.ids $(ids_dir)/
+	dh_install -p $(dkms_package) debian/broadcom-sta-dkms.metainfo.xml $(metadata_dir)/
 
 install-source: install-tmp
 	dh_installdirs -p $(source_package) $(source_target)
