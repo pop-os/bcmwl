@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Eduard Bloch <blade@debian.org>
 Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>
 Build-Depends: debhelper (>= 8), dkms
-Standards-Version: 3.9.6
+Standards-Version: 3.9.8
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
 Vcs-Git: https://gitlab.com/setecastronomy/broadcom-sta.git
 
