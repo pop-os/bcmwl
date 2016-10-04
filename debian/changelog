@@ -2,6 +2,7 @@ broadcom-sta (6.30.223.271-4) unstable; urgency=medium
 
   * Added patch from Koos Vriezen to work around kernel crash with version
     4.8+ (THANKS!) (closes: #839629)
+  * Experimental inclusion of AppStream metadata (closes: #838735)
   * Standards update (no changes required)
 
  -- Eduard Bloch <blade@debian.org>  Tue, 04 Oct 2016 23:25:35 +0200
