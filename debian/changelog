@@ -1,3 +1,12 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu1) zesty; urgency=medium
+
+  * debian/dkms.conf.in
+    - Drop obsolete patches.
+  * New upstream release:
+    - Client does not ACK auth/assoc responses from Cisco AP3800 (LP: #1647036).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Tue, 06 Dec 2016 16:29:07 +0100
+
 bcmwl (6.30.223.248+bdcom-0ubuntu11) yakkety; urgency=medium
 
   * debian/patches/0020-add-support-for-linux-4.8.patch:
