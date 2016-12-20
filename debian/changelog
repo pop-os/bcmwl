@@ -1,3 +1,14 @@
+broadcom-sta (6.30.223.271-5) unstable; urgency=low
+
+  * Disable the AppStream metadata again until it's clear how to work around
+    confusion with the devices better covered by the free driver
+  * Added 17-fix-kernel-warnings.patch from Luis Ortega (avoid useless kernel
+    warnings and possibly add better tracibility of bogus auth failures)
+    (closes: #843387, #843389)
+  * Updated upstream download URL
+
+ -- Eduard Bloch <blade@debian.org>  Tue, 20 Dec 2016 21:53:02 +0100
+
 broadcom-sta (6.30.223.271-4) unstable; urgency=medium
 
   * Added patch from Koos Vriezen to work around kernel crash with version

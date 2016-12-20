@@ -35,7 +35,8 @@ install-dkms: install-tmp
 	dh_installdirs -p $(dkms_package) $(dkms_target)
 	dh_install -p $(dkms_package) debian/tmp/* $(dkms_target)/
 	dh_install -p $(dkms_package) debian/broadcom-sta.ids $(ids_dir)/
-	dh_install -p $(dkms_package) debian/broadcom-sta-dkms.metainfo.xml $(metadata_dir)/
+# disable the AppStream metadata until it's clear how to work around confusion with the devices supported by the free driver
+#	dh_install -p $(dkms_package) debian/broadcom-sta-dkms.metainfo.xml $(metadata_dir)/
 
 install-source: install-tmp
 	dh_installdirs -p $(source_package) $(source_target)
