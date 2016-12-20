@@ -8,3 +8,5 @@
 14-rdtscl.patch
 15-linux47.patch
 16-linux48.patch
+17-fix-kernel-warnings.patch 
+
