@@ -6,6 +6,7 @@ broadcom-sta (6.30.223.271-5) unstable; urgency=low
     warnings and possibly add better tracibility of bogus auth failures)
     (closes: #843387, #843389)
   * Updated upstream download URL
+  * Switch to debhelper 9 (no functional changes)
 
  -- Eduard Bloch <blade@debian.org>  Tue, 20 Dec 2016 21:53:02 +0100
 
