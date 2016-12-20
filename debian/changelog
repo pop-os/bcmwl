@@ -1,4 +1,4 @@
-broadcom-sta (6.30.223.271-5) unstable; urgency=low
+broadcom-sta (6.30.223.271-5) unstable; urgency=medium
 
   * Disable the AppStream metadata again until it's clear how to work around
     confusion with the devices better covered by the free driver
