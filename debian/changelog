@@ -1,3 +1,12 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu2) zesty; urgency=medium
+
+  * debian/dkms.conf.in,
+    debian/patches/0023-add-support-for-linux-4.11.patch:
+    - Add support for Linux 4.11.
+      Credit for the patch goes to Krzysztof Kolasa.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 20 Mar 2017 16:55:50 +0100
+
 bcmwl (6.30.223.271+bdcom-0ubuntu1) zesty; urgency=medium
 
   * debian/dkms.conf.in
