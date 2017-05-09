@@ -1,3 +1,10 @@
+broadcom-sta (6.30.223.271-6) unstable; urgency=low
+
+  * Added 18-linux411.patch to support Linux kernel 4.11, by koos vriezen
+    (closes: #861807)
+
+ -- Eduard Bloch <blade@debian.org>  Tue, 09 May 2017 20:15:42 +0200
+
 broadcom-sta (6.30.223.271-5) unstable; urgency=medium
 
   * Disable the AppStream metadata again until it's clear how to work around
