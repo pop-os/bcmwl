@@ -1,3 +1,13 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu3) artful; urgency=medium
+
+  * debian/dkms.conf.in,
+    debian/patches/0024-add-support-for-linux-4.12.patch:
+    - Add support for Linux 4.12.
+      Thanks to Dmitriy Budnik for reporting the problem and for pointing
+      to part of the solution.
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Mon, 12 Jun 2017 16:48:01 +0200
+
 bcmwl (6.30.223.271+bdcom-0ubuntu2) zesty; urgency=medium
 
   * debian/dkms.conf.in,
