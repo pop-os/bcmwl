@@ -1,3 +1,10 @@
+broadcom-sta (6.30.223.271-7) unstable; urgency=medium
+
+  * Added 19-linux412.patch to support Linux kernel 4.12
+    (Thanks to koos vriezen, closes: #867258)
+
+ -- Eduard Bloch <blade@debian.org>  Sat, 08 Jul 2017 15:03:23 +0200
+
 broadcom-sta (6.30.223.271-6) unstable; urgency=low
 
   * Added 18-linux411.patch to support Linux kernel 4.11, by koos vriezen
