@@ -1,3 +1,13 @@
+broadcom-sta (6.30.223.271-8) UNRELEASED; urgency=medium
+
+  * Team upload.
+  * debian/patches:
+    - Added 20-linux414.patch, and 21-linux415.patch to support
+      Linux kernel 4.15
+      (Thanks to Gerardo Esteban Malazdrewicz, closes: #885885)
+
+ -- Roger Shimizu <rogershimizu@gmail.com>  Mon, 22 Jan 2018 23:39:21 +0900
+
 broadcom-sta (6.30.223.271-7) unstable; urgency=medium
 
   * Added 19-linux412.patch to support Linux kernel 4.12
