@@ -1,3 +1,7 @@
+From: Cyril Lacoux <clacoux@easter-eggs.com>
+Date: Mon, 11 Aug 2014 08:16:11 +0400
+Subject: changelog
+
 Description: Upstream changes introduced in version 5.60.48.36-4
  This patch has been created by dpkg-source during the package build.
  Here's the last changelog entry, hopefully it gives details on why
@@ -29,10 +33,13 @@ Forwarded: <no|not-needed|url proving that it has been forwarded>
 Reviewed-By: <name and email of someone who approved the patch>
 Last-Update: <YYYY-MM-DD>
 
-Index: broadcom-sta-6.30.223.248/CHANGELOG
-===================================================================
---- /dev/null	1970-01-01 00:00:00.000000000 +0000
-+++ broadcom-sta-6.30.223.248/CHANGELOG	2014-08-11 08:16:11.943132001 +0400
+ CHANGELOG | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 93 insertions(+)
+ create mode 100644 CHANGELOG
+
+diff --git a/CHANGELOG b/CHANGELOG
+new file mode 100644
+index 0000000..b021e72
 @@ -0,0 +1,93 @@
 +WHAT'S NEW IN RELEASE 6.30.223.23X
 +---------------------------------
