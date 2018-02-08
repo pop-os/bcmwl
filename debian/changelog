@@ -7,6 +7,9 @@ broadcom-sta (6.30.223.271-8) unstable; urgency=medium
       (Thanks to Gerardo Esteban Malazdrewicz, closes: #885885)
     - Fix typo in 14-rdtscl.patch
 
+  [ Eduard Bloch ]
+  * Dropped extra CHANGELOG file (ancient documentation)
+
  -- Roger Shimizu <rogershimizu@gmail.com>  Mon, 22 Jan 2018 23:39:21 +0900
 
 broadcom-sta (6.30.223.271-7) unstable; urgency=medium
