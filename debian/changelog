@@ -1,4 +1,4 @@
-broadcom-sta (6.30.223.271-8) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.271-8) unstable; urgency=medium
 
   * Team upload.
   * debian/patches:
