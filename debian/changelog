@@ -1,5 +1,6 @@
-broadcom-sta (6.30.223.271-8) unstable; urgency=medium
+broadcom-sta (6.30.223.271-8) unstable; urgency=low
 
+  [ Roger Shimizu ]
   * Team upload.
   * debian/patches:
     - Added 20-linux414.patch, and 21-linux415.patch to support
@@ -12,7 +13,7 @@ broadcom-sta (6.30.223.271-8) unstable; urgency=medium
   * Standard version update to 4.1.3 (added lintian override to
     broadcom-sta-source since debhelper is used on purpose therein)
 
- -- Roger Shimizu <rogershimizu@gmail.com>  Mon, 22 Jan 2018 23:39:21 +0900
+ -- Eduard Bloch <blade@debian.org>  Tue, 13 Feb 2018 21:45:18 +0100
 
 broadcom-sta (6.30.223.271-7) unstable; urgency=medium
 
