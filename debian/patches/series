@@ -1,4 +1,3 @@
-00-changelog.patch
 01-shipped-module.patch
 02-license.patch
 03-rename-to-wlan0.patch
@@ -8,6 +7,8 @@
 14-rdtscl.patch
 15-linux47.patch
 16-linux48.patch
-17-fix-kernel-warnings.patch 
+17-fix-kernel-warnings.patch
 18-linux411.patch
 19-linux412.patch
+20-linux414.patch
+21-linux415.patch
