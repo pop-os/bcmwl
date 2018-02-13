@@ -1,7 +1,6 @@
 broadcom-sta (6.30.223.271-8) unstable; urgency=low
 
   [ Roger Shimizu ]
-  * Team upload.
   * debian/patches:
     - Added 20-linux414.patch, and 21-linux415.patch to support
       Linux kernel 4.15
