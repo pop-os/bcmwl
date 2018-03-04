@@ -4,6 +4,11 @@ broadcom-sta (6.30.223.271-9) UNRELEASED; urgency=medium
     - Apply DEP-5.
   * debian/rules:
     - Get version info from packaging script.
+  * debian/*lintian-overrides:
+    - spelling-error-in-binary on prebuilt libraries.
+    - source-contains-prebuilt-binary on prebuilt libraries.
+    - binary-package-depends-on-toolchain-package on debhelper,
+      since it is unused.
 
  -- Roger Shimizu <rosh@debian.org>  Mon, 05 Mar 2018 01:36:08 +0900
 

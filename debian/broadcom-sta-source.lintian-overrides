@@ -1,1 +1,0 @@
-binary-package-depends-on-toolchain-package depends: debhelper (>= 8)
