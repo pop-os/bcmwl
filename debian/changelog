@@ -2,6 +2,8 @@ broadcom-sta (6.30.223.271-9) UNRELEASED; urgency=medium
 
   * debian/copyright:
     - Apply DEP-5.
+  * debian/rules:
+    - Get version info from packaging script.
 
  -- Roger Shimizu <rosh@debian.org>  Mon, 05 Mar 2018 01:36:08 +0900
 
