@@ -1,5 +1,6 @@
-Author: Broadcom Corporation
-Download: https://www.broadcom.com/support/download-search/?pf=Wireless+LAN+Infrastructure
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Contact: Broadcom Corporation
+Source: https://www.broadcom.com/support/download-search/?pf=Wireless+LAN+Infrastructure
 
 Files: *
 Copyright: (C) Broadcom Corporation
