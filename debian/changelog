@@ -10,6 +10,9 @@ broadcom-sta (6.30.223.271-9) UNRELEASED; urgency=medium
     - source-contains-prebuilt-binary on prebuilt libraries.
     - binary-package-depends-on-toolchain-package on debhelper,
       since it is unused.
+  * debian/patches:
+    - Amend debian/patches/20-linux414.patch to support i386.
+      Thanks to ubuntu for the patch.
 
  -- Roger Shimizu <rosh@debian.org>  Mon, 05 Mar 2018 01:36:08 +0900
 
