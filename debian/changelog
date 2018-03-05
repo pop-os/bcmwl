@@ -2,6 +2,7 @@ broadcom-sta (6.30.223.271-9) UNRELEASED; urgency=medium
 
   * debian/copyright:
     - Apply DEP-5.
+    - Add Comment sectioin to explain why this is non-free.
   * debian/rules:
     - Get version info from packaging script.
   * debian/*lintian-overrides:

@@ -1,6 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Contact: Broadcom Corporation
 Source: https://www.broadcom.com/support/download-search/?pf=Wireless+LAN+Infrastructure
+Comment: non-free due to shipping with prebuilt drivers for amd64 and i386.
 
 Files: *
 Copyright: (C) Broadcom Corporation
