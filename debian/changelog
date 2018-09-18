@@ -13,6 +13,8 @@ broadcom-sta (6.30.223.271-9) UNRELEASED; urgency=medium
   * debian/patches:
     - Amend debian/patches/20-linux414.patch to support i386.
       Thanks to ubuntu for the patch.
+  * debian/control:
+    - Add Vcs-Browser.
 
  -- Roger Shimizu <rosh@debian.org>  Mon, 05 Mar 2018 01:36:08 +0900
 
