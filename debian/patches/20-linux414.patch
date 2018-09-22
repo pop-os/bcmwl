@@ -4,10 +4,10 @@ Subject: linux414
 Origin: https://bugs.debian.org/885885
 
 linux 4.14 changed the kernel_read function prototype.
-
 ---
  amd64/src/shared/linux_osl.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ i386/src/shared/linux_osl.c  |  4 ++++
+ 2 files changed, 15 insertions(+), 1 deletion(-)
 
 diff --git a/amd64/src/shared/linux_osl.c b/amd64/src/shared/linux_osl.c
 index 9adc392..3aa48bf 100644
@@ -24,15 +24,31 @@ index 9adc392..3aa48bf 100644
  
 -	rdlen = kernel_read(fp, fp->f_pos, buf, len);
 +	pos = fp->f_pos;
-+	rdlen = kernel_read(fp, 
++	rdlen = kernel_read(fp,
 +#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0)
-+			pos, 
++			pos,
 +#endif
 +			buf, len
 +#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
-+			,&pos 
++			,&pos
 +#endif
 +	);
+ 	if (rdlen > 0)
+ 		fp->f_pos += rdlen;
+ 
+diff --git a/i386/src/shared/linux_osl.c b/i386/src/shared/linux_osl.c
+index 6157d18..3188745 100644
+--- a/i386/src/shared/linux_osl.c
++++ b/i386/src/shared/linux_osl.c
+@@ -1076,7 +1076,11 @@ osl_os_get_image_block(char *buf, int len, void *image)
+ 	if (!image)
+ 		return 0;
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0)
++	rdlen = kernel_read(fp, buf, len, &fp->f_pos);
++#else
+ 	rdlen = kernel_read(fp, fp->f_pos, buf, len);
++#endif
  	if (rdlen > 0)
  		fp->f_pos += rdlen;
  

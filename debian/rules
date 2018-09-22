@@ -2,7 +2,8 @@
 
 #export DH_VERBOSE=1
 
-version         := $(shell dpkg-parsechangelog | sed -nr '/^Version:/s/Version: (.*:)?(.*)-(.*)/\2/p')
+include /usr/share/dpkg/pkg-info.mk
+version         := $(DEB_VERSION_EPOCH_UPSTREAM)
 
 source_name     := broadcom-sta
 source_package  := $(source_name)-source

@@ -1,3 +1,23 @@
+broadcom-sta (6.30.223.271-9) unstable; urgency=medium
+
+  * debian/copyright:
+    - Apply DEP-5.
+    - Add Comment sectioin to explain why this is non-free.
+  * debian/rules:
+    - Get version info from packaging script.
+  * debian/*lintian-overrides:
+    - spelling-error-in-binary on prebuilt libraries.
+    - source-contains-prebuilt-binary on prebuilt libraries.
+    - binary-package-depends-on-toolchain-package on debhelper,
+      since it is unused.
+  * debian/patches:
+    - Amend debian/patches/20-linux414.patch to support i386.
+      Thanks to ubuntu for the patch.
+  * debian/control:
+    - Add Vcs-Browser.
+
+ -- Roger Shimizu <rosh@debian.org>  Sun, 23 Sep 2018 00:56:35 +0900
+
 broadcom-sta (6.30.223.271-8) unstable; urgency=low
 
   [ Roger Shimizu ]
@@ -116,7 +136,7 @@ broadcom-sta (6.30.223.248-3.1) unstable; urgency=low
   * Non-maintainer upload.
   * Added Canonical patches to support Linux kernel versions up to 4.0.0
     (closes: #773713)
-  * Set some variables right for kernel-package/module-assistant usage, 
+  * Set some variables right for kernel-package/module-assistant usage,
     to build correctly against headers without having to boot that kernel
 
  -- Eduard Bloch <blade@debian.org>  Wed, 29 Apr 2015 11:50:17 +0200
@@ -281,7 +301,7 @@ broadcom-sta (5.100.82.112-2) unstable; urgency=low
 
 broadcom-sta (5.100.82.112-1) unstable; urgency=low
 
-  * New upstream release. 
+  * New upstream release.
 
  -- Cyril Lacoux <clacoux@easter-eggs.com>  Wed, 26 Oct 2011 08:51:03 +0400
 
@@ -297,7 +317,7 @@ broadcom-sta (5.100.82.111-1) unstable; urgency=low
 broadcom-sta (5.100.82.38-2) unstable; urgency=low
 
   * Updated supported chipset details, thanks to Geoff Simmons
-    <gsimmons@gsimmons.org> (Closes: #620149). 
+    <gsimmons@gsimmons.org> (Closes: #620149).
   * Added brcmsmac to blacklist, thanks to Geoff Simmons for the tip
     (Closes: #626283).
 
@@ -308,7 +328,7 @@ broadcom-sta (5.100.82.38-1) unstable; urgency=low
   * New upstream release (Closes: #605715).
   * Switch to dpkg-source 3.0 (quilt) format.
   * Updated my e-mail.
-  * Rebuild initrd when broadcom-sta-common is configured (Closes: #591869). 
+  * Rebuild initrd when broadcom-sta-common is configured (Closes: #591869).
   * Added brcm80211 driver to blacklist as requested by Ben Hutchings
     (Closes: #597786, #601009, #611539).
   * Added upstream changelog and README.txt files.
@@ -329,7 +349,7 @@ broadcom-sta (5.60.48.36-3) unstable; urgency=low
 
 broadcom-sta (5.60.48.36-2) unstable; urgency=low
 
-  * Added patch to compile with 2.6.33 (Closes: #572314, #572429). 
+  * Added patch to compile with 2.6.33 (Closes: #572314, #572429).
   * Added patch from Michael Tuschik for cross-compilation. (Closes: #579839)
 
  -- Cyril Lacoux (Yack) <clacoux@easter-eggs.com>  Mon, 24 May 2010 10:22:44 +0400
