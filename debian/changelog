@@ -1,4 +1,4 @@
-broadcom-sta (6.30.223.271-9) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.271-9) unstable; urgency=medium
 
   * debian/copyright:
     - Apply DEP-5.
@@ -16,7 +16,7 @@ broadcom-sta (6.30.223.271-9) UNRELEASED; urgency=medium
   * debian/control:
     - Add Vcs-Browser.
 
- -- Roger Shimizu <rosh@debian.org>  Mon, 05 Mar 2018 01:36:08 +0900
+ -- Roger Shimizu <rosh@debian.org>  Sun, 23 Sep 2018 00:56:35 +0900
 
 broadcom-sta (6.30.223.271-8) unstable; urgency=low
 
