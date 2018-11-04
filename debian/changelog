@@ -1,3 +1,11 @@
+broadcom-sta (6.30.223.271-9.1) unstable; urgency=medium
+
+  * Re-upload with source and all.
+  * debian/source/lintian-overrides:
+    - Add source-only-upload-to-non-free-without-autobuild.
+
+ -- Roger Shimizu <rosh@debian.org>  Sun, 04 Nov 2018 23:01:49 +0900
+
 broadcom-sta (6.30.223.271-9) unstable; urgency=medium
 
   * debian/copyright:
