@@ -4,7 +4,6 @@ Subject: linux415
 Origin: https://bugs.debian.org/885885
 
 linux 4.15 deprecated the init_timer function.
-
 ---
  amd64/src/wl/sys/wl_linux.c | 28 ++++++++++++++++++++++++----
  1 file changed, 24 insertions(+), 4 deletions(-)

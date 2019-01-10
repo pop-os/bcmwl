@@ -1,7 +1,16 @@
-Index: broadcom-sta/amd64/Makefile
-===================================================================
---- broadcom-sta.orig/amd64/Makefile
-+++ broadcom-sta/amd64/Makefile
+From: Ben Hutchings <ben@decadent.org.uk>
+Date: Mon, 19 Nov 2012 04:51:39 +0000
+Subject: Select wlc_hybrid.o based on the target kernel architecture
+Origin: http://bugs.debian.org/651787
+
+---
+ amd64/Makefile | 22 ++++++++++++++++++++--
+ 1 file changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/amd64/Makefile b/amd64/Makefile
+index a323a0d..994a146 100644
+--- a/amd64/Makefile
++++ b/amd64/Makefile
 @@ -145,9 +145,27 @@ ifeq "$(GE_49)" "1"
  EXTRA_CFLAGS       += -Wno-date-time
  endif

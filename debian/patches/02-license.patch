@@ -1,8 +1,16 @@
-Index: broadcom-sta/amd64/src/wl/sys/wl_linux.c
-===================================================================
---- broadcom-sta.orig/amd64/src/wl/sys/wl_linux.c
-+++ broadcom-sta/amd64/src/wl/sys/wl_linux.c
-@@ -158,6 +158,8 @@ static void wl_report_radio_state(wl_inf
+From: Cyril Lacoux <clacoux@easter-eggs.com>
+Date: Sat, 14 Nov 2009 15:37:18 +0400
+Subject: Adding patch to export module license symbol
+
+---
+ amd64/src/wl/sys/wl_linux.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/amd64/src/wl/sys/wl_linux.c b/amd64/src/wl/sys/wl_linux.c
+index 0d05100..1cb0874 100644
+--- a/amd64/src/wl/sys/wl_linux.c
++++ b/amd64/src/wl/sys/wl_linux.c
+@@ -158,6 +158,8 @@ static void wl_report_radio_state(wl_info_t *wl);
  
  MODULE_LICENSE("MIXED/Proprietary");
  
