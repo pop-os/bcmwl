@@ -1,3 +1,10 @@
+broadcom-sta (6.30.223.271-10) UNRELEASED; urgency=medium
+
+  * debian/patches:
+    - Apply DEP-3.
+
+ -- Roger Shimizu <rosh@debian.org>  Thu, 10 Jan 2019 20:28:33 +0200
+
 broadcom-sta (6.30.223.271-9.1) unstable; urgency=medium
 
   * Re-upload with source and all.

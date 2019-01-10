@@ -1,7 +1,7 @@
 From: koos vriezen <koos.vriezen@gmail.com>
 Date: Mon, 3 Oct 2016 10:54:11 +0200
 Subject: linux48
-Origin: https://bugs.debian.org/
+Origin: https://bugs.debian.org/839629
 
 Looking at the patch for kernel 4.8, I came up with the attached patch
 (and I send this mail while running it :)
