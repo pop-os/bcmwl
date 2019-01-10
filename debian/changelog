@@ -2,6 +2,7 @@ broadcom-sta (6.30.223.271-10) UNRELEASED; urgency=medium
 
   * debian/patches:
     - Apply DEP-3.
+    - Refresh patches.
 
  -- Roger Shimizu <rosh@debian.org>  Thu, 10 Jan 2019 20:28:33 +0200
 
