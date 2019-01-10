@@ -1,4 +1,4 @@
-broadcom-sta (6.30.223.271-10) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.271-10) unstable; urgency=medium
 
   * debian/patches:
     - Apply DEP-3.
@@ -6,7 +6,7 @@ broadcom-sta (6.30.223.271-10) UNRELEASED; urgency=medium
   * debian/source/lintian-overrides:
     - Remove source-only-upload-to-non-free-without-autobuild.
 
- -- Roger Shimizu <rosh@debian.org>  Thu, 10 Jan 2019 20:28:33 +0200
+ -- Roger Shimizu <rosh@debian.org>  Fri, 11 Jan 2019 00:12:46 +0200
 
 broadcom-sta (6.30.223.271-9.1) unstable; urgency=medium
 
