@@ -1,3 +1,11 @@
+broadcom-sta (6.30.223.271-11) unstable; urgency=medium
+
+  * debian/patches:
+    - Add compat fix for deprecated get_ds function
+      (Thanks patch from ubuntu, LP: #1830042, closes: #928754, #934677)
+
+ -- Roger Shimizu <rosh@debian.org>  Thu, 15 Aug 2019 21:42:52 +0900
+
 broadcom-sta (6.30.223.271-10) unstable; urgency=medium
 
   * debian/patches:
