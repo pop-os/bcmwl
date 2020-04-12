@@ -3,6 +3,8 @@ broadcom-sta (6.30.223.271-12) UNRELEASED; urgency=medium
   * debian/patches:
     - Add patch to adapt linux 5.6
       Thanks to Herman van Hazendonk (Closes: #955415).
+  * debian/control:
+    - Add Rules-Requires-Root: no
 
  -- Roger Shimizu <rosh@debian.org>  Mon, 13 Apr 2020 00:25:10 +0900
 
