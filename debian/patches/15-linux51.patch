@@ -5,7 +5,7 @@ Origin: https://bugs.debian.org/928754 https://bugs.debian.org/934677
 Bug-Ubuntu: https://bugs.launchpad.net/bugs/1830042
 
  This adds a compat fix for the deprecated get_ds helper function. For
- Linux 5.1 onwards this was replaced with KERNEL_DS, see Linux commit
+ Linux 5.1 onwards this was replaced with KERNEL_DS, see Linux
  commit 736706bee3298208343a76096370e4f6a5c55915
  ("get rid of legacy 'get_ds()' function")
  .
