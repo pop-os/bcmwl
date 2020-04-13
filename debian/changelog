@@ -1,4 +1,4 @@
-broadcom-sta (6.30.223.271-12) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.271-12) unstable; urgency=medium
 
   * debian/patches:
     - Add patch to adapt linux 5.6
@@ -6,7 +6,7 @@ broadcom-sta (6.30.223.271-12) UNRELEASED; urgency=medium
   * debian/control:
     - Add Rules-Requires-Root: no
 
- -- Roger Shimizu <rosh@debian.org>  Mon, 13 Apr 2020 00:25:10 +0900
+ -- Roger Shimizu <rosh@debian.org>  Mon, 13 Apr 2020 23:59:43 +0900
 
 broadcom-sta (6.30.223.271-11) unstable; urgency=medium
 
