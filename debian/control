@@ -3,9 +3,12 @@ Section: non-free/kernel
 Priority: optional
 Maintainer: Eduard Bloch <blade@debian.org>
 Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>, Roger Shimizu <rosh@debian.org>
-Build-Depends: debhelper (>= 9.2), dkms
-Standards-Version: 4.1.3
+Build-Depends:
+ debhelper-compat (= 12),
+ dkms
+Standards-Version: 4.5.0
 Rules-Requires-Root: no
+XS-Autobuild: yes
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
 Vcs-Git: https://salsa.debian.org/broadcom-sta-team/broadcom-sta.git
 Vcs-Browser: https://salsa.debian.org/broadcom-sta-team/broadcom-sta
@@ -45,7 +48,11 @@ Description: dkms source for the Broadcom STA Wireless driver
 
 Package: broadcom-sta-source
 Architecture: all
-Depends: ${misc:Depends}, debhelper (>= 8), make, xz-utils
+Depends:
+ ${misc:Depends},
+ debhelper-compat (= 12),
+ make,
+ xz-utils
 Recommends: module-assistant
 Description: Source for the Broadcom STA Wireless driver
  Broadcom STA is a binary-only device driver to support the following IEEE
