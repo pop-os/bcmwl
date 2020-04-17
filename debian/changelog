@@ -1,3 +1,17 @@
+broadcom-sta (6.30.223.271-13~exp1) experimental; urgency=medium
+
+  * debian/control:
+    - Get the package added to the "autobuild" whitelist, hoping can
+      resolve the source upload.
+    - Bump debhelper version to 12.
+    - Bump policy version to 4.5.0
+  * debian/broadcom-sta-dkms.metainfo.xml:
+    - Fix license for the metadata.
+  * Add debian/upstream/metadata.
+  * Remove debian/compat.
+
+ -- Roger Shimizu <rosh@debian.org>  Fri, 17 Apr 2020 19:21:05 +0900
+
 broadcom-sta (6.30.223.271-12) unstable; urgency=medium
 
   * debian/patches:
