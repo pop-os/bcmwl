@@ -14,3 +14,4 @@
 14-linux415.patch
 15-linux51.patch
 16-linux56.patch
+17-Parse-KERNELRELEASE-into-VERSION-PATCHLEVEL-and-SUBLEV.patch

@@ -1,3 +1,10 @@
+broadcom-sta (6.30.223.271-13) UNRELEASED; urgency=medium
+
+  * debian/patches:
+    - Add patch to fix dkms build error (Closes: #886512).
+
+ -- Roger Shimizu <rosh@debian.org>  Sat, 18 Apr 2020 18:26:19 +0900
+
 broadcom-sta (6.30.223.271-13~exp1) experimental; urgency=medium
 
   * debian/control:
