@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.271-14) unstable; urgency=medium
+
+  * Rebuild as unstable.
+
+ -- Roger Shimizu <rosh@debian.org>  Sat, 18 Apr 2020 19:07:30 +0900
+
 broadcom-sta (6.30.223.271-13) experimental; urgency=medium
 
   * debian/patches:
