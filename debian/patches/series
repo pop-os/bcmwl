@@ -19,3 +19,4 @@
 19-wl-Fix-get-set-values-for-tx_power.patch
 20-wl-Fix-mac-address-setting.patch
 21-wl-Fix-misleading-indentation.patch
+22-wl-Fix-fall-through-warnings.patch
