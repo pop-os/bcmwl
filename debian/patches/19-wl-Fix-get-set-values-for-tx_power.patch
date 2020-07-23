@@ -18,7 +18,7 @@ utilities like `iwconfig` or `iw`.
  2 files changed, 17 insertions(+), 13 deletions(-)
 
 diff --git a/amd64/src/wl/sys/wl_cfg80211_hybrid.c b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
-index a732e0b..6bc7771 100644
+index 1eba605..5019dd5 100644
 --- a/amd64/src/wl/sys/wl_cfg80211_hybrid.c
 +++ b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
 @@ -88,13 +88,13 @@ static s32 wl_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev, u
