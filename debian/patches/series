@@ -17,3 +17,4 @@
 17-Get-rid-of-get_fs-set_fs-calls.patch
 18-wl-Make-sure-power_mgmt-settings-are-honored.patch
 19-wl-Fix-get-set-values-for-tx_power.patch
+20-wl-Fix-mac-address-setting.patch
