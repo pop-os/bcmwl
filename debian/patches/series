@@ -20,3 +20,4 @@
 20-wl-Fix-mac-address-setting.patch
 21-wl-Fix-misleading-indentation.patch
 22-wl-Fix-fall-through-warnings.patch
+23-wl-Avoid-disconnecting-invalid-interface.patch
