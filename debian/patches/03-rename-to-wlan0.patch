@@ -1,6 +1,7 @@
 From: Carlos Alberto Lopez Perez <clopez@igalia.com>
 Date: Tue, 8 Nov 2011 20:11:40 +0000
 Subject: rename-to-wlan0
+
 Origin: https://bugs.debian.org/648169
 
 renames the interface ethX that the driver automatically

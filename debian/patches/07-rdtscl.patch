@@ -1,6 +1,7 @@
 From: Eduard Bloch <blade@debian.org>
 Date: Fri, 25 Dec 2015 18:24:18 +0100
 Subject: rdtscl
+
 Origin: https://bugs.debian.org/808954
 
 Since Linux 4.3, rdtscl() is no longer available and native_read_tsc()
