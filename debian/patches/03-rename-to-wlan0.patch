@@ -50,10 +50,10 @@ index 1068371..88f0d11 100644
  Some kernel versions of Ubuntu such as 2.6.35-22 (released with Ubuntu 
  10.10) may have problems that affect WPA/WPA2 connections created through 
 diff --git a/amd64/src/wl/sys/wl_linux.c b/amd64/src/wl/sys/wl_linux.c
-index 1cb0874..72bf429 100644
+index 0d05100..947cef3 100644
 --- a/amd64/src/wl/sys/wl_linux.c
 +++ b/amd64/src/wl/sys/wl_linux.c
-@@ -219,7 +219,7 @@ module_param(nompc, int, 0);
+@@ -217,7 +217,7 @@ module_param(nompc, int, 0);
  #define to_str(s) #s
  #define quote_str(s) to_str(s)
  
