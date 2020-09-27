@@ -32,10 +32,10 @@ index b24a973..9bce9b1 100644
  
  void
 diff --git a/amd64/src/wl/sys/wl_linux.c b/amd64/src/wl/sys/wl_linux.c
-index ab7b883..10621c2 100644
+index 8fe9f4f..66069d4 100644
 --- a/amd64/src/wl/sys/wl_linux.c
 +++ b/amd64/src/wl/sys/wl_linux.c
-@@ -590,10 +590,17 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
+@@ -588,10 +588,17 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
  	}
  	wl->bcm_bustype = bustype;
  
@@ -53,7 +53,7 @@ index ab7b883..10621c2 100644
  
  	wl->bar1_addr = bar1_addr;
  	wl->bar1_size = bar1_size;
-@@ -780,8 +787,13 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -778,8 +785,13 @@ wl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	if ((val & 0x0000ff00) != 0)
  		pci_write_config_dword(pdev, 0x40, val & 0xffff00ff);
  		bar1_size = pci_resource_len(pdev, 2);
@@ -67,7 +67,7 @@ index ab7b883..10621c2 100644
  	wl = wl_attach(pdev->vendor, pdev->device, pci_resource_start(pdev, 0), PCI_BUS, pdev,
  		pdev->irq, bar1_addr, bar1_size);
  
-@@ -3354,12 +3366,19 @@ wl_proc_write(struct file *filp, const char __user *buff, size_t length, loff_t
+@@ -3352,12 +3364,19 @@ wl_proc_write(struct file *filp, const char __user *buff, size_t length, loff_t
  }
  
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 0)

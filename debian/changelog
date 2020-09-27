@@ -1,3 +1,11 @@
+broadcom-sta (6.30.223.271-15) UNRELEASED; urgency=medium
+
+  * debian/patches:
+    - Remove patch 02, since it's not needed.
+    - Refresh patches.
+
+ -- Roger Shimizu <rosh@debian.org>  Sun, 27 Sep 2020 16:10:04 +0900
+
 broadcom-sta (6.30.223.271-14) unstable; urgency=medium
 
   * Rebuild as unstable.

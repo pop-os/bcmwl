@@ -9,10 +9,10 @@ Origin: https://bugs.debian.org/754434
  1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/amd64/src/wl/sys/wl_linux.c b/amd64/src/wl/sys/wl_linux.c
-index d335d65..73938f5 100644
+index 23d71c6..32a0ad5 100644
 --- a/amd64/src/wl/sys/wl_linux.c
 +++ b/amd64/src/wl/sys/wl_linux.c
-@@ -726,7 +726,7 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
+@@ -724,7 +724,7 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
  		WL_ALL_PASSIVE_ENAB(wl) ?  ", Passive Mode" : "", EPI_VERSION_STR);
  
  #ifdef BCMDBG
@@ -21,7 +21,7 @@ index d335d65..73938f5 100644
  #endif 
  	printf("\n");
  
-@@ -2051,8 +2051,7 @@ wl_osl_pcie_rc(struct wl_info *wl, uint op, int param)
+@@ -2049,8 +2049,7 @@ wl_osl_pcie_rc(struct wl_info *wl, uint op, int param)
  void
  wl_dump_ver(wl_info_t *wl, struct bcmstrbuf *b)
  {

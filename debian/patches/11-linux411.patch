@@ -34,10 +34,10 @@ index 551fe1f..83930ec 100644
  #include <linux/nl80211.h>
  #include <net/rtnetlink.h>
 diff --git a/amd64/src/wl/sys/wl_linux.c b/amd64/src/wl/sys/wl_linux.c
-index b7fbe28..77dc327 100644
+index e2f1cb6..7cedddd 100644
 --- a/amd64/src/wl/sys/wl_linux.c
 +++ b/amd64/src/wl/sys/wl_linux.c
-@@ -2912,7 +2912,9 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
+@@ -2910,7 +2910,9 @@ wl_monitor(wl_info_t *wl, wl_rxsts_t *rxsts, void *p)
  	if (skb == NULL) return;
  
  	skb->dev = wl->monitor_dev;

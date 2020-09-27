@@ -9,10 +9,10 @@ Downloaded from https://gist.github.com/hobarrera/ac0e6225210ac5bb13f6#file-broa
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/amd64/src/wl/sys/wl_linux.c b/amd64/src/wl/sys/wl_linux.c
-index 73938f5..b7fbe28 100644
+index 32a0ad5..e2f1cb6 100644
 --- a/amd64/src/wl/sys/wl_linux.c
 +++ b/amd64/src/wl/sys/wl_linux.c
-@@ -2162,8 +2162,8 @@ wl_start(struct sk_buff *skb, struct net_device *dev)
+@@ -2160,8 +2160,8 @@ wl_start(struct sk_buff *skb, struct net_device *dev)
  	wlif = WL_DEV_IF(dev);
  	wl = WL_INFO(dev);
  

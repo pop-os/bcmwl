@@ -1,5 +1,5 @@
 01-shipped-module.patch
-02-license.patch
+02-Parse-KERNELRELEASE-into-VERSION-PATCHLEVEL-and-SUBLEV.patch
 03-rename-to-wlan0.patch
 04-user_ioctl.patch
 05-remove-time-and-date-macros.patch
@@ -14,4 +14,3 @@
 14-linux415.patch
 15-linux51.patch
 16-linux56.patch
-17-Parse-KERNELRELEASE-into-VERSION-PATCHLEVEL-and-SUBLEV.patch
