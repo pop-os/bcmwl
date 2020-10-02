@@ -1,3 +1,14 @@
+broadcom-sta (6.30.223.271-16~exp1) experimental; urgency=medium
+
+  * debian/patches:
+    - Add 5 patches from Diego Escalante Urrelo to improve:
+      + power mgmt setting
+      + tx_power
+      + mac address setting
+      + other minor fixes
+
+ -- Roger Shimizu <rosh@debian.org>  Sat, 03 Oct 2020 02:25:04 +0900
+
 broadcom-sta (6.30.223.271-15) unstable; urgency=medium
 
   * debian/patches:
