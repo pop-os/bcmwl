@@ -1,9 +1,9 @@
 From: Cyril Lacoux <clacoux@easter-eggs.com>
 Date: Wed, 13 Aug 2014 08:04:37 +0400
 Subject: Remove __TIME__ and __DATE__ macros from code
-
 Origin: https://bugs.debian.org/752864
 Origin: https://bugs.debian.org/754434
+
 ---
  amd64/src/wl/sys/wl_linux.c | 5 ++---
  1 file changed, 2 insertions(+), 3 deletions(-)

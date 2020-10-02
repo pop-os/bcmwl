@@ -1,8 +1,8 @@
 From: Luis Ortega <luiorpe1@gmail.com>
 Date: Sun, 6 Nov 2016 12:15:10 +0100
 Subject: fix-kernel-warnings
-
 Origin: https://bugs.debian.org/843387
+
 ---
  amd64/src/wl/sys/wl_cfg80211_hybrid.c | 87 ++++++++++++++++++++++++-----------
  1 file changed, 60 insertions(+), 27 deletions(-)

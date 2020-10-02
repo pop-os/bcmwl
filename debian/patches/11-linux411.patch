@@ -1,7 +1,6 @@
 From: koos vriezen <koos.vriezen@gmail.com>
 Date: Mon, 1 May 2017 18:28:01 +0200
 Subject: Compile fix with kernel 4.11
-
 Origin: http://bugs.debian.org/861807
 Forwarded: no
 Reviewed-By: Eduard Bloch <blade@debian.org>

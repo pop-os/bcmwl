@@ -1,8 +1,8 @@
 From: Ben Hutchings <ben@decadent.org.uk>
 Date: Mon, 19 Nov 2012 04:51:39 +0000
 Subject: Select wlc_hybrid.o based on the target kernel architecture
-
 Origin: http://bugs.debian.org/651787
+
 ---
  amd64/Makefile | 22 ++++++++++++++++++++--
  1 file changed, 20 insertions(+), 2 deletions(-)

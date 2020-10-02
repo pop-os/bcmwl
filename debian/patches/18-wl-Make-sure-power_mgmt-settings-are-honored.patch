@@ -14,10 +14,10 @@ keep PM off, no matter the circumstances.
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/amd64/src/wl/sys/wl_cfg80211_hybrid.c b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
-index 8e01841..1eba605 100644
+index 111ec5a..e81389f 100644
 --- a/amd64/src/wl/sys/wl_cfg80211_hybrid.c
 +++ b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
-@@ -1504,7 +1504,9 @@ wl_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+@@ -1479,7 +1479,9 @@ wl_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
  	s32 pm;
  	s32 err = 0;
  

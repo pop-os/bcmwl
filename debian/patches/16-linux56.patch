@@ -1,7 +1,6 @@
 From: Herman van Hazendonk <github.com@herrie.org>
 Date: Tue, 31 Mar 2020 17:09:55 +0200
 Subject: [PATCH] Add fixes for 5.6 kernel
-
 Origin: https://salsa.debian.org/Herrie82-guest/broadcom-sta/-/merge_requests/1
 
 Use ioremap instead of ioremap_nocache and proc_ops instead of

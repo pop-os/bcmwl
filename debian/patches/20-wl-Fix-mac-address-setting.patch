@@ -24,10 +24,10 @@ even when the hardware had not been able to change it.
  1 file changed, 6 insertions(+), 4 deletions(-)
 
 diff --git a/amd64/src/wl/sys/wl_linux.c b/amd64/src/wl/sys/wl_linux.c
-index bca6246..ecae389 100644
+index 4f5e43a..acdac06 100644
 --- a/amd64/src/wl/sys/wl_linux.c
 +++ b/amd64/src/wl/sys/wl_linux.c
-@@ -1820,15 +1820,17 @@ wl_set_mac_address(struct net_device *dev, void *addr)
+@@ -1848,15 +1848,17 @@ wl_set_mac_address(struct net_device *dev, void *addr)
  	WL_TRACE(("wl%d: wl_set_mac_address\n", wl->pub->unit));
  
  	WL_LOCK(wl);

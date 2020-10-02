@@ -9,10 +9,10 @@ interface.
  1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/amd64/src/wl/sys/wl_cfg80211_hybrid.c b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
-index 968c9bd..e40a7ff 100644
+index 195c0e4..1801f70 100644
 --- a/amd64/src/wl/sys/wl_cfg80211_hybrid.c
 +++ b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
-@@ -1090,14 +1090,15 @@ wl_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_c
+@@ -1065,14 +1065,15 @@ wl_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_c
  	WL_DBG(("Reason %d\n", reason_code));
  
  	if (wl->profile->active) {

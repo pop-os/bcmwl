@@ -1,7 +1,6 @@
 From: Gerardo Esteban Malazdrewicz <gerardo@malazdrewicz.com.ar>
 Date: Fri, 29 Dec 2017 23:44:24 -0400
 Subject: linux414
-
 Origin: https://bugs.debian.org/885885
 
 linux 4.14 changed the kernel_read function prototype.
