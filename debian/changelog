@@ -1,3 +1,11 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu7) groovy; urgency=medium
+
+  * debian/patches/0028-add-support-for-linux-5.6.patch:
+    - Remove extra src prefix, which prevented the patch from
+      being applied correctly (LP: #1878045).
+
+ -- Alberto Milone <alberto.milone@canonical.com>  Fri, 02 Oct 2020 11:57:47 +0200
+
 bcmwl (6.30.223.271+bdcom-0ubuntu6) groovy; urgency=medium
 
   * debian/dkms.conf.in,
