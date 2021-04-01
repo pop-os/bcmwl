@@ -1,3 +1,9 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu8pop0) focal; urgency=medium
+
+  * Pop!_OS backport
+
+ -- Jeremy Soller <jeremy@system76.com>  Thu, 01 Apr 2021 11:10:44 -0600
+
 bcmwl (6.30.223.271+bdcom-0ubuntu8) hirsute; urgency=medium
 
   * debian/dkms.conf.in,
