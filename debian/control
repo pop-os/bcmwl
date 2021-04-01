@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 7.0.50~),
  dh-modaliases
 
 Package: bcmwl-kernel-source
-Architecture: i386 amd64
+Architecture: amd64
 Depends: ${misc:Depends}, dkms, linux-libc-dev, libc6-dev
 XB-Modaliases: ${modaliases}
 Conflicts: bcmwl-modaliases
