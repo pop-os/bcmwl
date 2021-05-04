@@ -1,3 +1,10 @@
+broadcom-sta (6.30.223.271-16) UNRELEASED; urgency=medium
+
+  * debian/patches:
+    - Fix typo of patch 21.
+
+ -- Roger Shimizu <rosh@debian.org>  Tue, 04 May 2021 17:47:33 +0900
+
 broadcom-sta (6.30.223.271-16~exp1) experimental; urgency=medium
 
   * debian/patches:
