@@ -2,6 +2,7 @@ broadcom-sta (6.30.223.271-16) UNRELEASED; urgency=medium
 
   * debian/patches:
     - Fix typo of patch 21.
+    - Previous patch 19 20 fixes old ticket (Closes: #987159).
 
  -- Roger Shimizu <rosh@debian.org>  Tue, 04 May 2021 17:47:33 +0900
 
