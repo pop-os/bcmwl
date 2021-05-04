@@ -1,12 +1,13 @@
-broadcom-sta (6.30.223.271-16) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.271-16) unstable; urgency=medium
 
+  * Upload to unstable.
   * debian/patches:
     - Fix typo of patch 21.
     - Previous patch 19 20 fixes old ticket (Closes: #987159).
   * debian/README.source:
     - Note some git repo for future reference.
 
- -- Roger Shimizu <rosh@debian.org>  Tue, 04 May 2021 17:47:33 +0900
+ -- Roger Shimizu <rosh@debian.org>  Tue, 04 May 2021 18:11:49 +0900
 
 broadcom-sta (6.30.223.271-16~exp1) experimental; urgency=medium
 
