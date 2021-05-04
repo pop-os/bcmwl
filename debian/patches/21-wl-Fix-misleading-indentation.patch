@@ -6,7 +6,7 @@ Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 
 Mixed spaces and tabs caused a misleading indentation warning.
-Tidy up to supress the warning:
+Tidy up to suppress the warning:
 
 src/wl/sys/wl_linux.c:788:2: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
   788 |  if ((val & 0x0000ff00) != 0)
