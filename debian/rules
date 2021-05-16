@@ -45,8 +45,8 @@ install-source: install-tmp
 	
 	# Copy Debian files
 	install -D -m 0755 debian/rules.modules $(source_debdir)/rules
-	for file in changelog compat control control.modules.in copyright; do \
-		install -m 644 debian/$$file $(source_debdir); \
+	for file in changelog control control.modules.in copyright; do \
+		install -m 644 debian/$$file $(source_debdir) || exit; \
 	done
 	
 	# Make suitable tarball for module-assisant and kernel-package
