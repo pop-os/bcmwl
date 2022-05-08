@@ -1,3 +1,10 @@
+broadcom-sta (6.30.223.271-18) unstable; urgency=medium
+
+  * debian/patches/25-linux517.patch:
+    Fixing build for Linux 5.17 (based on ArchLinux patch)
+
+ -- Eduard Bloch <blade@debian.org>  Sun, 08 May 2022 23:05:27 +0200
+
 broadcom-sta (6.30.223.271-17) unstable; urgency=medium
 
   * Re-upload with binary since this is non-free and won't get built

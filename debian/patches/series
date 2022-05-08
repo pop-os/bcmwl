@@ -22,3 +22,4 @@
 22-wl-Fix-fall-through-warnings.patch
 23-wl-Avoid-disconnecting-invalid-interface.patch
 24-wl-Use-the-right-enums-for-cfg80211_get_bss.patch
+25-linux517.patch
