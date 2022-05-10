@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Alberto Milone <alberto.milone@canonical.com>
 Standards-Version: 3.9.1
-Build-Depends: debhelper (>= 7.0.50~),
+Build-Depends: debhelper-compat (=10),
  dh-modaliases
 
 Package: bcmwl-kernel-source
