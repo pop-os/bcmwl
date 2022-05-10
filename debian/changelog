@@ -1,3 +1,10 @@
+broadcom-sta (6.30.223.271-19) unstable; urgency=medium
+
+  * Re-upload with binary since this is non-free and won't get built
+    on buildd.
+
+ -- Eduard Bloch <blade@debian.org>  Tue, 10 May 2022 21:50:15 +0200
+
 broadcom-sta (6.30.223.271-18) unstable; urgency=medium
 
   * debian/patches/25-linux517.patch:
