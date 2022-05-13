@@ -20,11 +20,11 @@ See also: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/com
  src/wl/sys/wl_linux.c | 16 +++++++++++++---
  1 file changed, 13 insertions(+), 3 deletions(-)
 
-diff --git a/src/wl/sys/wl_linux.c b/src/wl/sys/wl_linux.c
-index e491df7..6996794 100644
---- a/src/wl/sys/wl_linux.c
-+++ b/src/wl/sys/wl_linux.c
-@@ -93,6 +93,10 @@ struct iw_statistics *wl_get_wireless_stats(struct net_device *dev);
+Index: bcmwl/src/src/wl/sys/wl_linux.c
+===================================================================
+--- bcmwl.orig/src/src/wl/sys/wl_linux.c
++++ bcmwl/src/src/wl/sys/wl_linux.c
+@@ -93,6 +93,10 @@ struct iw_statistics *wl_get_wireless_st
  
  #include <wlc_wowl.h>
  
@@ -32,10 +32,10 @@ index e491df7..6996794 100644
 +#define PDE_DATA pde_data
 +#endif
 +
- #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
- static void wl_timer(struct timer_list *tl);
- #else
-@@ -490,6 +494,12 @@ wl_if_setup(struct net_device *dev)
+ static void wl_timer(ulong data);
+ static void _wl_timer(wl_timer_t *t);
+ static struct net_device *wl_alloc_linux_if(wl_if_t *wlif);
+@@ -486,6 +490,12 @@ wl_if_setup(struct net_device *dev)
  #endif
  }
  
@@ -48,7 +48,7 @@ index e491df7..6996794 100644
  static wl_info_t *
  wl_attach(uint16 vendor, uint16 device, ulong regs,
  	uint bustype, void *btparam, uint irq, uchar* bar1_addr, uint32 bar1_size)
-@@ -634,7 +644,7 @@ wl_attach(uint16 vendor, uint16 device, ulong regs,
+@@ -630,7 +640,7 @@ wl_attach(uint16 vendor, uint16 device,
  			WL_ERROR(("wl%d: Error setting MAC ADDRESS\n", unit));
  	}
  #endif 
@@ -57,7 +57,7 @@ index e491df7..6996794 100644
  
  	online_cpus = 1;
  
-@@ -1835,7 +1845,7 @@ wl_set_mac_address(struct net_device *dev, void *addr)
+@@ -1801,7 +1811,7 @@ wl_set_mac_address(struct net_device *de
  
  	WL_LOCK(wl);
  
@@ -66,7 +66,7 @@ index e491df7..6996794 100644
  	err = wlc_iovar_op(wl->wlc, "cur_etheraddr", NULL, 0, sa->sa_data, ETHER_ADDR_LEN,
  		IOV_SET, (WL_DEV_IF(dev))->wlcif);
  	WL_UNLOCK(wl);
-@@ -3010,7 +3020,7 @@ _wl_add_monitor_if(wl_task_t *task)
+@@ -2963,7 +2973,7 @@ _wl_add_monitor_if(wl_task_t *task)
  	else
  		dev->type = ARPHRD_IEEE80211_RADIOTAP;
  
@@ -75,6 +75,3 @@ index e491df7..6996794 100644
  
  #if defined(WL_USE_NETDEV_OPS)
  	dev->netdev_ops = &wl_netdev_monitor_ops;
--- 
-2.34.1
-
