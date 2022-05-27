@@ -1,6 +1,7 @@
 broadcom-sta (6.30.223.271-24) UNRELEASED; urgency=medium
 
   * Switch to dh-sequence-dkms.  (Closes: #1027868)
+  * Declare Testsuite: autopkgtest-pkg-dkms, restrict it to amd64 and i386.
 
  -- Andreas Beckmann <anbe@debian.org>  Fri, 27 May 2022 21:40:30 +0200
 

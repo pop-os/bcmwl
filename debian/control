@@ -12,6 +12,7 @@ XS-Autobuild: yes
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
 Vcs-Git: https://salsa.debian.org/broadcom-sta-team/broadcom-sta.git
 Vcs-Browser: https://salsa.debian.org/broadcom-sta-team/broadcom-sta
+Testsuite: autopkgtest-pkg-dkms
 
 Package: broadcom-sta-common
 Architecture: all
