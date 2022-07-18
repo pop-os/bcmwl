@@ -1,0 +1,65 @@
+From: Andrea Righi <andrea.righi@canonical.com>
+Subject: Add support for linux 5.18+
+
+diff -urpN build.orig/src/shared/linux_osl.c build/src/shared/linux_osl.c
+--- build.orig/src/shared/linux_osl.c	2022-07-18 07:36:45.423524176 +0000
++++ build/src/shared/linux_osl.c	2022-07-18 08:34:57.271538585 +0000
+@@ -31,6 +31,44 @@
+ 
+ #include <linux/fs.h>
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++#define PCI_DMA_TODEVICE DMA_TO_DEVICE
++#define PCI_DMA_FROMDEVICE DMA_FROM_DEVICE
++#define PCI_DMA_BIDIRECTIONAL DMA_BIDIRECTIONAL
++
++static inline void *
++pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
++		     dma_addr_t *dma_handle)
++{
++	return dma_alloc_coherent(&hwdev->dev, size, dma_handle, GFP_ATOMIC);
++}
++
++static inline void
++pci_free_consistent(struct pci_dev *hwdev, size_t size,
++		    void *vaddr, dma_addr_t dma_handle)
++{
++	dma_free_coherent(&hwdev->dev, size, vaddr, dma_handle);
++}
++
++static inline int pci_set_dma_mask(struct pci_dev *dev, u64 mask)
++{
++	return dma_set_mask(&dev->dev, mask);
++}
++
++static inline dma_addr_t
++pci_map_single(struct pci_dev *hwdev, void *ptr, size_t size, int direction)
++{
++	return dma_map_single(&hwdev->dev, ptr, size, (enum dma_data_direction)direction);
++}
++
++static inline void
++pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr,
++		 size_t size, int direction)
++{
++	dma_unmap_single(&hwdev->dev, dma_addr, size, (enum dma_data_direction)direction);
++}
++#endif
++
+ #define PCI_CFG_RETRY 		10
+ 
+ #define OS_HANDLE_MAGIC		0x1234abcd	
+diff -urpN build.orig/src/wl/sys/wl_linux.c build/src/wl/sys/wl_linux.c
+--- build.orig/src/wl/sys/wl_linux.c	2022-07-18 07:36:45.423524176 +0000
++++ build/src/wl/sys/wl_linux.c	2022-07-18 08:35:44.526158064 +0000
+@@ -93,6 +93,10 @@ struct iw_statistics *wl_get_wireless_st
+ 
+ #include <wlc_wowl.h>
+ 
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 18, 0)
++#define PDE_DATA pde_data
++#endif
++
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+ static void wl_timer(struct timer_list *tl);
+ #else

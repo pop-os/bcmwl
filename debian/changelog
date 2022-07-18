@@ -1,3 +1,11 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu9) kinetic; urgency=medium
+
+  * debian/dkms.conf.in,
+    debian/patches/0040-add-support-for-linux-5.18.patch (LP: #1981968):
+    - Add support for Linux 5.18.
+
+ -- Andrea Righi <andrea.righi@canonical.com>  Mon, 18 Jul 2022 08:40:44 +0000
+
 bcmwl (6.30.223.271+bdcom-0ubuntu8) hirsute; urgency=medium
 
   * debian/dkms.conf.in,
