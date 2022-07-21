@@ -1,14 +1,16 @@
-bcmwl (6.30.223.271+bdcom-0ubuntu8pop1) jammy; urgency=medium
+bcmwl (6.30.223.271+bdcom-0ubuntu9pop1) jammy; urgency=medium
 
-  * Linux 5.17 support
+  * Backport 5.18 support
 
- -- Michael Aaron Murphy <mmstick@pm.me>  Mon, 09 May 2022 20:46:44 +0200
+ -- Michael Aaron Murphy <mmstick@pm.me>  Thu, 21 Jul 2022 19:55:52 +0200
 
-bcmwl (6.30.223.271+bdcom-0ubuntu8pop0) focal; urgency=medium
+bcmwl (6.30.223.271+bdcom-0ubuntu9) kinetic; urgency=medium
 
-  * Pop!_OS backport
+  * debian/dkms.conf.in,
+    debian/patches/0040-add-support-for-linux-5.18.patch (LP: #1981968):
+    - Add support for Linux 5.18.
 
- -- Jeremy Soller <jeremy@system76.com>  Thu, 01 Apr 2021 11:10:44 -0600
+ -- Andrea Righi <andrea.righi@canonical.com>  Mon, 18 Jul 2022 08:40:44 +0000
 
 bcmwl (6.30.223.271+bdcom-0ubuntu8) hirsute; urgency=medium
 
