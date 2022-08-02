@@ -1,6 +1,7 @@
 From: Colin Ian King <colin.king@canonical.com>
 Date: Thu, 6 Jun 2019 16:24:01 +0000
 Subject: Add Linux 5.1+ compat fix for deprecated get_ds call
+
 Origin: https://bugs.debian.org/928754 https://bugs.debian.org/934677
 Bug-Ubuntu: https://bugs.launchpad.net/bugs/1830042
 

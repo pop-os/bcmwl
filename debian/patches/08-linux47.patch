@@ -1,6 +1,7 @@
 From: Felix Yan <felixonmars@archlinux.org>
 Date: Mon, 20 Jun 2016 11:18:00 +0800
 Subject: linux47
+
 Origin: https://github.com/archlinuxcn/repo/tree/f4d6cff1cacf8dad13006fade5f96bc2cf020a9b/broadcom-wl-dkms
 
 Since Linux 4.7, the enum ieee80211_band is no longer used

@@ -1,8 +1,8 @@
 From: Cyril Lacoux <clacoux@easter-eggs.com>
 Date: Mon, 19 Nov 2012 12:02:30 +0000
 Subject: Allow normal users to send ioctl requests
-Origin: https://bugs.debian.org/672677
 
+Origin: https://bugs.debian.org/672677
 ---
  amd64/src/wl/sys/wl_linux.c | 6 +-----
  1 file changed, 1 insertion(+), 5 deletions(-)
