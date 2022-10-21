@@ -1,0 +1,18 @@
+diff --git a/src/wl/sys/wl_cfg80211_hybrid.c b/src/wl/sys/wl_cfg80211_hybrid.c
+index dcc18ce..f0d34c7 100644
+--- a/src/wl/sys/wl_cfg80211_hybrid.c
++++ b/src/wl/sys/wl_cfg80211_hybrid.c
+@@ -2367,8 +2367,13 @@ wl_bss_roaming_done(struct wl_cfg80211_priv *wl, struct net_device *ndev,
+ 			conn_info->req_ie, conn_info->req_ie_len,
+ 			conn_info->resp_ie, conn_info->resp_ie_len, GFP_KERNEL);
+ #else
++#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 0, 0)
+ 	roam_info.channel = &wl->conf->channel;
+ 	roam_info.bssid = (u8 *)&wl->bssid;
++#else
++	roam_info.links[0].channel = &wl->conf->channel;
++	roam_info.links[0].bssid = (u8 *)&wl->bssid;
++#endif
+ 	roam_info.req_ie = conn_info->req_ie;
+ 	roam_info.req_ie_len = conn_info->req_ie_len;
+ 	roam_info.resp_ie = conn_info->resp_ie;
