@@ -1,3 +1,11 @@
+broadcom-sta (6.30.223.271-21) unstable; urgency=medium
+
+  * debian/patches/27-linux600.patch: build fix for Linux 6.00 based on
+    https://github.com/archlinux/svntogit-community/blob/master/broadcom-wl-dkms/repos/community-x86_64/015-linux600.patch
+    (closes: #1021912)
+
+ -- Eduard Bloch <blade@debian.org>  Fri, 21 Oct 2022 12:31:12 +0200
+
 broadcom-sta (6.30.223.271-20) unstable; urgency=low
 
   * debian/patches/26-linux518.patch: build fix for Linux 5.18.
