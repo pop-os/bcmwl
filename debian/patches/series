@@ -24,3 +24,4 @@
 24-wl-Use-the-right-enums-for-cfg80211_get_bss.patch
 25-linux517.patch
 26-linux518.patch
+27-linux600.patch
