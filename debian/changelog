@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.271-22) unstable; urgency=medium
+
+  * Re-upload with binary since this is non-free and won't get auto-built.
+
+ -- Eduard Bloch <blade@debian.org>  Fri, 28 Oct 2022 14:17:06 +0200
+
 broadcom-sta (6.30.223.271-21) unstable; urgency=medium
 
   * debian/patches/27-linux600.patch: build fix for Linux 6.00 based on
