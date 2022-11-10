@@ -1,3 +1,6 @@
 broadcom-sta source: source-is-missing *amd64/lib/wlc_hybrid.o_shipped*
 broadcom-sta source: source-is-missing *i386/lib/wlc_hybrid.o_shipped*
 
+# `XS-Autobuild` is incorrectly reported as unknown
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1013414
+broadcom-sta source: unknown-field Autobuild
