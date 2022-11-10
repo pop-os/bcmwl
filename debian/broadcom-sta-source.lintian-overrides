@@ -1,0 +1,3 @@
+# Ignore warning caused by how changelogs are truncated
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1021502
+broadcom-sta-source: debian-news-entry-has-unknown-version */doc/broadcom-sta-source/NEWS.Debian*
