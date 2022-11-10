@@ -1,3 +1,4 @@
+# Ignore the proprietary blobs
 broadcom-sta source: source-is-missing *amd64/lib/wlc_hybrid.o_shipped*
 broadcom-sta source: source-is-missing *i386/lib/wlc_hybrid.o_shipped*
 
