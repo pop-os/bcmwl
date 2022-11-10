@@ -1,5 +1,5 @@
 broadcom-sta (5.100.82.112-2) unstable; urgency=low
-  
+
   As of broadcom-sta version 5.100.82.112-2, interfaces created by the
   driver supplied in this package will use the "wlan" prefix (e.g. wlan0),
   following the convention set by mac80211 drivers.

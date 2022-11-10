@@ -25,13 +25,13 @@ metadata_dir    := usr/share/appdata
 install-tmp:
 	mkdir -p debian/tmp
 	cp -a amd64/* debian/tmp/
-	
+
 	# Shipped proprietary precompiled driver
 	rm -f debian/tmp/lib/wlc_hybrid.o_shipped
 	rm -f debian/tmp/lib/LICENSE.txt # License is in copyright file
 	cp amd64/lib/wlc_hybrid.o_shipped debian/tmp/lib/wlc_hybrid.o_amd64
 	cp i386/lib/wlc_hybrid.o_shipped debian/tmp/lib/wlc_hybrid.o_i386
-	
+
 install-dkms: install-tmp
 	dh_installdirs -p $(dkms_package) $(dkms_target)
 	dh_install -p $(dkms_package) debian/tmp/* $(dkms_target)/
@@ -42,13 +42,13 @@ install-dkms: install-tmp
 install-source: install-tmp
 	dh_installdirs -p $(source_package) $(source_target)
 	dh_install -p $(source_package) debian/tmp/* README.txt $(source_target)/
-	
+
 	# Copy Debian files
 	install -D -m 0755 debian/rules.modules $(source_debdir)/rules
 	for file in changelog control control.modules.in copyright; do \
 		install -m 644 debian/$$file $(source_debdir) || exit; \
 	done
-	
+
 	# Make suitable tarball for module-assisant and kernel-package
 	cd debian/$(source_package)/usr/src && tar cfJ $(source_name).tar.xz modules && rm -rf modules
 
