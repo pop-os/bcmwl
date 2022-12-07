@@ -1,3 +1,14 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu10) lunar; urgency=medium
+
+  * debian/dkms.conf.in,
+    debian/patches/0041-dev-addr-access.patch (LP: #1998039):
+    - Fix netdev->dev_addr access with kernels >= 5.17.
+  * debian/dkms.conf.in,
+    debian/patches/0042-add-support-for-linux-6.x.patch (LP: #1999009):
+    - Support linux >= 6.1
+
+ -- Andrea Righi <andrea.righi@canonical.com>  Wed, 07 Dec 2022 06:38:54 +0000
+
 bcmwl (6.30.223.271+bdcom-0ubuntu9) kinetic; urgency=medium
 
   * debian/dkms.conf.in,

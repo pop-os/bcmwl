@@ -1,0 +1,67 @@
+From: Joan Bruguera <joanbrugueram@gmail.com>
+Subject: wl: Update for linux-5.17+ deprecations
+Origin: https://raw.githubusercontent.com/archlinux/svntogit-community/master/broadcom-wl-dkms/trunk/012-linux517.patch
+
+--- src/src/wl/sys/wl_linux.c	2022-11-27 20:54:15.564505095 -0700
++++ src/src/wl/sys/wl_linux.c	2022-11-27 21:27:02.663444631 -0700
+@@ -630,7 +630,11 @@
+ 			WL_ERROR(("wl%d: Error setting MAC ADDRESS\n", unit));
+ 	}
+ #endif 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
+ 	bcopy(&wl->pub->cur_etheraddr, dev->dev_addr, ETHER_ADDR_LEN);
++#else
++	eth_hw_addr_set(dev, wl->pub->cur_etheraddr.octet);
++#endif
+ 
+ 	online_cpus = 1;
+ 
+@@ -1801,7 +1805,12 @@
+ 
+ 	WL_LOCK(wl);
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
+ 	bcopy(sa->sa_data, dev->dev_addr, ETHER_ADDR_LEN);
++#else
++	eth_hw_addr_set(dev, sa->sa_data);
++#endif
++
+ 	err = wlc_iovar_op(wl->wlc, "cur_etheraddr", NULL, 0, sa->sa_data, ETHER_ADDR_LEN,
+ 		IOV_SET, (WL_DEV_IF(dev))->wlcif);
+ 	WL_UNLOCK(wl);
+@@ -2963,7 +2972,11 @@
+ 	else
+ 		dev->type = ARPHRD_IEEE80211_RADIOTAP;
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
+ 	bcopy(wl->dev->dev_addr, dev->dev_addr, ETHER_ADDR_LEN);
++#else
++	eth_hw_addr_set(dev, wl->dev->dev_addr);
++#endif
+ 
+ #if defined(WL_USE_NETDEV_OPS)
+ 	dev->netdev_ops = &wl_netdev_monitor_ops;
+@@ -3244,7 +3257,11 @@
+ static ssize_t
+ wl_proc_read(struct file *filp, char __user *buffer, size_t length, loff_t *offp)
+ {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
+ 	wl_info_t * wl = PDE_DATA(file_inode(filp));
++#else
++	wl_info_t * wl = pde_data(file_inode(filp));
++#endif
+ #endif
+ 	int bcmerror, len;
+ 	int to_user = 0;
+@@ -3301,7 +3318,11 @@
+ static ssize_t
+ wl_proc_write(struct file *filp, const char __user *buff, size_t length, loff_t *offp)
+ {
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 17, 0)
+ 	wl_info_t * wl = PDE_DATA(file_inode(filp));
++#else
++	wl_info_t * wl = pde_data(file_inode(filp));
++#endif
+ #endif
+ 	int from_user = 0;
+ 	int bcmerror;
