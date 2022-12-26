@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.271-23) UNRELEASED; urgency=medium
+
+  * Merging various patches from 
+
+ -- Eduard Bloch <blade@debian.org>  Tue, 27 Dec 2022 00:06:53 +0100
+
 broadcom-sta (6.30.223.271-22) unstable; urgency=medium
 
   * Re-upload with binary since this is non-free and won't get auto-built.
