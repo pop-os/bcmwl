@@ -1,8 +1,8 @@
 From: koos vriezen <koos.vriezen@gmail.com>
 Date: Mon, 3 Jul 2017 09:57:21 +0200
 Subject: linux412
-Origin: https://bugs.debian.org/867258
 
+Origin: https://bugs.debian.org/867258
 ---
  amd64/src/wl/sys/wl_cfg80211_hybrid.c | 29 +++++++++++++++++++++++++----
  1 file changed, 25 insertions(+), 4 deletions(-)

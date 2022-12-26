@@ -7,4 +7,3 @@ blacklist bcma
 blacklist brcm80211
 blacklist brcmsmac
 blacklist ssb
-install wl /sbin/modprobe --ignore-install wl $CMDLINE_OPTS

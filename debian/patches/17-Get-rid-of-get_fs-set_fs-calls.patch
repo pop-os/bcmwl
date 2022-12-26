@@ -1,6 +1,7 @@
 From: Joan Bruguera <joanbrugueram@gmail.com>
 Date: Sun, 13 Sep 2020 07:33:32 +0200
 Subject: Get rid of get_fs/set_fs calls in Broadcom WL driver.
+
 Origin: https://gist.github.com/joanbm/5c640ac074d27fd1d82c74a5b67a1290
 
 Fixes linux-next where get_fs/set_fs is already removed for some architectures.

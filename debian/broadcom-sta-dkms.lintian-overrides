@@ -1,4 +1,4 @@
 # Shipped libraries for i386 and amd64
-arch-independent-package-contains-binary-or-object usr/src/broadcom-sta-*/lib/wlc_hybrid.o_*
-unstripped-binary-or-object usr/src/broadcom-sta-*/lib/wlc_hybrid.o_*
-spelling-error-in-binary usr/src/broadcom-sta-*/lib/wlc_hybrid.o_*
+broadcom-sta-dkms: arch-independent-package-contains-binary-or-object *lib/wlc_hybrid.o_*
+broadcom-sta-dkms: unstripped-binary-or-object *lib/wlc_hybrid.o_*
+broadcom-sta-dkms: spelling-error-in-binary *lib/wlc_hybrid.o_*
