@@ -1,6 +1,13 @@
-broadcom-sta (6.30.223.271-23) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.271-23) unstable; urgency=medium
 
-  * Merging various patches from 
+  * Pulled the truckload of latest patches from Diego Escalante Urrelo (Fixing
+    `Incorrect netdev->dev_addr` errors in linux-5.17+ patch, closes: #1016505)
+  * debian/patches/29-linux601.patch: Linux 6.1 fixes from
+    https://github.com/archlinux/svntogit-community/blob/master/broadcom-wl-dkms/repos/community-x86_64/016-linux601.patch
+    (closes: #1023843, actually probably before by 6.30.223.271-21)
+  * debian/control.modules.in: updated with author information from
+    debian/control, and removed the dependencency on linux-image-* (not much of
+    help anyway and causes the problem with *-unsigned kernel packages)
 
  -- Eduard Bloch <blade@debian.org>  Tue, 27 Dec 2022 00:06:53 +0100
 

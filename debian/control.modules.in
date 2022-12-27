@@ -1,14 +1,15 @@
 Source: broadcom-sta
 Section: non-free/kernel
 Priority: optional
-Maintainer: Cyril Lacoux <clacoux@easter-eggs.com>
+Maintainer: Eduard Bloch <blade@debian.org>
+Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>, Roger Shimizu <rosh@debian.org>
 Build-Depends: debhelper-compat (= 12)
-Standards-Version: 3.9.4
+Standards-Version: 4.5
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
 
 Package: broadcom-sta-modules-_KVERS_
 Architecture: all
-Depends: linux-modules-_KVERS_ | linux-image-_KVERS_, broadcom-sta-common
+Depends: broadcom-sta-common
 Provides: broadcom-sta-modules
 Recommends: wireless-tools
 Description: broadcom-sta modules for Linux (kernel _KVERS_)
