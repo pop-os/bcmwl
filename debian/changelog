@@ -1,3 +1,9 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu10~22.04.1) jammy; urgency=medium
+
+  * Backport dkms support for HWE kernels.
+
+ -- Dimitri John Ledkov <dimitri.ledkov@canonical.com>  Mon, 16 Jan 2023 11:12:48 +0000
+
 bcmwl (6.30.223.271+bdcom-0ubuntu10) lunar; urgency=medium
 
   * debian/dkms.conf.in,
