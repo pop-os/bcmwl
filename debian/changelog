@@ -1,3 +1,9 @@
+bcmwl (6.30.223.271+bdcom-0ubuntu10pop1) jammy; urgency=medium
+
+  * Pop!_OS backports
+
+ -- Brock Szuszczewicz <brock@szu.email>  Fri, 27 Jan 2023 15:52:59 -0700
+
 bcmwl (6.30.223.271+bdcom-0ubuntu10~22.04.1) jammy; urgency=medium
 
   * Backport dkms support for HWE kernels.
