@@ -11,6 +11,10 @@ broadcom-sta (6.30.223.271-24) unstable; urgency=low
     - 30-fix-version-parsing.patch
     (Closes: #1057447)
 
+  [ Eduard Bloch <blade@debian.org> ]
+
+  * Adding dh-dkms to Build-Depends to make dh_clean happy
+
  -- Eduard Bloch <blade@debian.org>  Sun, 03 Mar 2024 11:02:34 +0100
 
 broadcom-sta (6.30.223.271-23) unstable; urgency=medium

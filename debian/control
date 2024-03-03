@@ -6,6 +6,7 @@ Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>, Roger Shimizu <rosh@debian.or
 Build-Depends:
  debhelper-compat (= 12),
  dh-sequence-dkms,
+ dh-dkms
 Standards-Version: 4.5.0
 Rules-Requires-Root: no
 XS-Autobuild: yes
