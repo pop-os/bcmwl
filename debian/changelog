@@ -1,9 +1,17 @@
-broadcom-sta (6.30.223.271-24) UNRELEASED; urgency=medium
+broadcom-sta (6.30.223.271-24) unstable; urgency=low
+
+  [ Andreas Beckmann <anbe@debian.org> ]
 
   * Switch to dh-sequence-dkms.  (Closes: #1027868)
   * Declare Testsuite: autopkgtest-pkg-dkms, restrict it to amd64 and i386.
+  * Added/Updated patches to support a variety of Linux versions (including
+    6.x-rcY) and GCC versions (for bookworm, trixie, sid):
+    - 08-linux47.patch
+    - 24-wl-Use-the-right-enums-for-cfg80211_get_bss.patch
+    - 30-fix-version-parsing.patch
+    (Closes: #1057447)
 
- -- Andreas Beckmann <anbe@debian.org>  Fri, 27 May 2022 21:40:30 +0200
+ -- Eduard Bloch <blade@debian.org>  Sun, 03 Mar 2024 11:02:34 +0100
 
 broadcom-sta (6.30.223.271-23) unstable; urgency=medium
 

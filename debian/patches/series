@@ -26,3 +26,4 @@
 27-linux600.patch
 28-wl-Update-for-linux-5.17-deprecations.patch
 29-linux601.patch
+30-fix-version-parsing.patch
