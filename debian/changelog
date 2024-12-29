@@ -3,7 +3,8 @@ broadcom-sta (6.30.223.271-25) unstable; urgency=low
   [ Eduard Bloch ]
 
   * Adding initramfs update trigger as suggested by Andreas Beckmann
-    (closes: #1016882)
+    (closes: #1016882) to deliver modprobe blocklist into initrd and prevent
+    the influence of a wrong driver
   * 31-6.12-unaligned-header-location.patch: adjust to new location of
     unaligned.h (closes: #1088844, #1090964)
 
