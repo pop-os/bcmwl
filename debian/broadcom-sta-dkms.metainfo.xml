@@ -13,6 +13,24 @@
     </p>
   </description>
   <provides>
-    <modalias>pci:v*d*sv*sd*bc02sc80i*</modalias>
+    <modalias>pci:v000014E4d00004311sv*</modalias>
+    <modalias>pci:v000014E4d00004312sv*</modalias>
+    <modalias>pci:v000014E4d00004313sv*</modalias>
+    <modalias>pci:v000014E4d00004315sv*</modalias>
+    <modalias>pci:v000014E4d00004328sv*</modalias>
+    <modalias>pci:v000014E4d00004329sv*</modalias>
+    <modalias>pci:v000014E4d0000432Asv*</modalias>
+    <modalias>pci:v000014E4d0000432Bsv*</modalias>
+    <modalias>pci:v000014E4d0000432Csv*</modalias>
+    <modalias>pci:v000014E4d0000432Dsv*</modalias>
+    <modalias>pci:v000014E4d00004331sv*</modalias>
+    <modalias>pci:v000014E4d00004353sv*</modalias>
+    <modalias>pci:v000014E4d00004357sv*</modalias>
+    <modalias>pci:v000014E4d00004358sv*</modalias>
+    <modalias>pci:v000014E4d00004359sv*</modalias>
+    <modalias>pci:v000014E4d00004365sv*</modalias>
+    <modalias>pci:v000014E4d000043A0sv*</modalias>
+    <modalias>pci:v000014E4d000043B1sv*</modalias>
+    <modalias>pci:v000014E4d00004727sv*</modalias>
   </provides>
 </component>
