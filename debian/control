@@ -52,7 +52,6 @@ Architecture: amd64 i386
 Depends:
  ${misc:Depends},
  debhelper-compat (= 13),
- module-assistant,
  make,
  xz-utils
 Description: Source for the Broadcom STA Wireless driver
