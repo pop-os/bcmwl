@@ -1,5 +1,5 @@
 Source: broadcom-sta
-Section: non-free/kernel
+Section: restricted/kernel
 Priority: optional
 Maintainer: Eduard Bloch <blade@debian.org>
 Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>, Roger Shimizu <rosh@debian.org>
@@ -69,3 +69,11 @@ Description: Source for the Broadcom STA Wireless driver
  .
  The wireless-tools package is also required in order to make use of these
  modules.  Kernel source or headers are required to compile these modules.
+
+Package: bcmwl-kernel-source
+Section: restricted/oldlibs
+Architecture: i386 amd64
+Depends: ${misc:Depends}, broadcom-sta-dkms (= ${source:Version})
+Description: transitional package for Broadcom STA Wireless driver
+ This is a transitional package for Broadcom STA Wireless driver. It
+ can safely be removed.
