@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.271-25pop1) noble; urgency=medium
+
+  * Backport to Pop!_OS
+
+ -- Michael Aaron Murphy <michael@mmurphy.dev>  Tue, 18 Feb 2025 10:19:55 +0100
+
 broadcom-sta (6.30.223.271-25) unstable; urgency=low
 
   [ Eduard Bloch ]
