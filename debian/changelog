@@ -1,4 +1,4 @@
-broadcom-sta (6.30.223.271-25pop1) noble; urgency=medium
+broadcom-sta (6.30.223.271+bdcom-0ubuntu10pop2) noble; urgency=medium
 
   * Backport to Pop!_OS
 
