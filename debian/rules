@@ -29,8 +29,7 @@ install-tmp:
 	# Shipped proprietary precompiled driver
 	rm -f debian/tmp/lib/wlc_hybrid.o_shipped
 	rm -f debian/tmp/lib/LICENSE.txt # License is in copyright file
-	cp amd64/lib/wlc_hybrid.o_shipped debian/tmp/lib/wlc_hybrid.o_amd64
-	cp i386/lib/wlc_hybrid.o_shipped debian/tmp/lib/wlc_hybrid.o_i386
+	cp -p $(DEB_HOST_ARCH)/lib/wlc_hybrid.o_shipped debian/tmp/lib/wlc_hybrid.o_$(DEB_HOST_ARCH)
 
 install-dkms: install-tmp
 	dh_installdirs -p $(dkms_package) $(dkms_target)

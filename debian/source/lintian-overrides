@@ -1,6 +1,4 @@
 # Ignore the proprietary blobs
+source-contains-prebuilt-binary [*/lib/wlc_hybrid.o_shipped]
 broadcom-sta source: source-is-missing *lib/wlc_hybrid.o_shipped*
-
-# `XS-Autobuild` is incorrectly reported as unknown
-# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1013414
-broadcom-sta source: unknown-field Autobuild
+very-long-line-length-in-source-file * > 512 [*/lib/wlc_hybrid.o_shipped:*]

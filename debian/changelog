@@ -1,3 +1,13 @@
+broadcom-sta (6.30.223.271-25.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * broadcom-sta-source: Add autopkgtest.  (Closes: #1095295)
+  * Promote module-assistant to Depends.
+  * Switch Architecture from all to amd64 i386.
+  * Update Lintian overrides.
+
+ -- Andreas Beckmann <anbe@debian.org>  Thu, 06 Mar 2025 09:07:30 +0100
+
 broadcom-sta (6.30.223.271-25) unstable; urgency=low
 
   [ Eduard Bloch ]
