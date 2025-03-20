@@ -4,10 +4,10 @@ Priority: optional
 Maintainer: Eduard Bloch <blade@debian.org>
 Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>, Roger Shimizu <rosh@debian.org>
 Build-Depends:
- debhelper-compat (= 12),
+ debhelper-compat (= 13),
  dh-sequence-dkms,
  dh-dkms
-Standards-Version: 4.5.0
+Standards-Version: 4.7.0
 Rules-Requires-Root: no
 XS-Autobuild: yes
 Homepage: http://www.broadcom.com/support/802.11/linux_sta.php
@@ -52,7 +52,7 @@ Package: broadcom-sta-source
 Architecture: amd64 i386
 Depends:
  ${misc:Depends},
- debhelper-compat (= 12),
+ debhelper-compat (= 13),
  module-assistant,
  make,
  xz-utils

@@ -17,7 +17,7 @@ dkms_target     := usr/src/$(source_name)-$(version)
 ids_dir         := usr/share/broadcom-sta
 
 # AppStream data
-metadata_dir    := usr/share/appdata
+metadata_dir    := usr/share/metainfo
 
 %:
 	dh $@
@@ -32,15 +32,16 @@ install-tmp:
 	cp -p $(DEB_HOST_ARCH)/lib/wlc_hybrid.o_shipped debian/tmp/lib/wlc_hybrid.o_$(DEB_HOST_ARCH)
 
 install-dkms: install-tmp
-	dh_installdirs -p $(dkms_package) $(dkms_target)
-	dh_install -p $(dkms_package) debian/tmp/* $(dkms_target)/
-	dh_install -p $(dkms_package) debian/broadcom-sta.ids $(ids_dir)/
+	dh_installdirs --package=$(dkms_package) $(dkms_target)
+	dh_install --package=$(dkms_package) debian/tmp/* $(dkms_target)/
+	dh_install --package=$(dkms_package) debian/broadcom-sta.ids $(ids_dir)/
 # disable the AppStream metadata until it's clear how to work around confusion with the devices supported by the free driver
 #	dh_install -p $(dkms_package) debian/broadcom-sta-dkms.metainfo.xml $(metadata_dir)/
+	dh_install -p $(dkms_package) debian/com.broadcom.linux.broadcom_sta.dkms.metainfo.xml $(metadata_dir)/
 
 install-source: install-tmp
-	dh_installdirs -p $(source_package) $(source_target)
-	dh_install -p $(source_package) debian/tmp/* README.txt $(source_target)/
+	dh_installdirs --package=$(source_package) $(source_target)
+	dh_install --package=$(source_package) debian/tmp/* README.txt $(source_target)/
 
 	# Copy Debian files
 	install -D -m 0755 debian/rules.modules $(source_debdir)/rules

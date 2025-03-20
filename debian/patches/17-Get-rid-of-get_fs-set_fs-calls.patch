@@ -23,7 +23,7 @@ Signed-off-by: Joan Bruguera <joanbrugueram@gmail.com>
  5 files changed, 42 insertions(+), 55 deletions(-)
 
 diff --git a/amd64/src/wl/sys/wl_cfg80211_hybrid.c b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
-index 8e01841..111ec5a 100644
+index 61446fc..5ca1f49 100644
 --- a/amd64/src/wl/sys/wl_cfg80211_hybrid.c
 +++ b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
 @@ -41,6 +41,7 @@
@@ -34,7 +34,7 @@ index 8e01841..111ec5a 100644
  
  #define EVENT_TYPE(e) dtoh32((e)->event_type)
  #define EVENT_FLAGS(e) dtoh16((e)->flags)
-@@ -442,34 +443,8 @@ static void key_endian_to_host(struct wl_wsec_key *key)
+@@ -447,34 +448,8 @@ static void key_endian_to_host(struct wl_wsec_key *key)
  static s32
  wl_dev_ioctl(struct net_device *dev, u32 cmd, void *arg, u32 len)
  {

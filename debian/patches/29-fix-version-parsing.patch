@@ -1,11 +1,19 @@
-Author: Andreas Beckmann <anbe@debian.org>
-Description: fix detection of LINUXVER_WEXT_ONLY
- - fix version parsing if there are only two numeric components (e.g. 6.7-rc1)
- - set SUBLEVEL to 0 if missing
- - fix version comparison logic
- - -a and -o don't have well defined precedence
+From: Andreas Beckmann <anbe@debian.org>
+Date: Thu, 30 Jan 2025 22:59:05 -0500
+Subject: fix detection of LINUXVER_WEXT_ONLY
+
 Bug-Debian: https://bugs.debian.org/1057447
 
+- fix version parsing if there are only two numeric components (e.g. 6.7-rc1)
+- set SUBLEVEL to 0 if missing
+- fix version comparison logic
+- -a and -o don't have well defined precedence
+---
+ amd64/Makefile | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/amd64/Makefile b/amd64/Makefile
+index ed16dfc..4d7e9d1 100644
 --- a/amd64/Makefile
 +++ b/amd64/Makefile
 @@ -20,20 +20,22 @@

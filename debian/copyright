@@ -222,8 +222,10 @@ License: other
  writing.
 
 Files: debian/*
-Copyright: (C) 2009-2012 Cyril Lacoux <clacoux@easter-eggs.com>
+Copyright: (C) 2009-2014 Cyril Lacoux <clacoux@easter-eggs.com>
            (C) 2009 Daniel Baumann <daniel@debian.org>
-License: PD
+           (C) 2015-2025 Eduard Bloch <daniel@debian.org>
+           (C) 2018-2021 Roger Shimizu <rosh@debian.org>
+License: MIT
  The Debian packaging is hereby placed in the public domain (no rights
- reserved).
+ reserved). Alternatively, the MIT license can be applied.

@@ -21,7 +21,7 @@ Last-Update: 2017-05-04
  2 files changed, 5 insertions(+)
 
 diff --git a/amd64/src/wl/sys/wl_cfg80211_hybrid.c b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
-index 551fe1f..83930ec 100644
+index 9551af7..694c03d 100644
 --- a/amd64/src/wl/sys/wl_cfg80211_hybrid.c
 +++ b/amd64/src/wl/sys/wl_cfg80211_hybrid.c
 @@ -30,6 +30,9 @@
