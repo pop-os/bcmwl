@@ -20,7 +20,7 @@ ids_dir         := usr/share/broadcom-sta
 metadata_dir    := usr/share/metainfo
 
 %:
-	dh $@
+	dh $@ --with dkms
 
 install-tmp:
 	mkdir -p debian/tmp
