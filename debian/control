@@ -5,8 +5,7 @@ Maintainer: Eduard Bloch <blade@debian.org>
 Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>, Roger Shimizu <rosh@debian.org>
 Build-Depends:
  debhelper-compat (= 13),
- dh-sequence-dkms,
- dh-dkms
+ dkms
 Standards-Version: 4.7.0
 Rules-Requires-Root: no
 XS-Autobuild: yes
