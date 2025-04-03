@@ -57,5 +57,8 @@ override_dh_install: install-dkms install-source
 override_dh_dkms:
 	dh_dkms -V $(version)
 
+override_dh_builddeb:
+	dh_builddeb -- -Zzstd -z3
+
 # do nothing
 override_dh_auto_configure override_dh_auto_build override_dh_auto_test override_dh_auto_install override_dh_auto_clean:
