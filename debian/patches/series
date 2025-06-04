@@ -35,3 +35,6 @@
 35-wl-Use-kernel-keyword-for-fallthrough.patch
 36-wl-Add-missing-braces-as-recommended-by-gcc.patch
 37-wl-Fix-memcpy-field-spanning-write-warning.patch
+38-build-don-t-use-deprecated-EXTRA_-FLAGS.patch
+39-wl-use-timer_delete-for-kernel-6.15.patch
+40-wl-add-MODULE_DESCRIPTION.patch
