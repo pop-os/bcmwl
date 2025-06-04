@@ -1,3 +1,18 @@
+broadcom-sta (6.30.223.271-27) unstable; urgency=low
+
+  [ Eduard Bloch ]
+
+  * Importing Ubuntu patches to support kernel 6.15 (closes: #1106546)
+
+  [ You-Sheng Yang <vicamo@gmail.com> ]
+
+  * Fix build failure against kernel v5.15 (LP: #2111898)
+    - 38-build-don-t-use-deprecated-EXTRA_-FLAGS.patch
+    - 39-wl-use-timer_delete-for-kernel-6.15.patch
+    - 40-wl-add-MODULE_DESCRIPTION.patch
+
+ -- Eduard Bloch <blade@debian.org>  Wed, 04 Jun 2025 15:41:29 +0200
+
 broadcom-sta (6.30.223.271-26) unstable; urgency=medium
 
   [ Diego Escalante Urrelo ]
