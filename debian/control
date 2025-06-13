@@ -1,7 +1,8 @@
 Source: broadcom-sta
 Section: non-free/kernel
 Priority: optional
-Maintainer: Eduard Bloch <blade@debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Eduard Bloch <blade@debian.org>
 Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>, Roger Shimizu <rosh@debian.org>
 Build-Depends:
  debhelper-compat (= 13),
@@ -18,7 +19,7 @@ Testsuite: autopkgtest-pkg-dkms
 Package: broadcom-sta-common
 Architecture: amd64 i386
 Depends: ${misc:Depends}
-Recommends: broadcom-sta-source
+Recommends: broadcom-sta-source, module-assistant
 Description: Common files for the Broadcom STA Wireless driver
  Broadcom STA is a binary-only device driver to support the following IEEE
  802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4313-,
@@ -53,9 +54,9 @@ Architecture: amd64 i386
 Depends:
  ${misc:Depends},
  debhelper-compat (= 13),
- module-assistant,
  make,
  xz-utils
+Recommends: module-assistant
 Description: Source for the Broadcom STA Wireless driver
  Broadcom STA is a binary-only device driver to support the following IEEE
  802.11a/b/g/n wireless network cards: BCM4311-, BCM4312-, BCM4313-,
