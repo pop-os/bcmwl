@@ -1,8 +1,40 @@
-broadcom-sta (6.30.223.271-26pop1) noble; urgency=medium
+broadcom-sta (6.30.223.271-27ubuntu1pop1) noble; urgency=medium
 
-  * Backport for noble
+  * Backport for Linux 6.16 support
 
- -- Michael Aaron Murphy <michael@mmurphy.dev>  Fri, 28 Mar 2025 11:46:21 +0100
+ -- Michael Murphy <michael@mmurphy.dev>  Tue, 02 Sep 2025 17:03:29 +0200
+
+broadcom-sta (6.30.223.271-27ubuntu1) questing; urgency=medium
+
+  [ You-Sheng Yang ]
+
+  * Non-maintainer upload.
+  * Failed to build against linux-6.16 (LP: #2114261)
+    - 41-wl-use-timer_container_of-for-kernel-6.16.patch
+
+  [ Jeremy Bícha ]
+
+  * Revert "Promote module-assistant to Depends" because it is not in
+    restricted or main
+
+ -- You-Sheng Yang <vicamo@gmail.com>  Fri, 13 Jun 2025 18:50:36 +0800
+
+broadcom-sta (6.30.223.271-27) unstable; urgency=low
+
+  [ Eduard Bloch ]
+
+  * Importing Ubuntu patches to support kernel 6.15 (closes: #1106546),
+    probably also solving not resolvable headers (closes: #1101411, not
+    reproducible with linux-headers-6.12.22+bpo-amd64)
+
+  [ You-Sheng Yang <vicamo@gmail.com> ]
+
+  * Fix build failure against kernel v5.15 (LP: #2111898)
+    - 38-build-don-t-use-deprecated-EXTRA_-FLAGS.patch
+    - 39-wl-use-timer_delete-for-kernel-6.15.patch
+    - 40-wl-add-MODULE_DESCRIPTION.patch
+
+ -- Eduard Bloch <blade@debian.org>  Wed, 04 Jun 2025 15:41:29 +0200
 
 broadcom-sta (6.30.223.271-26) unstable; urgency=medium
 
