@@ -1,3 +1,16 @@
+broadcom-sta (6.30.223.271-28~exp1) experimental; urgency=medium
+
+  [ You-Sheng Yang ]
+
+  * Failed to build against linux-6.16 (LP: #2114261)(Closes: #1113676)
+    - 41-wl-use-timer_container_of-for-kernel-6.16.patch
+
+  [ Roger Shimizu ]
+
+  * Add patch for linking issue (Closes: #1106546).
+
+ -- Roger Shimizu <rosh@debian.org>  Sun, 14 Sep 2025 14:46:00 -0700
+
 broadcom-sta (6.30.223.271-27) unstable; urgency=low
 
   [ Eduard Bloch ]
