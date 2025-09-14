@@ -39,3 +39,4 @@
 39-wl-use-timer_delete-for-kernel-6.15.patch
 40-wl-add-MODULE_DESCRIPTION.patch
 41-wl-use-timer_container_of-for-kernel-6.16.patch
+42-build-dirty-fix-for-the-linking.patch
