@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.271-28) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Roger Shimizu <rosh@debian.org>  Sat, 20 Sep 2025 18:08:40 -0700
+
 broadcom-sta (6.30.223.271-28~exp1) experimental; urgency=medium
 
   [ You-Sheng Yang ]
