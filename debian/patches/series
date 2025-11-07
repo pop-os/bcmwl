@@ -40,3 +40,5 @@
 40-wl-add-MODULE_DESCRIPTION.patch
 41-wl-use-timer_container_of-for-kernel-6.16.patch
 42-build-dirty-fix-for-the-linking.patch
+43-wl-Adapt-to-linux-6.17-cfg80211-changes.patch
+44-wl-Do-not-flush-system-wide-queue.patch
