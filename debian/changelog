@@ -1,3 +1,13 @@
+broadcom-sta (6.30.223.271-29) unstable; urgency=medium
+
+  [ Diego Escalante Urrelo ]
+  * debian: Fix lintian --pedantic warnings.
+  * debian: Upgrade to latest packaging standards.
+  * debian/patches: Minor pq reformat noise.
+  * debian/patches: Fix build for linux-6.17 (Closes: #1106546, #1119951).
+
+ -- Roger Shimizu <rosh@debian.org>  Sat, 08 Nov 2025 22:49:03 -0800
+
 broadcom-sta (6.30.223.271-28) unstable; urgency=medium
 
   * Upload to unstable.
