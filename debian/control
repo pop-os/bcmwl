@@ -1,7 +1,8 @@
 Source: broadcom-sta
 Section: non-free/kernel
 Priority: optional
-Maintainer: Eduard Bloch <blade@debian.org>
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+XSBC-Original-Maintainer: Eduard Bloch <blade@debian.org>
 Uploaders: Cyril Lacoux <clacoux@easter-eggs.com>, Roger Shimizu <rosh@debian.org>
 Build-Depends:
  debhelper-compat (= 13),

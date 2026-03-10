@@ -42,3 +42,4 @@
 42-build-dirty-fix-for-the-linking.patch
 43-wl-Adapt-to-linux-6.17-cfg80211-changes.patch
 44-wl-Do-not-flush-system-wide-queue.patch
+45-broadcom-wl-fix-linux-6.5.patch
