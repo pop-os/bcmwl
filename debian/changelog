@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.271-29ubuntu1pop1) jammy; urgency=medium
+
+  * Linux 7.0 support
+
+ -- Michael Murphy <mmstick@pop-os>  Thu, 04 Jun 2026 15:02:03 +0200
+
 broadcom-sta (6.30.223.271-29ubuntu1) resolute; urgency=medium
 
   * Re-introduced missed patch for LP: #2030978 (LP: #2143839)
