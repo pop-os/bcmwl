@@ -1,7 +1,12 @@
-broadcom-sta (6.30.223.271-29ubuntu1) resolute; urgency=medium
+broadcom-sta (6.30.223.271-30) UNRELEASED; urgency=medium
 
+  [ Alessio Faina ]
   * Re-introduced missed patch for LP: #2030978 (LP: #2143839)
     - debian/patches: 45-broadcom-wl-fix-linux-6.5.patch
+
+  [ Roger Shimizu ]
+  * Add patch from Joshua Gatley-Dewing to fix build for linux-7.1
+    (Closes: #1136423).
 
  -- Alessio Faina <alessio.faina@canonical.com>  Tue, 10 Mar 2026 15:03:27 +0100
 
