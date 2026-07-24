@@ -1,4 +1,4 @@
-broadcom-sta (6.30.223.271-31) UNRELEASED; urgency=low
+broadcom-sta (6.30.223.271-31) experimental; urgency=low
 
   * debian/patches: 47-linux72.patch (based on
     https://github.com/joanbm/broadcom-wl-linux-mainline/blob/master/patches/023-linux702.patch)
