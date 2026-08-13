@@ -1,3 +1,9 @@
+broadcom-sta (6.30.223.271-31ubuntu1pop1) noble; urgency=medium
+
+  * Linux 7.1.5 Support
+
+ -- Jonah Grasso <jonah@system76.com>  Tue, 18 Aug 2026 09:52:15 -0600
+
 broadcom-sta (6.30.223.271-31) experimental; urgency=low
 
   * debian/patches: 47-linux72.patch (based on
